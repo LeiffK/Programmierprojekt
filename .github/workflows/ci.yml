@@ -1,0 +1,39 @@
+name: Prüfung & CI
+on:
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+
+      # Prettier Check (nur Prüfung, kein Auto-Format)
+      - name: Prettier Check
+        run: npx prettier --check .
+
+      # Linter
+      - name: ESLint
+        run: npm run lint
+
+      # TypeScript Type-Check
+      - name: Type Check
+        run: npm run type-check
+
+      # Unit Tests
+      - name: Tests
+        run: npm run test
+
+      # Build-Probe
+      - name: Build
+        run: npm run build
