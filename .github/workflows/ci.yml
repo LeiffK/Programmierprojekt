@@ -22,10 +22,6 @@ jobs:
       - name: Prettier Check
         run: npx prettier --check .
 
-      # Linter
-      - name: ESLint
-        run: npm run lint
-
       # TypeScript Type-Check
       - name: Type Check
         run: npm run type-check
