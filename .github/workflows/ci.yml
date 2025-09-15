@@ -1,7 +1,16 @@
 name: Prüfung & CI
+
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
+
+# Notwendig für Pages-Deploy
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -12,24 +21,58 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
-      - run: npm ci
+          cache: npm
 
-      # Prettier Check (nur Prüfung, kein Auto-Format)
+      - name: Install dependencies
+        run: npm ci
+
       - name: Prettier Check
         run: npx prettier --check .
 
-      # TypeScript Type-Check
       - name: Type Check
         run: npm run type-check
 
-      # Unit Tests
       - name: Tests
         run: npm run test
 
-      # Build-Probe
-      - name: Build
+      - name: Build (probe)
         run: npm run build
+
+  deploy:
+    # Nur auf Push nach main, NACHDEM checks erfolgreich war
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: checks
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node (20.x)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site
+        run: npm run build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
