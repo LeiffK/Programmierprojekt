@@ -1,0 +1,24 @@
+import { BanditEnv, EnvConfig, PullResult } from "../types";
+
+export class BernoulliBanditEnv implements BanditEnv {
+  config: EnvConfig;
+  optimalAction: number;
+
+  constructor(config: EnvConfig) {
+    if (!config.probs || config.probs.length !== config.arms) {
+      throw new Error("Bernoulli config must define probs for each arm.");
+    }
+    this.config = config;
+    this.optimalAction = config.probs.indexOf(Math.max(...config.probs));
+  }
+
+  pull(action: number): PullResult {
+    const p = this.config.probs![action];
+    const reward = Math.random() < p ? 1 : 0;
+    return {
+      action,
+      reward,
+      isOptimal: action === this.optimalAction,
+    };
+  }
+}

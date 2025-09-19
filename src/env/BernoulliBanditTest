@@ -1,0 +1,12 @@
+import { describe, it, expect } from "vitest";
+import { BernoulliBanditEnv } from "src/domain/env/BernoulliBanditEnv";
+
+describe("BernoulliBanditEnv", () => {
+  it("returns only 0/1 as rewards", () => {
+    const env = new BernoulliBanditEnv({ type: "bernoulli", arms: 2, probs: [0.8, 0.2] });
+    for (let i = 0; i < 100; i++) {
+      const res = env.pull(0);
+      expect([0, 1]).toContain(res.reward);
+    }
+  });
+});
