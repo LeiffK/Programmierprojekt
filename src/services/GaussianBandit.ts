@@ -134,15 +134,15 @@ function play(
     return simulation 
 }
 
-// let sim1 =createSim(5,5)
-// console.log("Simulation:")
-// console.log(sim1)
-// play(sim1,1)
-// play(sim1,1)
-// play(sim1,1)
-// play(sim1,1)
-// console.log("Simulation nach Iteration:")
-// console.log(sim1)
+let sim1 =createSim(5,5)
+console.log("Simulation:")
+console.log(sim1)
+play(sim1,1)
+play(sim1,1)
+play(sim1,1)
+play(sim1,1)
+console.log("Simulation nach Iteration:")
+console.log(sim1)
 
 
 
