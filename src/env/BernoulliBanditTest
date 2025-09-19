@@ -1,12 +1,14 @@
-import { describe, it, expect } from "vitest";
-import { BernoulliBanditEnv } from "src/domain/env/BernoulliBanditEnv";
+import { describe, it, expect } from "vitest"; // Testframework-Funktionen importieren
+import { BernoulliBanditEnv } from "src/env/BernoulliBanditEnv"; // Bernoulli-Bandit-Umgebung importieren
 
-describe("BernoulliBanditEnv", () => {
-  it("returns only 0/1 as rewards", () => {
-    const env = new BernoulliBanditEnv({ type: "bernoulli", arms: 2, probs: [0.8, 0.2] });
-    for (let i = 0; i < 100; i++) {
-      const res = env.pull(0);
-      expect([0, 1]).toContain(res.reward);
+
+describe("BernoulliBanditEnv", () => { // Test-Suite für BernoulliBanditEnv
+  it("returns only 0/1 as rewards", () => { // Testfall: Prüft, ob nur 0 oder 1 als Belohnung zurückgegeben werden
+    const env = new BernoulliBanditEnv({ type: "bernoulli", arms: 2, probs: [0.8, 0.2] }); // Umgebung mit 2 Armen und Erfolgswahrscheinlichkeiten 0.8 und 0.2 erstellen
+    for (let i = 0; i < 100; i++) { // 100-mal Arm 0 ziehen
+      const res = env.pull(0); // Arm ziehen
+      expect([0, 1]).toContain(res.reward); // Erwartung: reward ist 0 oder 1
     }
   });
 });
+
