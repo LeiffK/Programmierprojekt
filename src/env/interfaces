@@ -1,0 +1,27 @@
+export interface EnvConfig {
+  type: "bernoulli" | "gaussian";
+  arms: number;
+  probs?: number[];     // für Bernoulli-Wahrscheinlichkeiten pro Arm
+  means?: number[];     // für Gaußsche Mittelwerte
+  variances?: number[]; // für Gaußsche Varianzen
+  seed?: number;        // optional: Reproduzierbarkeit
+}
+
+export interface PullResult {
+  action: number;       // welcher Arm gezogen wurde
+  reward: number;       // Belohnung zurückgegeben (z.B. 0 oder 1 bei Bernoulli)
+  isOptimal: boolean;   // ob Aktion optimaler Arm ist (für Auswertung)
+}
+
+export interface BanditEnv {
+  config: EnvConfig;
+  optimalAction: number;
+  pull(action: number): PullResult;  // Methode, um Belohnung für Aktion zu simulieren
+}
+
+export interface BanditAlgorithm {
+  name: string;                     // Name des Algorithmus, z.B. "Greedy"
+  selectAction(): number;           // Methode zur Auswahl des nächsten Arms (Aktion)
+  update(action: number, reward: number): void; // Methode zur Aktualisierung des internen Zustands nach Beobachtung einer Belohnung
+  reset?(arms: number): void;       // optionale Methode zum Zurücksetzen des Algorithmus mit gegebener Anzahl Arme
+}
