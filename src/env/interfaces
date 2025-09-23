@@ -3,7 +3,7 @@ export interface EnvConfig {
   arms: number;
   probs?: number[];     // für Bernoulli-Wahrscheinlichkeiten pro Arm
   means?: number[];     // für Gaußsche Mittelwerte
-  variances?: number[]; // für Gaußsche Varianzen
+  stdDevs?: number[]; // für Gaußsche Standardabweichungen
   seed?: number;        // optional: Reproduzierbarkeit
 }
 
