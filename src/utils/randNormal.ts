@@ -15,5 +15,5 @@ export function randNormal(
   const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2); //Teil 1 der Formel zur Bestimmung der Länge der Hypotenuse/Radius, Teil 2 zur Bestimmung des Winkel des Dreiecks im Kreis.
 
   // Auf N(mean, stdDev^2) abbilden
-  return mean + z0 * stdDev; //Box Muller Funktion gibt Werte Standard Normalverteilt zurück (also Mittelwert 0 & Standardabweichung =1)
+  return mean + z0 * stdDev; //Box Muller Funktion gibt Werte Standard Normalverteilt zurück (also Mittelwert 0 & Standardabweichung =1) ==> einmal an unsere Mittelwerte/Standardabweichung anpassen
 }

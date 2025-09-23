@@ -1,4 +1,4 @@
-export interface BanditAlgorithm {
+export interface iBanditAlgorithm {
   name: string;                     // Name des Algorithmus, z.B. "Greedy"
   selectAction(): number;           // Methode zur Auswahl des nächsten Arms (Aktion)
   update(action: number, reward: number): void; // Methode zur Aktualisierung des internen Zustands nach Beobachtung einer Belohnung
