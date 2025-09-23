@@ -8,5 +8,5 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true
   },
-  "include": ["vite.config.ts", "src/**/*.ts"]
+  "include": ["src/**/*.ts", "vite.config.ts"]
 }

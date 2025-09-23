@@ -1,5 +1,5 @@
-import type { iEnvConfig } from "../Domain/iEnvConfig.ts";
-import { GaussianBanditEnv } from "./GaussianBanditEnv.ts";
+import type { iEnvConfig } from "../Domain/iEnvConfig";
+import { GaussianBanditEnv } from "./GaussianBanditEnv";
 
 const cfg: iEnvConfig = {
   type: "gaussian",

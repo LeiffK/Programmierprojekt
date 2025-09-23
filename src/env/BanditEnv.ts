@@ -22,7 +22,7 @@ export abstract class BanditEnv implements iBanditEnv {
 
 
     this.config = config;
-    this.rng = seedrandom(config.seed);//Seedrandom nimmt eigentlich Strings entgegen. Juckt aber nicht obs nh number ist. Funktioniert so auch
+    this.rng = seedrandom(String(config.seed));//Seedrandom nimmt eigentlich Strings entgegen. Juckt aber nicht obs nh number ist. Funktioniert so auch
     this.optimalAction = -1; // Platzhalter Kinderklassen überschreiben das im Konstruktor
     this.config = config; // Speichere Konfiguration
 }
