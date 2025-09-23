@@ -1,9 +1,9 @@
-import type { iBanditEnv } from "../Domain/iBanditEnv";
-import type { iEnvConfig } from "../Domain/iEnvConfig";
-import type { iPullResult } from "../Domain/iPullResult";
-import { BanditEnv } from "./BanditEnv";
-import { randNormal } from "../utils/randNormal";
-import { randGaussianDist } from "../utils/randGaussianDist";
+import type { iBanditEnv } from "../Domain/iBanditEnv.ts";
+import type { iEnvConfig } from "../Domain/iEnvConfig.ts";
+import type { iPullResult } from "../Domain/iPullResult.ts";
+import {randGaussianDist} from "../utils/randGaussianDist.ts";
+import {BanditEnv} from "./BanditEnv.ts";
+import { randNormal } from "../utils/randNormal.ts";
 
 export class GaussianBanditEnv extends BanditEnv implements iBanditEnv {
 
@@ -61,3 +61,6 @@ export class GaussianBanditEnv extends BanditEnv implements iBanditEnv {
     };
   }
 }
+
+
+

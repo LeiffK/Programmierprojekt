@@ -1,4 +1,4 @@
-function randGaussianDist(
+export function randGaussianDist(
     rng: () => number,
     lowerBound: number = -100,
     upperBound: number = 100,

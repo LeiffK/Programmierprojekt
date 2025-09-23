@@ -1,7 +1,7 @@
-import type {iBanditEnv} from "../Domain/iBanditEnv"
-import type { iEnvConfig } from "../Domain/iEnvConfig";
-import type { iPullResult } from "../Domain/iPullResult";
-import seedrandom from "seedrandom"
+import type {iBanditEnv} from "../Domain/iBanditEnv.ts"
+import type { iEnvConfig } from "../Domain/iEnvConfig.ts";
+import type { iPullResult } from "../Domain/iPullResult.ts";
+import seedrandom from "seedrandom";
 //Das ist die Klasse von welcher Gaussian und Bernoulli
 
 export abstract class BanditEnv implements iBanditEnv {
@@ -12,18 +12,17 @@ export abstract class BanditEnv implements iBanditEnv {
 
     //Error Messages:
     if (config.type !== "gaussian" && config.type !== "bernoulli") {
-    throw new Error(
-        `BanditEnv expects config.type to be either "gaussian" or "bernoulli".`
-    );
+      throw new Error(
+          `BanditEnv expects config.type to be either "gaussian" or "bernoulli".`
+      );
+    }
     if (!config.arms || config.arms <= 0) {
-    throw new Error("Config must define a positive number of arms.");
+      throw new Error("Config must define a positive number of arms.");
     }
-    }
-
 
 
     this.config = config;
-    this.rng = seedrandom(config.seed);
+    this.rng = seedrandom(config.seed);//Seedrandom nimmt eigentlich Strings entgegen. Juckt aber nicht obs nh number ist. Funktioniert so auch
     this.optimalAction = -1; // Platzhalter Kinderklassen überschreiben das im Konstruktor
     this.config = config; // Speichere Konfiguration
 }
