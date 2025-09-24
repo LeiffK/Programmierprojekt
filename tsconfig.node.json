@@ -8,11 +8,9 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
-    /* Node mode (statt bundler) */
     "moduleResolution": "node16",
     "types": ["node"],
 
-    /* Bundler-Optionen sind hier optional, ich lasse sie drin falls du Einheitlichkeit willst */
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
