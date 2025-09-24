@@ -1,6 +1,6 @@
-import type {iBanditEnv} from "../Domain/iBanditEnv.ts"
-import type { iEnvConfig } from "../Domain/iEnvConfig.ts";
-import type { iPullResult } from "../Domain/iPullResult.ts";
+import type {iBanditEnv} from "./Domain/iBanditEnv.js"
+import type { iEnvConfig } from "./Domain/iEnvConfig.js";
+import type { iPullResult } from "./Domain/iPullResult.js";
 import seedrandom from "seedrandom";
 //Das ist die Klasse von welcher Gaussian und Bernoulli
 

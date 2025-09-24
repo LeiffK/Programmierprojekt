@@ -1,4 +1,4 @@
-import type { iEnvConfig } from "../Domain/iEnvConfig";
+import type { iEnvConfig } from "./Domain/iEnvConfig";
 import { GaussianBanditEnv } from "./GaussianBanditEnv";
 
 const cfg: iEnvConfig = {

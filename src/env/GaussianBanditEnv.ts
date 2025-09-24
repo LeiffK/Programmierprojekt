@@ -1,6 +1,6 @@
-import type { iBanditEnv } from "../Domain/iBanditEnv";
-import type { iEnvConfig } from "../Domain/iEnvConfig";
-import type { iPullResult } from "../Domain/iPullResult";
+import type { iBanditEnv } from "./Domain/iBanditEnv";
+import type { iEnvConfig } from "./Domain/iEnvConfig";
+import type { iPullResult } from "./Domain/iPullResult";
 import {randGaussianDist} from "../utils/randGaussianDist";
 import {BanditEnv} from "./BanditEnv";
 import { randNormal } from "../utils/randNormal";
