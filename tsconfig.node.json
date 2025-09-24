@@ -1,13 +1,18 @@
 {
   "compilerOptions": {
+    "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+
     "target": "ES2023",
     "lib": ["ES2023"],
     "module": "ESNext",
     "skipLibCheck": true,
 
-    /* Bundler mode */
-    "moduleResolution": "bundler",
+    /* Node mode (statt bundler) */
+    "moduleResolution": "node16",
+    "types": ["node"],
+
+    /* Bundler-Optionen sind hier optional, ich lasse sie drin falls du Einheitlichkeit willst */
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
