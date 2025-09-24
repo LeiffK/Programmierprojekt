@@ -4,7 +4,7 @@ import { GaussianBanditEnv } from "./GaussianBanditEnv";
 const cfg: iEnvConfig = {
   type: "gaussian",
   arms: 3,
-  seed: 43,  // damit die Ergebnisse reproduzierbar sind
+  seed: 43, // damit die Ergebnisse reproduzierbar sind
 };
 
 const env = new GaussianBanditEnv(cfg);

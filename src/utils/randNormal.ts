@@ -3,9 +3,10 @@
 export function randNormal(
   rng: () => number,
   mean: number = 0,
-  stdDev: number = 1
+  stdDev: number = 1,
 ): number {
-  let u1 = 0, u2 = 0;
+  let u1 = 0,
+    u2 = 0;
 
   // u1 darf nicht 0 sein (weil log(0) undefiniert ist)
   while (u1 === 0) u1 = rng(); // u1 zuständig für Radius
