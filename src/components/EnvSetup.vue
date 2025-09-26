@@ -2,71 +2,80 @@
   <section class="card">
     <h2>Environment</h2>
 
-    <!-- 3 Spalten, identische Control-Höhe/Breite -->
     <div class="form-grid">
-      <!-- Typ -->
       <div class="field col-4">
         <label class="label">Typ</label>
         <select v-model="local.type" class="control">
           <option value="gaussian">Gaussian · Watchtime</option>
-          <option value="bernoulli" disabled>Bernoulli · CTR (bald)</option>
+          <option value="bernoulli" disabled>Bernoulli · CTR (bald)</option> <!-- schonmal bernoulli einbauen,
+                                                                                  damit das später einfach direkt
+                                                                                  "aktiviert" werden kann -->
         </select>
       </div>
 
-      <!-- # Thumbnails -->
-      <div class="field col-4">
-        <label class="label"># Thumbnails</label>
-        <div class="control-group">
-          <button
-            class="group-btn"
-            type="button"
-            title="−1"
-            @click="local.arms = Math.max(2, local.arms - 1)"
-          >
-            −
-          </button>
-
-          <input
-            v-model.number="local.arms"
-            type="number"
-            min="2"
-            max="12"
-            class="group-input"
-          />
-
-          <button
-            class="group-btn"
-            type="button"
-            title="+1"
-            @click="local.arms = Math.min(12, local.arms + 1)"
-          >
-            +
-          </button>
-        </div>
+      <!-- # Thumbnails mit mindestanzahl 2 und maximal 12   -->
+      <div class="col-4">
+        <NumericStepper
+            v-model="local.arms"
+            label="# Thumbnails"
+            :min="2"
+            :max="12"
+            :step="1"
+            @bump="p => emit('log', `Thumbnails ${p.delta>0?'erhöht':'verringert'} → ${p.value}`)"
+        />
       </div>
 
-      <!-- Seed -->
+      <!-- Eingabefeld für den Seed -->
       <div class="field col-4">
         <label class="label">Seed</label>
         <input
-          v-model.number="local.seed"
-          type="number"
-          min="0"
-          class="control"
+            v-model.number="local.seed"
+            type="number"
+            min="0"
+            class="control no-spin"
+            inputmode="numeric"
         />
       </div>
     </div>
 
-    <div class="row">
-      <button class="btn" @click="randomize" :disabled="busy">
-        Zufalls-Parameter (μ/σ)
-      </button>
-      <button class="btn primary" @click="init" :disabled="busy">
-        Environment initialisieren
-      </button>
-      <div class="muted" v-if="envId">
-        Env: <code>{{ envIdShort }}</code>
+
+    <div class="actions">
+      <div class="control-group group-3">
+        <!-- 1) Seed würfeln -->
+        <button
+            class="group-btn"
+            type="button"
+            :disabled="busy"
+            @click="onSeedRoll"
+            title="Seed zufällig setzen"
+        >
+          🎲 Seed würfeln
+        </button>
+
+        <!-- 2) μ/σ zufällig  -->
+        <button
+            class="group-btn"
+            type="button"
+            :disabled="busy"
+            @click="randomize"
+            title="Mittelwert/Std-Abw. zufällig setzen"
+        >
+          μ/σ zufällig
+        </button>
+
+        <!-- 3) initialisieren -->
+        <button
+            class="group-btn primary"
+            type="button"
+            :disabled="busy"
+            @click="init"
+            title="Environment initialisieren"
+        >
+          Initialisieren
+        </button>
       </div>
+
+      <span class="muted" v-if="envId">Env: <code>{{ envIdShort }}</code></span>
     </div>
   </section>
 </template>
@@ -75,12 +84,14 @@
 import { computed, reactive, watch } from "vue";
 import type { iEnvConfig } from "../env/Domain/iEnvConfig.js";
 import { initEnv } from "../api/banditClient";
+import NumericStepper from "./ui/NumericStepper.vue";
+
 
 const props = defineProps<{ modelValue: iEnvConfig; busy: boolean }>();
 const emit = defineEmits<{
-  (e: "update:modelValue", v: iEnvConfig): void;
-  (e: "inited", payload: { envId: string; optimalAction: number }): void;
-  (e: "log", msg: string): void;
+  (e: "update:modelValue", v: iEnvConfig): void
+  (e: "inited", payload: { envId: string; optimalAction: number }): void
+  (e: "log", msg: string): void
 }>();
 
 const local = reactive<iEnvConfig>({
@@ -88,32 +99,33 @@ const local = reactive<iEnvConfig>({
   arms: props.modelValue.arms ?? 6,
   seed: props.modelValue.seed ?? 12345,
   means: props.modelValue.means,
-  stdDev: props.modelValue.stdDev,
+  stdDev: props.modelValue.stdDev
 });
 
-watch(
-  () => props.modelValue,
-  (v) => Object.assign(local, v),
-  { deep: true },
-);
-watch(
-  local,
-  (v) => {
-    if (v.type !== "gaussian") v.type = "gaussian"; // Bernoulli ist noch deaktiviert
-    emit("update:modelValue", { ...v });
-  },
-  { deep: true },
-);
+watch(() => props.modelValue, v => Object.assign(local, v), { deep: true });
+watch(local, v => {
+  if (v.type !== "gaussian") v.type = "gaussian"; // bernoulli noch deaktiviert
+  emit("update:modelValue", { ...v });
+}, { deep: true });
 
 const envId = computed(() => (local as any)._envId as string | undefined);
-const envIdShort = computed(() =>
-  envId.value ? envId.value.split("-")[0] : "—",
-);
+const envIdShort = computed(() => envId.value ? envId.value.split("-")[0] : "—");
 
+// Helper: μ/σ random erzwingen
 function randomize() {
   local.means = undefined;
   local.stdDev = undefined;
-  emit("log", "Params cleared. Env will generate μ and σ on init.");
+  emit("log", "μ/σ zurückgesetzt – werden beim Init zufällig erzeugt.");
+}
+
+// seed würfeln
+function onSeedRoll() {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  // bisschen begrenzen, sonst unnötig lang: 5-stellig wirkt freundlicher
+  const next = Number(String(buf[0]).slice(0, 5));
+  local.seed = next;
+  emit("log", `Seed gewürfelt → ${next}`);
 }
 
 async function init() {
@@ -125,77 +137,62 @@ async function init() {
 </script>
 
 <style scoped>
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 12px;
-  align-items: end;
+/* Grid  */
+.form-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;align-items:end}
+.field{display:flex;flex-direction:column}
+.col-4{grid-column:span 4}
+@media (max-width: 980px){ .col-4{grid-column:1 / -1} }
+
+/* Inputs */
+.control{ height:44px; width:100%; background:#111; color:#eee; border:1px solid #333; border-radius:10px; padding:0 12px }
+
+/* Stepper/Control-Gruppe  */
+.control-group{
+  height:44px; width:100%;
+  display:grid; grid-template-columns:auto 1fr auto;
+  background:#111; border:1px solid #333; border-radius:10px; overflow:hidden;
 }
-.field {
-  display: flex;
-  flex-direction: column;
+.group-3{ grid-template-columns: 1fr 1fr 1fr; } /* die drei Buttons nebeneinander */
+
+.group-input{
+  height:42px; width:100%;
+  margin:0; padding:0 12px;
+  background:transparent; color:#eee;
+  border:0; outline:none; text-align:center;
 }
-.col-4 {
-  grid-column: span 4;
+.group-btn{
+  height:42px; background:#1a1a1a; color:#fff;
+  border:0; border-right:1px solid #333;
+  cursor:pointer; padding:0 12px; text-align:center;
 }
-@media (max-width: 980px) {
-  .col-4 {
-    grid-column: 1 / -1;
-  }
+.group-btn:last-child{ border-right:0 }
+.group-btn.primary{ background:#ff0000; border-right:1px solid #ff0000 }
+.group-btn:disabled{ opacity:.6; cursor:not-allowed }
+
+.actions{ display:flex; align-items:center; gap:16px; margin-top:12px; flex-wrap:wrap }
+
+
+.control{
+  height:44px;
+  width:100%;
+  background:#111;
+  color:#eee;
+  border:1px solid #333;
+  border-radius:10px;
+  padding:0 12px;
+  box-sizing:border-box;
 }
 
-/* Einheitliche Control-Größe */
-.control,
-.control-group {
-  height: 44px;
-  width: 100%;
-  background: #111;
-  color: #eee;
-  border: 1px solid #333;
-  border-radius: 10px;
-  box-sizing: border-box;
-}
-
-/* Select & Input optisch angleichen */
-.control {
-  padding: 0 12px;
-  appearance: none;
-}
-
-/* Stepper-Gruppe als ein Control */
-.control-group {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  overflow: hidden; /* eine saubere Kontur */
-}
-.group-btn {
-  width: 44px;
-  height: 42px; /* -2px wirkt optisch mittig innerhalb der Border */
+/* native Number-Spinner platt machen (Chrome/Edge/Safari) */
+.no-spin::-webkit-outer-spin-button,
+.no-spin::-webkit-inner-spin-button{
+  -webkit-appearance: none;
   margin: 0;
-  padding: 0;
-  background: #1a1a1a;
-  color: #fff;
-  border: 0;
-  border-right: 1px solid #333;
-  cursor: pointer;
-}
-.group-btn:last-child {
-  border-right: 0;
-  border-left: 1px solid #333;
-}
-.group-input {
-  height: 42px;
-  width: 100%;
-  margin: 0;
-  padding: 0 12px;
-  background: transparent;
-  color: #eee;
-  border: 0;
-  outline: none;
-  text-align: center;
 }
 
-.label {
-  margin-bottom: 6px;
+/* Firefox & Co. */
+.no-spin{
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 </style>

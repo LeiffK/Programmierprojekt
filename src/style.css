@@ -77,3 +77,70 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+
+/* --- Motion Tokens ------------------------------------------------------- */
+:root{
+    --ease-out: cubic-bezier(.2,.8,.2,1);
+    --ease-in:  cubic-bezier(.4,0,.2,1);
+    --dur-press: 140ms;
+    --dur-fast: 180ms;
+    --dur-med:  260ms;
+}
+
+/* --- Button-Motion (gilt für .group-btn, .btn, etc.) --------------------- */
+.group-btn,
+.btn{
+    transition:
+            transform var(--dur-press) var(--ease-out),
+            background-color var(--dur-fast) var(--ease-out),
+            box-shadow var(--dur-fast) var(--ease-out),
+            border-color var(--dur-fast) var(--ease-out),
+            opacity var(--dur-fast) var(--ease-out);
+    will-change: transform;
+}
+
+/* Press-Feedback (dezent, kein Gimmick) */
+.group-btn:active,
+.btn:active{
+    transform: translateY(1px) scale(0.98);
+}
+
+/* Hover-Feedback */
+.group-btn:hover:not(:disabled),
+.btn:hover:not(:disabled){
+    box-shadow: 0 0 0 0 rgba(0,0,0,0),
+    0 6px 16px rgba(0,0,0,.18);
+}
+
+/* Focus-Ring (AA konform) */
+.group-btn:focus-visible,
+.btn:focus-visible{
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255,255,255,.14), 0 0 0 6px rgba(255,0,0,.35);
+    transition-duration: var(--dur-med);
+}
+
+/* Primary/Pause Varianten leicht aufhellen beim Hover */
+.group-btn.primary:hover{ filter: brightness(1.05); }
+.group-btn.ghost:hover{ filter: brightness(1.08); }
+
+/* Disabled weich statt abrupt */
+.group-btn:disabled,
+.btn:disabled{
+    opacity: .55;
+    cursor: not-allowed;
+    filter: grayscale(.1);
+}
+
+/* --- Section-Transitions -------------------------------------------------- */
+.fade-slide-enter-active,
+.fade-slide-leave-active{
+    transition: opacity var(--dur-med) var(--ease-out),
+    transform var(--dur-med) var(--ease-out);
+}
+.fade-slide-enter-from,
+.fade-slide-leave-to{
+    opacity: 0;
+    transform: translateY(6px);
+}
