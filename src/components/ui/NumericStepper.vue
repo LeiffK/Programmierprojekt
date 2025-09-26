@@ -5,32 +5,36 @@
 
     <div class="control-group" :class="{ disabled }">
       <button
-          class="group-btn"
-          type="button"
-          :disabled="disabled || atMin"
-          title="−"
-          @click="onBump(-step)"
-      >−</button>
+        class="group-btn"
+        type="button"
+        :disabled="disabled || atMin"
+        title="−"
+        @click="onBump(-step)"
+      >
+        −
+      </button>
 
       <!-- ja, zentriert, damit es nicht flimmert wie ne Disco -->
       <input
-          class="group-input"
-          :value="displayVal"
-          :disabled="disabled"
-          inputmode="numeric"
-          @input="onInput"
-          @blur="normalize"
-          @keydown.arrow-up.prevent="onBump(step)"
-          @keydown.arrow-down.prevent="onBump(-step)"
+        class="group-input"
+        :value="displayVal"
+        :disabled="disabled"
+        inputmode="numeric"
+        @input="onInput"
+        @blur="normalize"
+        @keydown.arrow-up.prevent="onBump(step)"
+        @keydown.arrow-down.prevent="onBump(-step)"
       />
 
       <button
-          class="group-btn"
-          type="button"
-          :disabled="disabled || atMax"
-          title="+"
-          @click="onBump(step)"
-      >+</button>
+        class="group-btn"
+        type="button"
+        :disabled="disabled || atMax"
+        title="+"
+        @click="onBump(step)"
+      >
+        +
+      </button>
     </div>
   </div>
 </template>
@@ -38,29 +42,37 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 
-const props = withDefaults(defineProps<{
-  modelValue: number
-  label?: string
-  min?: number
-  max?: number
-  step?: number
-  disabled?: boolean
-}>(), {
-  min: 0,
-  max: Number.POSITIVE_INFINITY,
-  step: 1,
-  disabled: false,
-});
+const props = withDefaults(
+  defineProps<{
+    modelValue: number;
+    label?: string;
+    min?: number;
+    max?: number;
+    step?: number;
+    disabled?: boolean;
+  }>(),
+  {
+    min: 0,
+    max: Number.POSITIVE_INFINITY,
+    step: 1,
+    disabled: false,
+  },
+);
 
 const emit = defineEmits<{
-  (e: "update:modelValue", v: number): void
-  (e: "bump", payload: { delta: number, value: number }): void // fürs Debuggen: welche Richtung?
+  (e: "update:modelValue", v: number): void;
+  (e: "bump", payload: { delta: number; value: number }): void; // fürs Debuggen: welche Richtung?
 }>();
 
 // interner Buffer, damit man auch "leere" Eingaben tippen kann ohne sofort zu clampen
 const buf = ref<number>(props.modelValue);
 
-watch(() => props.modelValue, v => { buf.value = v; });
+watch(
+  () => props.modelValue,
+  (v) => {
+    buf.value = v;
+  },
+);
 
 const displayVal = computed(() => String(buf.value ?? ""));
 
@@ -96,25 +108,52 @@ function normalize() {
 </script>
 
 <style scoped>
-.field{display:flex;flex-direction:column}
-.control-group{
-  height:44px; width:100%;
-  display:grid; grid-template-columns:auto 1fr auto;
-  background:#111; border:1px solid #333; border-radius:10px; overflow:hidden;
+.field {
+  display: flex;
+  flex-direction: column;
 }
-.control-group.disabled{opacity:.6}
-.group-btn{
-  height:42px; width:44px;
-  background:#1a1a1a; color:#fff; border:0; border-right:1px solid #333;
-  cursor:pointer;
+.control-group {
+  height: 44px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 10px;
+  overflow: hidden;
 }
-.group-btn:last-child{ border-right:0; border-left:1px solid #333 }
-.group-btn:disabled{ opacity:.5; cursor:not-allowed }
-.group-input{
-  height:42px; width:100%;
-  margin:0; padding:0 12px;
-  background:transparent; color:#eee;
-  border:0; outline:none; text-align:center;
+.control-group.disabled {
+  opacity: 0.6;
 }
-.label{ margin-bottom:6px }
+.group-btn {
+  height: 42px;
+  width: 44px;
+  background: #1a1a1a;
+  color: #fff;
+  border: 0;
+  border-right: 1px solid #333;
+  cursor: pointer;
+}
+.group-btn:last-child {
+  border-right: 0;
+  border-left: 1px solid #333;
+}
+.group-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.group-input {
+  height: 42px;
+  width: 100%;
+  margin: 0;
+  padding: 0 12px;
+  background: transparent;
+  color: #eee;
+  border: 0;
+  outline: none;
+  text-align: center;
+}
+.label {
+  margin-bottom: 6px;
+}
 </style>

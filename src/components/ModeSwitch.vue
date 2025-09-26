@@ -1,20 +1,18 @@
 <template>
   <div class="seg" role="tablist" aria-label="Modus wählen">
     <button
-        class="seg-btn"
-        :class="{ active: local === 'manual' }"
-        role="tab"
-
-        @click="set('manual')"
+      class="seg-btn"
+      :class="{ active: local === 'manual' }"
+      role="tab"
+      @click="set('manual')"
     >
       Manuell
     </button>
     <button
-        class="seg-btn"
-        :class="{ active: local === 'algo' }"
-        role="tab"
-
-        @click="set('algo')"
+      class="seg-btn"
+      :class="{ active: local === 'algo' }"
+      role="tab"
+      @click="set('algo')"
     >
       Algorithmus
     </button>
@@ -33,7 +31,10 @@ const emit = defineEmits<{
 }>();
 
 const local = ref<Mode>(props.modelValue ?? "manual");
-watch(() => props.modelValue, v => (local.value = v ?? "manual"));
+watch(
+  () => props.modelValue,
+  (v) => (local.value = v ?? "manual"),
+);
 
 function set(v: Mode) {
   if (local.value === v) return;
@@ -72,7 +73,7 @@ function set(v: Mode) {
   color: #fff;
 }
 .seg-btn:disabled {
-  opacity: .6;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 </style>

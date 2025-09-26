@@ -6,20 +6,28 @@
     <div class="grid">
       <div>
         <NumericStepper
-            v-model="totalSteps"
-            label="Ziel-Iterationen (n)"
-            :min="1"
-            :step="1"
-            @bump="p => pushLog(`n ${p.delta>0?'erhöht':'verringert'} → ${p.value}`)"
+          v-model="totalSteps"
+          label="Ziel-Iterationen (n)"
+          :min="1"
+          :step="1"
+          @bump="
+            (p) =>
+              pushLog(`n ${p.delta > 0 ? 'erhöht' : 'verringert'} → ${p.value}`)
+          "
         />
       </div>
       <div>
         <NumericStepper
-            v-model="rate"
-            label="Rate (n pro Sekunde)"
-            :min="1"
-            :step="1"
-            @bump="p => pushLog(`Rate ${p.delta>0?'erhöht':'verringert'} → ${p.value}/s`)"
+          v-model="rate"
+          label="Rate (n pro Sekunde)"
+          :min="1"
+          :step="1"
+          @bump="
+            (p) =>
+              pushLog(
+                `Rate ${p.delta > 0 ? 'erhöht' : 'verringert'} → ${p.value}/s`,
+              )
+          "
         />
       </div>
       <div>
@@ -40,43 +48,45 @@
     <div class="actions">
       <div class="control-group group-4">
         <button
-            class="group-btn"
-            type="button"
-            :disabled="!envId"
-            @click="onConfigure"
+          class="group-btn"
+          type="button"
+          :disabled="!envId"
+          @click="onConfigure"
         >
           Konfigurieren
         </button>
 
         <button
-            class="group-btn"
-            type="button"
-            :disabled="!envId || running"
-            @click="onStep"
+          class="group-btn"
+          type="button"
+          :disabled="!envId || running"
+          @click="onStep"
         >
           +1 Schritt
         </button>
 
         <button
-            class="group-btn primary"
-            type="button"
-            :disabled="!envId || running"
-            @click="onStart"
+          class="group-btn primary"
+          type="button"
+          :disabled="!envId || running"
+          @click="onStart"
         >
           Start
         </button>
 
         <button
-            class="group-btn ghost"
-            type="button"
-            :disabled="!envId || !running"
-            @click="onPause"
+          class="group-btn ghost"
+          type="button"
+          :disabled="!envId || !running"
+          @click="onPause"
         >
           Pause
         </button>
       </div>
 
-      <span class="muted status" v-if="statusText">Status: {{ statusText }}</span>
+      <span class="muted status" v-if="statusText"
+        >Status: {{ statusText }}</span
+      >
     </div>
 
     <div class="out">
@@ -102,24 +112,33 @@ const totalSteps = ref<number>(100);
 const rate = ref<number>(5);
 const algoId = ref<string>("");
 
-const statusText = ref<string>("");    // „Bereit“, „Konfiguriert“, „Läuft“, „Pausiert“
-const running = ref<boolean>(false);   // steuert Start/Pause
+const statusText = ref<string>(""); // „Bereit“, „Konfiguriert“, „Läuft“, „Pausiert“
+const running = ref<boolean>(false); // steuert Start/Pause
 const logs: string[] = [];
 const logText = ref<string>("");
 
 let worker: Worker | null = null;
 
-watch(() => props.envId, (id) => {
-  if (!id) { statusText.value = "Kein Environment"; running.value = false; return; }
-  ensureWorker();
-  statusText.value = "Bereit";
-});
+watch(
+  () => props.envId,
+  (id) => {
+    if (!id) {
+      statusText.value = "Kein Environment";
+      running.value = false;
+      return;
+    }
+    ensureWorker();
+    statusText.value = "Bereit";
+  },
+);
 
 watch(algoId, (v) => pushLog(`Algorithmus gewählt: ${v || "—"}`));
 
 function ensureWorker() {
   if (worker) return;
-  worker = new Worker(new URL("../workers/banditWorker.ts", import.meta.url), { type: "module" });
+  worker = new Worker(new URL("../workers/banditWorker.ts", import.meta.url), {
+    type: "module",
+  });
 
   worker.addEventListener("message", (e: MessageEvent) => {
     const msg = e.data;
@@ -130,7 +149,9 @@ function ensureWorker() {
         break;
 
       case "CONFIGURED":
-        pushLog(`Konfiguriert: env=${msg.payload.envId.substring(0, 8)} steps=${msg.payload.totalSteps} rate=${msg.payload.rate}/s`);
+        pushLog(
+          `Konfiguriert: env=${msg.payload.envId.substring(0, 8)} steps=${msg.payload.totalSteps} rate=${msg.payload.rate}/s`,
+        );
         statusText.value = "Konfiguriert";
         // Konfigurieren setzt den Lauf zurück (falls jemand mitten drin klickt)
         running.value = false;
@@ -145,7 +166,10 @@ function ensureWorker() {
       case "STOPPED":
         // STOPPED kann „Pause“ oder „Ende“ sein – wir differenzieren über reason
         const reason = msg.payload?.reason ?? "";
-        const isPause = reason === "Manuell gestoppt" || reason === "" || reason.startsWith("Ziel");
+        const isPause =
+          reason === "Manuell gestoppt" ||
+          reason === "" ||
+          reason.startsWith("Ziel");
         // pragmatisch: bei „Manuell gestoppt“ zeigen wir „Pausiert“
         statusText.value = isPause ? "Pausiert" : "Gestoppt";
         running.value = false; // wichtig: Start danach wieder aktiv
@@ -164,11 +188,15 @@ function ensureWorker() {
         break;
 
       case "RESULT":
-        pushLog(`Schritt ${msg.payload.step}: Arm ${msg.payload.action} → Reward ${msg.payload.reward.toFixed(2)} (${msg.payload.isOptimal ? "optimal" : "—"})`);
+        pushLog(
+          `Schritt ${msg.payload.step}: Arm ${msg.payload.action} → Reward ${msg.payload.reward.toFixed(2)} (${msg.payload.isOptimal ? "optimal" : "—"})`,
+        );
         break;
 
       case "PROGRESS":
-        pushLog(`Fortschritt: ${msg.payload.step}/${msg.payload.total} (rest ${msg.payload.remaining})`);
+        pushLog(
+          `Fortschritt: ${msg.payload.step}/${msg.payload.total} (rest ${msg.payload.remaining})`,
+        );
         break;
 
       case "ERROR":
@@ -238,30 +266,59 @@ onBeforeUnmount(() => {
 
 <style scoped>
 /* Select-Optik wie in EnvSetup */
-.control{
-  height:44px; width:100%;
-  background:#111; color:#eee;
-  border:1px solid #333; border-radius:10px;
-  padding:0 12px;
+.control {
+  height: 44px;
+  width: 100%;
+  background: #111;
+  color: #eee;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 0 12px;
 }
 
 /* Eine Gruppe mit 4 gleich breiten Buttons  */
-.actions{ display:flex; align-items:center; gap:16px; margin-top:12px; flex-wrap:wrap }
-.control-group{
-  height:44px; width:100%;
-  display:grid; grid-template-columns: repeat(4, 1fr);
-  background:#111; border:1px solid #333; border-radius:10px; overflow:hidden;
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
 }
-.group-btn{
-  height:42px;
-  background:#1a1a1a; color:#fff;
-  border:0; border-right:1px solid #333;
-  cursor:pointer; padding:0 12px;
+.control-group {
+  height: 44px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 10px;
+  overflow: hidden;
 }
-.group-btn:last-child{ border-right:0 }
-.group-btn.primary{ background:#ff0000; border-right:1px solid #ff0000 }
-.group-btn.ghost{ background:#2a1b1b }
-.group-btn:disabled{ opacity:.6; cursor:not-allowed }
+.group-btn {
+  height: 42px;
+  background: #1a1a1a;
+  color: #fff;
+  border: 0;
+  border-right: 1px solid #333;
+  cursor: pointer;
+  padding: 0 12px;
+}
+.group-btn:last-child {
+  border-right: 0;
+}
+.group-btn.primary {
+  background: #ff0000;
+  border-right: 1px solid #ff0000;
+}
+.group-btn.ghost {
+  background: #2a1b1b;
+}
+.group-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
-.status{ white-space:nowrap }
+.status {
+  white-space: nowrap;
+}
 </style>
