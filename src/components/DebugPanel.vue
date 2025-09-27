@@ -60,7 +60,7 @@ const props = defineProps<{
 
 function estimateText(idx: number) {
   const q = props.snapshot?.estimates[idx] ?? 0;
-  return `${q.toFixed(0)}s`; // watchtime. klar.
+  return `${q.toFixed(0)}s`; // watchtime.
 }
 function truthText(idx: number) {
   const cfg = props.snapshot?.config;

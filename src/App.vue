@@ -1,17 +1,23 @@
 <template>
   <div class="shell">
     <header class="bar">
-      <div class="brand">Creator Lab · Mini Runner</div>
+      <div class="bar-inner">
+        <div class="brand">Creator Lab · Mini Runner</div>
+        <ModeSwitch v-model="mode" @change="onModeChange" />
+      </div>
     </header>
 
     <main class="wrap">
+      <!-- Setup & Debug bleiben immer sichtbar -->
       <EnvSetup v-model="form" :busy="busy" @inited="onInited" @log="setLast" />
-
       <DebugPanel :snapshot="snapshot" :lastResult="lastResult" />
 
-      <section class="card">
+      <!-- Manuell testen -->
+      <section class="card" v-if="mode === 'manual'">
         <h2>Manuell testen</h2>
-        <p class="muted">Ein Klick entspricht genau einem Zuschauer.</p>
+        <p class="muted">
+          Ein Klick entspricht genau einem Zuschauer. Handarbeit ftw.
+        </p>
 
         <div class="thumb-grid">
           <ThumbnailCard
@@ -31,6 +37,13 @@
           <div>{{ lastEventText }}</div>
         </div>
       </section>
+
+      <!-- Algorithmus / Worker -->
+      <RunnerControls
+        v-if="mode === 'algo'"
+        :envId="envId || null"
+        :arms="snapshot?.config?.arms || form.arms"
+      />
     </main>
   </div>
 </template>
@@ -42,6 +55,8 @@ import { getEnvSnapshot, pullAction } from "./api/banditClient";
 import EnvSetup from "./components/EnvSetup.vue";
 import DebugPanel from "./components/DebugPanel.vue";
 import ThumbnailCard from "./components/ThumbnailCard.vue";
+import RunnerControls from "./components/RunnerControls.vue";
+import ModeSwitch from "./components/ModeSwitch.vue";
 
 type EnvSnapshot = {
   config: iEnvConfig;
@@ -58,8 +73,14 @@ const snapshot = ref<EnvSnapshot | null>(null);
 const lastResult = ref<string>("");
 const lastEventText = ref<string>("—");
 
+// Neuer Modus-State
+const mode = ref<"manual" | "algo">("manual");
+
 function setLast(msg: string) {
   lastResult.value = msg;
+}
+function onModeChange(v: "manual" | "algo") {
+  setLast(`Modus gewechselt: ${v === "manual" ? "Manuell" : "Algorithmus"}`);
 }
 
 function refresh() {
@@ -69,7 +90,7 @@ function refresh() {
 
 function estimateText(idx: number) {
   const q = snapshot.value?.estimates[idx] ?? 0;
-  return `${q.toFixed(0)}s`; // watchtime als sekunden
+  return `${q.toFixed(0)}s`;
 }
 function truthText(idx: number) {
   const cfg = snapshot.value?.config;
@@ -104,7 +125,14 @@ async function onManual(a: number) {
 </script>
 
 <style scoped>
-/* hier nur grid/layout – rest ist global in utilities.css */
+.bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* bestehende Grids/Styles bleiben wie gehabt */
 .thumb-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(260px, 1fr));
