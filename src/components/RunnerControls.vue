@@ -136,7 +136,7 @@ watch(algoId, (v) => pushLog(`Algorithmus gewählt: ${v || "—"}`));
 
 function ensureWorker() {
   if (worker) return;
-  worker = new Worker(new URL("../workers/banditWorker.ts", import.meta.url), {
+  worker = new Worker(new URL("../workers/banditWorkers.ts", import.meta.url), {
     type: "module",
   });
 

@@ -99,7 +99,7 @@ button:focus-visible {
   will-change: transform;
 }
 
-/* Press-Feedback (dezent, kein Gimmick) */
+/* Press-Feedback */
 .group-btn:active,
 .btn:active {
   transform: translateY(1px) scale(0.98);

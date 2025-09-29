@@ -1,6 +1,5 @@
 <template>
   <div class="field">
-    <!-- label ist optional (UX: nicht immer Textmüll produzieren) -->
     <label v-if="label" class="label">{{ label }}</label>
 
     <div class="control-group" :class="{ disabled }">
@@ -14,7 +13,6 @@
         −
       </button>
 
-      <!-- ja, zentriert, damit es nicht flimmert wie ne Disco -->
       <input
         class="group-input"
         :value="displayVal"
