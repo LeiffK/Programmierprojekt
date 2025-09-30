@@ -106,8 +106,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-// Falls dein Projekt KEIN '@' Alias hat: auf "../domain/iMetrics" ändern
-import type { iMetricsRow } from "@/domain/iMetrics";
+
+import type { iMetricsRow } from "../domain/iMetrics";
 
 const props = defineProps<{ rows: iMetricsRow[]; open?: boolean }>();
 const emit = defineEmits<{
@@ -138,7 +138,7 @@ function dotStyle(r: iMetricsRow) {
   // Farbe optional an der Row (kannst du im Parent setzen), sonst fallback
   const color =
     (r as unknown as { color?: string })?.color ||
-    (r.kind === "manual" ? "#4caf50" : "#ff5252");
+    (r.kind === "manual" ? "#4caf50" : "#4caf50");
   return {
     backgroundColor: color,
     opacity: r.visible ? 1 : 0.35,
@@ -255,8 +255,8 @@ function fmtNum(n: number) {
   cursor: pointer;
 }
 .check input:checked {
-  background: #ff0000;
-  border-color: #ff0000;
+  background: #2f5b2f;
+  border-color: #2f5b2f;
 }
 .check input:checked::after {
   content: "";

@@ -108,13 +108,13 @@ const rows = ref<iMetricsRow[]>([
   },
 ]);
 
-// kleines Helferlein: bester erwarteter Reward (für Gaussian = max(μ))
+// Helfer: bester erwarteter Reward (für Gaussian = max(μ))
 function bestExpectedReward(): number {
   const mu = snapshot.value?.config.means;
   return Array.isArray(mu) && mu.length ? Math.max(...mu) : 0;
 }
 
-// manuelle Serie hochzählen (aka: Statistik nicht verschlafen)
+// manuelle Serie hochzählen
 function upsertManualRow(
   lastAction: number,
   lastReward: number,
@@ -197,7 +197,7 @@ async function onManual(a: number) {
   gap: 12px;
 }
 
-/* bestehende Grids/Styles bleiben wie gehabt */
+
 .thumb-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(260px, 1fr));
