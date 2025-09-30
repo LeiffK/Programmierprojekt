@@ -1,6 +1,12 @@
 <template>
   <section class="card">
-    <h2>Environment</h2>
+    <div class="card-head">
+      <h2>Environment</h2>
+      <div class="head-actions">
+        <!-- App kann hier beliebige Controls einschieben -->
+        <slot name="actions" />
+      </div>
+    </div>
 
     <div class="form-grid">
       <div class="field col-4">
@@ -252,16 +258,26 @@ async function init() {
   box-sizing: border-box;
 }
 
-/* native Number-Spinner platt machen (Chrome/Edge/Safari) */
 .no-spin::-webkit-outer-spin-button,
 .no-spin::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-/* Firefox & Co. */
 .no-spin {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.head-actions {
+  display: flex;
+  gap: 8px;
 }
 </style>
