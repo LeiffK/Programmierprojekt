@@ -12,7 +12,12 @@
         <!--  LINKS: Setup, Modus & Interaktion (manuell/worker) -->
         <div class="col-left">
           <!--  hier wird das Environment zurechtgebastelt -->
-          <EnvSetup v-model="form" :busy="busy" @inited="onInited" @log="setLast">
+          <EnvSetup
+            v-model="form"
+            :busy="busy"
+            @inited="onInited"
+            @log="setLast"
+          >
             <!-- Modus-Schalter: „Manuell“ oooder „Algorithmus“    -->
             <template #actions>
               <ModeSwitch v-model="mode" @change="onModeChange" />
@@ -27,17 +32,16 @@
             <!-- Thumbnails -->
             <div class="thumb-grid">
               <ThumbnailCard
-                  v-for="i in form.arms"
-                  :key="i"
-                  :label="`Thumbnail ${String.fromCharCode(64 + i)}`"
-                  :variant="`Variante ${String.fromCharCode(64 + i)}`"
-                  :n="snapshot?.counts[i - 1] || 0"
-                  :estimate="estimateText(i - 1)"
-                  :truth="truthText(i - 1)"
-                  @pick="onManual(i - 1)"
+                v-for="i in form.arms"
+                :key="i"
+                :label="`Thumbnail ${String.fromCharCode(64 + i)}`"
+                :variant="`Variante ${String.fromCharCode(64 + i)}`"
+                :n="snapshot?.counts[i - 1] || 0"
+                :estimate="estimateText(i - 1)"
+                :truth="truthText(i - 1)"
+                @pick="onManual(i - 1)"
               />
             </div>
-
 
             <div class="toast">
               <div class="pill">Letztes Ereignis</div>
@@ -47,9 +51,9 @@
 
           <!-- Falls der Modus „Algorithmus“ ist: Worker-Steuerung (Start/Pause etc.) -->
           <RunnerControls
-              v-else
-              :envId="envId || null"
-              :arms="snapshot?.config?.arms || form.arms"
+            v-else
+            :envId="envId || null"
+            :arms="snapshot?.config?.arms || form.arms"
           />
         </div>
 
@@ -62,9 +66,9 @@
                  - v-model: aktive Kennzahl (Σ, Ø, Regret, ...)
                  - @toggle: Sichtbarkeit einzelner Serien (Pillen oben) -->
             <ChartArea
-                :series="chartSeries"
-                v-model="chartMetric"
-                @toggle="onChartToggle"
+              :series="chartSeries"
+              v-model="chartMetric"
+              @toggle="onChartToggle"
             />
           </section>
 
@@ -73,10 +77,10 @@
 
           <!-- Vergleichstabelle  -->
           <ComparisonTable
-              class="card"
-              :rows="metricRows"
-              v-model:open="tableOpen"
-              @toggleSeries="onToggleSeries"
+            class="card"
+            :rows="metricRows"
+            v-model:open="tableOpen"
+            @toggleSeries="onToggleSeries"
           />
         </div>
       </div>
@@ -178,14 +182,16 @@ function truthText(idx: number) {
   if (!cfg) return "—";
   const mu = cfg.means?.[idx];
   const sd = cfg.stdDev?.[idx];
-  return mu != null && sd != null ? `${mu.toFixed(0)}s ± ${sd.toFixed(0)}s` : "—";
+  return mu != null && sd != null
+    ? `${mu.toFixed(0)}s ± ${sd.toFixed(0)}s`
+    : "—";
 }
 
 // Neues Env initialisiert? -> Alles frisch machen.
 function onInited({ envId: id }: { envId: string; optimalAction: number }) {
   envId.value = id;
-  manualHistory.value = [];         // zurück auf Anfang (Reset tut gut)
-  resetSeriesStore();               // Sichtbarkeiten/Farben resseten (ja, mit 2 s, kann pasieren)
+  manualHistory.value = []; // zurück auf Anfang (Reset tut gut)
+  resetSeriesStore(); // Sichtbarkeiten/Farben resseten (ja, mit 2 s, kann pasieren)
   ensureSeries("manual", "Manuell", "#4caf50"); // grün = manuell, easy zu merken
   refresh();
 }
@@ -207,7 +213,7 @@ async function onManual(a: number) {
     // bisschen Feedback fürs testen später
     setLast(JSON.stringify({ manual: true, ...res }, null, 2));
     lastEventText.value = `Thumbnail ${String.fromCharCode(65 + a)} → Watchtime ${res.reward.toFixed(
-        0,
+      0,
     )}s · optimal: ${res.isOptimal ? "ja" : "nein"}`;
 
     refresh();
@@ -224,18 +230,30 @@ async function onManual(a: number) {
 // 1) Tabelle: aktuell nur „Manuell“ (Algos kommen dazu, dann werden es mehrere Rows)
 const metricRows = computed<iMetricsRow[]>(() => {
   const s = seriesState.manual; // Sichtbarkeit/Farbe aus dem Store
-  return [buildMetricsRowFromManual(manualHistory.value, snapshot.value?.config, s)];
+  return [
+    buildMetricsRowFromManual(manualHistory.value, snapshot.value?.config, s),
+  ];
 });
 
 // 2) Chart-Serien: dito – aktuell nur „Manuell“
 const chartSeries = computed<iChartSeries[]>(() => {
   const s = seriesState.manual;
-  const serie = buildSeriesFromManual(manualHistory.value, snapshot.value?.config, s);
+  const serie = buildSeriesFromManual(
+    manualHistory.value,
+    snapshot.value?.config,
+    s,
+  );
   return [serie];
 });
 
 // Tabelle toggelt Sichtbarkeit -> Store aktualisieren
-function onToggleSeries({ seriesId, visible }: { seriesId: string; visible: boolean }) {
+function onToggleSeries({
+  seriesId,
+  visible,
+}: {
+  seriesId: string;
+  visible: boolean;
+}) {
   setSeriesVisible(seriesId, visible);
 }
 
@@ -247,7 +265,7 @@ function onChartToggle({ id, visible }: { id: string; visible: boolean }) {
 
 <style scoped>
 /*  wir wollen volle Breite. */
-.wrap{
+.wrap {
   max-width: none;
   width: 100%;
   padding: 20px 24px;
@@ -255,44 +273,67 @@ function onChartToggle({ id, visible }: { id: string; visible: boolean }) {
 }
 
 /* Kopfzele */
-.bar-inner{
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
-  width:100%; padding: 0 24px; box-sizing: border-box;
+.bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 0 24px;
+  box-sizing: border-box;
 }
 
 /* Zwei-Spalten */
-.page-grid{
-  display:grid; gap:16px;
+.page-grid {
+  display: grid;
+  gap: 16px;
   grid-template-columns: 50% 50%;
 }
 
-.col-right{ position: relative; }
+.col-right {
+  position: relative;
+}
 
 /* Thumbnails: drei pro Reihe. */
-.thumb-grid{
-  display:grid; gap:18px;
+.thumb-grid {
+  display: grid;
+  gap: 18px;
   grid-template-columns: repeat(3, 1fr);
 }
 
 /* kleines Toast-Element  */
-.toast{
-  display:flex; align-items:center; gap:10px;
-  margin-top:12px; padding:10px 12px;
-  border:1px solid #2a2a2a; border-radius:10px; background:#191919;
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  background: #191919;
 }
-.pill{
-  background:#ff0000; color:#fff; padding:4px 10px;
-  border-radius:999px; font-size:12px;
+.pill {
+  background: #ff0000;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
 }
 
 /* für mobile und kleinere displays */
-@media (max-width: 1200px){
-  .page-grid{ grid-template-columns: 1fr; }
+@media (max-width: 1200px) {
+  .page-grid {
+    grid-template-columns: 1fr;
+  }
 }
-@media (max-width: 980px){
-  .thumb-grid{ grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 980px) {
+  .thumb-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
-@media (max-width: 620px){
-  .thumb-grid{ grid-template-columns: 1fr; }
+@media (max-width: 620px) {
+  .thumb-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
