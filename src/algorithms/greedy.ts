@@ -3,6 +3,6 @@ import { BasePolicy } from "./BasePolicy.ts";
 export class Greedy extends BasePolicy {
   selectAction(): number {
     // return this.tiebreak(this.getEstimates() as number[]); //Welche Arme gibt es? Wenn alle gleich "gut" nimm einfach zufällig irgendeinen
-    return this.tiebreak(this.getEstimates()as number[]);
-    }
+    return this.tiebreak(this.getEstimates() as number[]);
+  }
 }
