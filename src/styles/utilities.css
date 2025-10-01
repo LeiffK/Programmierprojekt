@@ -15,11 +15,12 @@ body {
     Arial;
 }
 
-/* Breiterer Arbeitsbereich (Studio-Feeling) */
 .wrap {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: var(--space-4);
+  max-width: 100vw; /* volle Breite */
+  width: 100%;
+  margin: 0; /* kein zentriertes Container-Limit */
+  padding: 20px 24px; /* moderates Seitenpadding */
+  box-sizing: border-box;
 }
 
 /* App-Bar */

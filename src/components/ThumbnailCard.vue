@@ -1,5 +1,4 @@
 <template>
-  <!-- Die ganze Karte ist jetzt klick- & fokussierbar -->
   <div
     class="thumb clickable"
     role="button"
@@ -84,12 +83,19 @@ defineEmits<{ (e: "pick"): void }>();
 }
 
 .art {
-  height: 140px;
+  /* statt fester Höhe jetzt 16:9 – wächst sauber mit Spaltenbreite */
+  aspect-ratio: 16 / 9;
+  height: auto;
+  min-height: 180px;
   display: grid;
   place-items: center;
-  background: #232323;
+  background: #242424;
   position: relative;
-  transition: filter var(--dur-soft) var(--ease-soft);
+}
+
+.art svg {
+  width: 86px;
+  height: 86px;
 }
 .thumb:hover .art {
   filter: saturate(1.08);
