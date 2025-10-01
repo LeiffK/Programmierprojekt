@@ -35,7 +35,6 @@ export abstract class BasePolicy implements iBanditPolicy {
     const a = result.action; //Der Arm, welchen wir gewählt haben
     this.N[a] += 1; //da zählen wir einmal hoch, dass wir ihn ausgewählt haben
     const n = this.N[a]; //
-    this.Q[a] += (result.reward - this.Q[a]) / n; 
     this.Q[a] = updateMean(this.Q[a],result.reward,this.N[a]) // den erwarteten Wert anpassen. 
     this.t += 1; // gesamt steps hochzählen
   }
@@ -55,23 +54,23 @@ export abstract class BasePolicy implements iBanditPolicy {
     return { name: this.constructor.name, params: { ...this.cfg } };//spuck einmal alles aus, was du als Parameter für den Algrothmus gesetzt hast
   }
 
-  /** Hilfsfunktion: argmax mit Zufalls-Tiebreak
+  /** Hilfsfunktion: Zufalls-Tiebreak
    * Exeption Handeling raaaar raar, das muss jetzt mindestens nh 1 für den Effort geben, weil der Case zu 99% niemals eintreten wird. Raaarrr 
    * **Hier Fleißsternchen einfügen**
    */
-  protected argmax(values: number[]): number {
-    let best = -Infinity;
+  protected tiebreak(values: number[]): number {//Übergeben werden alle möglichen, welche gezogen werden (also später alle möglichen Arme, welche gleiche Prob oder Mean haben)
+    let best = -Infinity; //der kleinst mögliche Wert, damit jeder gezogene Wert garantiert größer ist
     let candidates: number[] = [];
     for (let i = 0; i < values.length; i++) {
       const v = values[i];
       if (v > best) {
-        best = v;
-        candidates = [i];
-      } else if (v === best) {
+        best = v; //neuer bester Wert gefunden
+        candidates = [i]; 
+      } else if (v === best) { // wenn aktueller wert genauso gut ist füge ihn zu Kandidaten hinzu
         candidates.push(i);
       }
     }
-    const idx = Math.floor(this.rng() * candidates.length); // zufällig den "besten" auswählen
+    const idx = Math.floor(this.rng() * candidates.length); // zufällig den "besten" auswählen, Math.floor rundet die aktuelle Zahl immer AB
     return candidates[idx];
   }
 
