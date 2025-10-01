@@ -1,24 +1,19 @@
-// Metriken, die wir in der Tabelle ausrollen (Regret etc.)
-// Hinweis: reward ist absichtlich generisch (CTR oder Watchtime), die UI betitelt das passend.
+export type iSeriesKind = "manual" | "algo";
+
 export interface iMetricsRow {
-  seriesId: string;
-  label: string;
-  kind: "manual" | "algo";
+    seriesId: string;
+    label: string;
+    kind: iSeriesKind;       // 'manual' oder 'algo'
+    visible: boolean;
 
-  // Basiszahlen
-  n: number; // wie viele Züge
-  cumReward: number; // kumulierter Reward
-  avgReward: number; // Durchschnitt (cum / n)
+    n: number;               // Anzahl Züge
+    cumReward: number;       // Summe Reward
+    avgReward: number;       // Ø Reward
+    bestChoiceRate: number;  // Anteil optimaler Züge (0..1)
+    regret: number;          // Sum(bestMean - reward), kleiner = besser
 
-  // Qualität
-  optimalPulls: number; // wie oft optimaler Arm gewählt
-  bestChoiceRate: number; // Quote (optimalPulls / n)
+    lastAction?: number;
+    lastReward?: number;
 
-  // Effizienz
-  regret: number; // Summe (bestExpected - reward) – für Watchtime einfach „verpasste Sek.“
-  lastAction?: number; // zuletzt gezogener Arm (Debug, nett zu haben)
-  lastReward?: number; // zuletzt beobachteter Reward
-
-  // UI-Flags
-  visible: boolean; // für Chart/Legende später
+    color?: string;          // optionale Farbe für Punkt/Curve
 }

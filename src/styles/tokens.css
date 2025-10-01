@@ -27,4 +27,7 @@
   --space-2: 10px;
   --space-3: 14px;
   --space-4: 20px;
+
+     --row-accent:#ff0000;
+    --row-accent-rgb:255,0,0;
 }
