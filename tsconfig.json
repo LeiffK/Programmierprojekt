@@ -10,5 +10,5 @@
     "noEmit": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["src/**/*.ts", "vite.config.ts","src/**/*.vue"]
+  "include": ["src/**/*.ts", "vite.config.ts", "src/**/*.vue"]
 }

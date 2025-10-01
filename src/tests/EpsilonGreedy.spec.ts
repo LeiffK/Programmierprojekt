@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { EpsilonGreedy } from "../algorithms/EpsilonGreedy.ts";
-
+//Test E Greedy
 type Env = { config: { arms: number } };
 const makeEnv = (arms = 3): Env => ({ config: { arms } });
 
