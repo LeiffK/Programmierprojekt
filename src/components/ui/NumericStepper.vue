@@ -94,7 +94,7 @@ function onBump(d: number) {
 
 function onInput(e: Event) {
   const raw = (e.target as HTMLInputElement).value.trim();
-  const n = Number(raw.replace(",", ".")); // notfalls Komma nach Punkt (wir sind nett)
+  const n = Number(raw.replace(",", "."));
   buf.value = n;
 }
 
@@ -117,7 +117,7 @@ function normalize() {
   grid-template-columns: auto 1fr auto;
   background: #111;
   border: 1px solid #333;
-  border-radius: 10px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 .control-group.disabled {
@@ -125,7 +125,7 @@ function normalize() {
 }
 .group-btn {
   height: 42px;
-  width: 44px;
+  width: 46px;
   background: #1a1a1a;
   color: #fff;
   border: 0;
@@ -136,9 +136,9 @@ function normalize() {
   border-right: 0;
   border-left: 1px solid #333;
 }
-.group-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.group-btn:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.14);
 }
 .group-input {
   height: 42px;
@@ -153,5 +153,7 @@ function normalize() {
 }
 .label {
   margin-bottom: 6px;
+  color: var(--muted);
+  font-size: var(--fs-12);
 }
 </style>

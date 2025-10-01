@@ -2,22 +2,21 @@
   <div class="shell">
     <header class="bar">
       <div class="bar-inner">
-        <div class="brand">Creator Lab · Mini Runner</div>
-        <ModeSwitch v-model="mode" @change="onModeChange" />
+        <div class="brand">Bandit Lab</div>
       </div>
     </header>
 
     <main class="wrap">
-      <!-- Setup & Debug bleiben immer sichtbar -->
-      <EnvSetup v-model="form" :busy="busy" @inited="onInited" @log="setLast" />
+      <EnvSetup v-model="form" :busy="busy" @inited="onInited" @log="setLast">
+        <template #actions>
+          <ModeSwitch v-model="mode" @change="onModeChange" />
+        </template>
+      </EnvSetup>
       <DebugPanel :snapshot="snapshot" :lastResult="lastResult" />
 
-      <!-- Manuell testen -->
       <section class="card" v-if="mode === 'manual'">
         <h2>Manuell testen</h2>
-        <p class="muted">
-          Ein Klick entspricht genau einem Zuschauer. Handarbeit ftw.
-        </p>
+        <p class="muted">Ein Klick entspricht genau einem Zuschauer.</p>
 
         <div class="thumb-grid">
           <ThumbnailCard
