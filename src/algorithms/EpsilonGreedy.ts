@@ -14,10 +14,13 @@ export class EpsilonGreedy extends BasePolicy {
   }
 
   // Hilfsfunktion: bringt Epsilon in passenden Bereich
-  private getClampedEpsilon(): number {
+  protected getClampedEpsilon(): number {
     const raw = this["cfg"]?.epsilon ?? 0.1; //Wenn es ein Epsilon gibt verwende es. Ansonsten nimm 10%
     if (raw < 0) return 0; // Kleiner als 0% is Quatsch
     if (raw > 1) return 1; // Größer als 100% ist auch Quatsch
     return raw;
+  }
+  protected override setOptimisticInitialValue(): number {
+    return this.cfg.optimisticInitialValue ?? 150;
   }
 }

@@ -19,23 +19,18 @@ export abstract class BasePolicy implements iBanditPolicy {
   protected Q: number[] = []; // Schätzungen je Arm (mittlere Belohnung)
   protected N: number[] = []; // Zählungen je Arm, wie oft gewählt
   protected rng: () => number; // Zufallsfunktion für Tiebreaks und mehr
-
+  protected cfg: iBanditPolicyConfig;
   /**
    * Konstruktor.
    * Initialisiert rng mit Seed aus Konfiguration oder Standardwert "policy".
    * Übergibt weitere optionale Parameter in cfg (u.a. optimisticInitialValue).
    */
-  protected cfg: iBanditPolicyConfig; // eigenes Feld statt Parameter-Property
 
   constructor(cfg: iBanditPolicyConfig = {}) {
     // kein Parameter-Property mehr
     this.cfg = cfg; // Zuweisung
     this.rng = seedrandom(String(cfg.seed ?? "policy"));
   }
-
-  // constructor(protected cfg: iBanditPolicyConfig = {}) {// man kann eine Config übergeben. Muss man aber nicht
-  //   this.rng = seedrandom(String(cfg.seed ?? "policy"));
-  // }
 
   /**
    * Initialisierung der Policy mit Angaben aus Environment.
@@ -47,12 +42,15 @@ export abstract class BasePolicy implements iBanditPolicy {
    */
   initialize(env: iBanditEnv): void {
     this.nArms = env.config.arms; // Anzahl der Arme aus Environment-Konfig
-    const optimisticValue = this.cfg.optimisticInitialValue ?? 0;
+    const optimisticValue = this.setOptimisticInitialValue();
     this.Q = Array(this.nArms).fill(optimisticValue); // optimistische Startwerte fördern Exploration
     this.N = Array(this.nArms).fill(0); // Zähler für Ziehungen je Arm
     this.t = 0; // Gesamtanzahl Ziehungen
   }
-
+  protected setOptimisticInitialValue(): number {
+    // Methode, damit in Greedy oder E Greedy der Startwert für die Arme leichter angepasst werden kann--> Ansonsten öfters Gefahr, dass Algo sich einfach auf einen Anfangsarm einigt
+    return this.cfg.optimisticInitialValue ?? 0;
+  }
   /**
    * Setzt Zustand zurück auf Initialwerte (wie bei initialize).
    * Q und N auf Startwerte (bzw. 0) setzen, t auf 0.
