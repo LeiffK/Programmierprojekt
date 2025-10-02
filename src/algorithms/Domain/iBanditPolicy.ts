@@ -1,5 +1,5 @@
-import type { iBanditEnv } from "../../env/Domain/iBanditEnv";
-import { iPullResult } from "../../env/Domain/iPullResult";
+import type { iBanditEnv } from "../../env/domain/iBanditEnv";
+import { iPullResult } from "../../env/domain/iPullResult";
 
 /** Das haben basically alle Algorithmen */
 export interface iBanditPolicy {

@@ -1,6 +1,6 @@
-import type { iBanditEnv } from "../env/Domain/iBanditEnv.js";
-import type { iEnvConfig } from "../env/Domain/iEnvConfig.js";
-import type { iPullResult } from "../env/Domain/iPullResult.js";
+import type { iBanditEnv } from "../env/domain/iBanditEnv.js";
+import type { iEnvConfig } from "../env/domain/iEnvConfig.js";
+import type { iPullResult } from "../env/domain/iPullResult.js";
 import { GaussianBanditEnv } from "../env/GaussianBanditEnv.js";
 
 type InitEnvResponse = { envId: string; optimalAction: number };

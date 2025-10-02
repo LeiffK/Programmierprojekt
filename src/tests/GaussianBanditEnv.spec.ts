@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { GaussianBanditEnv } from "../env/GaussianBanditEnv.ts";
-import type { iEnvConfig } from "../env/Domain/iEnvConfig.ts";
+import type { iEnvConfig } from "../env/domain/iEnvConfig.ts";
 
 describe("GaussianBanditEnv", () => {
   it("sollte mit gültiger Means/StdDev-Config instanziiert werden", () => {

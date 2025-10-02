@@ -1,9 +1,9 @@
 import type { iBanditPolicy } from "../algorithms/Domain/iBanditPolicy";
 import type { iBanditPolicyConfig } from "../algorithms/Domain/iBanditPolicyConfig";
 import { EpsilonGreedy } from "../algorithms/EpsilonGreedy";
-import { Greedy } from "src/algorithms/Greedy";
-import type { iEnvConfig } from "../env/Domain/iEnvConfig";
-import type { iPullResult } from "../env/Domain/iPullResult";
+import { Greedy } from "../algorithms/Greedy";
+import type { iEnvConfig } from "../env/domain/iEnvConfig";
+import type { iPullResult } from "../env/domain/iPullResult";
 import { GaussianBanditEnv } from "../env/GaussianBanditEnv";
 
 export type PolicyId = "greedy" | "epsgreedy";

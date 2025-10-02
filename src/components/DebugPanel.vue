@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import type { iEnvConfig } from "../env/Domain/iEnvConfig.js";
+import type { iEnvConfig } from "../env/domain/iEnvConfig.js";
 
 type EnvSnapshot = {
   config: iEnvConfig;

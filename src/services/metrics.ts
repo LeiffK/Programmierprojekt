@@ -1,4 +1,4 @@
-import type { iEnvConfig } from "../env/Domain/iEnvConfig";
+import type { iEnvConfig } from "../env/domain/iEnvConfig";
 import type { ManualStep } from "../domain/iHistory";
 import type { iMetricsRow } from "../domain/iMetrics";
 import type { iChartSeries } from "../domain/chart/iChartSeries";

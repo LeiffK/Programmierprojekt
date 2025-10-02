@@ -96,7 +96,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, watch } from "vue";
-import type { iEnvConfig } from "../env/Domain/iEnvConfig.js";
+import type { iEnvConfig } from "../env/domain/iEnvConfig.js";
 import { initEnv } from "../api/banditClient";
 import NumericStepper from "./ui/NumericStepper.vue";
 

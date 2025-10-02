@@ -1,8 +1,8 @@
 import seedrandom from "seedrandom";
 import type { iBanditPolicyConfig } from "./Domain/iBanditPolicyConfig";
 import type { iBanditPolicy } from "./Domain/iBanditPolicy";
-import type { iBanditEnv } from "../env/Domain/iBanditEnv";
-import type { iPullResult } from "../env/Domain/iPullResult";
+import type { iBanditEnv } from "../env/domain/iBanditEnv";
+import type { iPullResult } from "../env/domain/iPullResult";
 
 /**
  * Abstrakte Basisklasse für alle Bandit-Policies.
