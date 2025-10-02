@@ -3,7 +3,7 @@
     <header class="bar">
       <div class="bar-inner">
         <!-- kleine Brand-Ecke. Wow, so minimalistisch. -->
-        <div class="brand">Bandit Lab</div>
+        <div class="brand">Bandit Lab test</div>
       </div>
     </header>
 
