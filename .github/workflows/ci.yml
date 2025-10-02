@@ -2,9 +2,9 @@ name: Prüfung & CI
 
 on:
   pull_request:
-    branches: [main]     # PRs erzeugen QA-Previews
+    branches: [main] # PRs erzeugen QA-Previews
   push:
-    branches: [main]     # Merge nach main = Produktion
+    branches: [main] # Merge nach main = Produktion
 
 permissions:
   contents: read
