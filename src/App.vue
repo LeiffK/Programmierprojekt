@@ -94,13 +94,13 @@ import type { iEnvConfig } from "./env/domain/iEnvConfig";
 import { getEnvSnapshot, pullAction } from "./api/banditClient";
 
 /* UI */
-import EnvSetup from "@/components/EnvSetup.vue";
-import DebugPanel from "@/components/DebugPanel.vue";
-import ThumbnailCard from "@/components/ThumbnailCard.vue";
-import RunnerControls from "@/components/RunnerControls.vue";
-import ModeSwitch from "@/components/ModeSwitch.vue";
-import ChartArea from "@/components/ChartArea.vue";
-import ComparisonTable from "@/components/ComparisonTable.vue";
+import EnvSetup from "components/EnvSetup.vue";
+import DebugPanel from "/components/DebugPanel.vue";
+import ThumbnailCard from "components/ThumbnailCard.vue";
+import RunnerControls from "components/RunnerControls.vue";
+import ModeSwitch from "components/ModeSwitch.vue";
+import ChartArea from "components/ChartArea.vue";
+import ComparisonTable from "components/ComparisonTable.vue";
 
 /* Domain/Services */
 import type { ManualStep } from "./domain/iHistory";
