@@ -2,9 +2,9 @@ name: Prüfung & CI
 
 on:
   pull_request:
-    branches: [main]     # PRs erzeugen Previews
+    branches: [main] # PRs erzeugen Previews
   push:
-    branches: [main]     # Merge nach main = Produktion
+    branches: [main] # Merge nach main = Produktion
 
 # Notwendig für Pages-Deploy
 permissions:
