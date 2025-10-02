@@ -5,5 +5,4 @@ export interface iEnvConfig {
   means?: number[]; // für Gaußsche Mittelwerte
   stdDev?: number[]; // für Gaußsche Standardabweichung
   seed: number; // optional: Reproduzierbarkei
-  //rng: () => number; // bin noch nicht 100% sure ob necessary
 }

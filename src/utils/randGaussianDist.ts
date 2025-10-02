@@ -1,7 +1,7 @@
 //Diese Funktion gibt zufällige Mittelwerte und Standardabweichungen zurück, welche einigermaßen zueinadner passen.
 export function randGaussianDist(
   rng: () => number,
-  lowerBound: number = 0, //Lowerbound und upperbound wird übergeben, damit man Fallbeispiele behandeln kann--> also zb. bei slot sollten zum Beispiel nur positive Werte erzeugt werden
+  lowerBound: number = 50, //Lowerbound und upperbound wird übergeben, damit man Fallbeispiele behandeln kann--> also zb. bei slot sollten zum Beispiel nur positive Werte erzeugt werden
   upperBound: number = 300,
   standardDeviationFactor: number = 0.5,
 ) {

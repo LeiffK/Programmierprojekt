@@ -107,9 +107,17 @@ import type { ManualStep } from "@/domain/iHistory";
 import type { iMetricsRow } from "@/domain/iMetrics";
 import type { iChartSeries } from "@/domain/chart/iChartSeries";
 import type { ChartMetric } from "@/domain/chart/iChartMetric";
-import { getSeriesState, setSeriesVisible, resetSeriesStore, ensureSeries } from "@/services/seriesStore";
+import {
+  getSeriesState,
+  setSeriesVisible,
+  resetSeriesStore,
+  ensureSeries,
+} from "@/services/seriesStore";
 import { ensurePolicies } from "@/services/seriesStore";
-import { buildMetricsRowFromHistory, buildSeriesFromHistory } from "@/services/metrics";
+import {
+  buildMetricsRowFromHistory,
+  buildSeriesFromHistory,
+} from "@/services/metrics";
 import { algorithmsRunner } from "@/services/algorithmsRunner";
 
 type EnvSnapshot = {
@@ -137,7 +145,9 @@ const manualHistory = ref<ManualStep[]>([]);
 /* Sichtbarkeiten/Farben */
 const seriesState = getSeriesState();
 
-function setLast(msg: string) { lastResult.value = msg; }
+function setLast(msg: string) {
+  lastResult.value = msg;
+}
 function onModeChange(v: "manual" | "algo") {
   setLast(`Modus gewechselt: ${v === "manual" ? "Manuell" : "Algorithmus"}`);
 }
@@ -153,8 +163,11 @@ function estimateText(idx: number) {
 function truthText(idx: number) {
   const cfg = snapshot.value?.config;
   if (!cfg) return "—";
-  const mu = cfg.means?.[idx]; const sd = cfg.stdDev?.[idx];
-  return mu != null && sd != null ? `${mu.toFixed(0)}s ± ${sd.toFixed(0)}s` : "—";
+  const mu = cfg.means?.[idx];
+  const sd = cfg.stdDev?.[idx];
+  return mu != null && sd != null
+    ? `${mu.toFixed(0)}s ± ${sd.toFixed(0)}s`
+    : "—";
 }
 
 function onInited({ envId: id }: { envId: string; optimalAction: number }) {
@@ -176,7 +189,11 @@ async function onManual(a: number) {
   busy.value = true;
   try {
     const res = await pullAction(envId.value, a);
-    manualHistory.value.push({ action: res.action, reward: res.reward, isOptimal: res.isOptimal });
+    manualHistory.value.push({
+      action: res.action,
+      reward: res.reward,
+      isOptimal: res.isOptimal,
+    });
 
     // Policies einmal mitziehen
     algorithmsRunner.stepAll();
@@ -199,21 +216,21 @@ const metricRows = computed<iMetricsRow[]>(() => {
 
   // Manuell
   rows.push(
-      buildMetricsRowFromHistory(
-          "manual",
-          "Manuell",
-          "manual",
-          manualHistory.value,
-          cfg,
-          seriesState.manual,
-      ),
+    buildMetricsRowFromHistory(
+      "manual",
+      "Manuell",
+      "manual",
+      manualHistory.value,
+      cfg,
+      seriesState.manual,
+    ),
   );
 
   // Policies
   for (const p of algorithmsRunner.getAll()) {
     const s = seriesState[p.id] ?? { color: p.color, visible: true }; // fallback
     rows.push(
-        buildMetricsRowFromHistory(p.id, p.label, "algo", p.history, cfg, s),
+      buildMetricsRowFromHistory(p.id, p.label, "algo", p.history, cfg, s),
     );
   }
   return rows;
@@ -226,21 +243,32 @@ const chartSeries = computed<iChartSeries[]>(() => {
 
   // Manuell
   out.push(
-      buildSeriesFromHistory("manual", "Manuell", "manual", manualHistory.value, cfg, seriesState.manual),
+    buildSeriesFromHistory(
+      "manual",
+      "Manuell",
+      "manual",
+      manualHistory.value,
+      cfg,
+      seriesState.manual,
+    ),
   );
 
   // Policies
   for (const p of algorithmsRunner.getAll()) {
     const s = seriesState[p.id] ?? { color: p.color, visible: true };
-    out.push(
-        buildSeriesFromHistory(p.id, p.label, "algo", p.history, cfg, s),
-    );
+    out.push(buildSeriesFromHistory(p.id, p.label, "algo", p.history, cfg, s));
   }
   return out;
 });
 
 /* Sichtbarkeit toggeln (von Tabelle und vom Chart aus) */
-function onToggleSeries({ seriesId, visible }: { seriesId: string; visible: boolean }) {
+function onToggleSeries({
+  seriesId,
+  visible,
+}: {
+  seriesId: string;
+  visible: boolean;
+}) {
   setSeriesVisible(seriesId, visible);
 }
 function onChartToggle({ id, visible }: { id: string; visible: boolean }) {

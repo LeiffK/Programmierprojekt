@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { Greedy } from "../algorithms/greedy.ts";
-
+import { Greedy } from "src/algorithms/Greedy.ts";
 type Env = { config: { arms: number } };
 const makeEnv = (arms = 3): Env => ({ config: { arms } });
 
@@ -28,7 +27,7 @@ describe("Greedy Policy", () => {
     expect(pol.getEstimates()[0]).toBe(10);
 
     pol.update({ action: 0, reward: 0, isOptimal: false });
-    expect(pol.getEstimates()[0]).toBe(5); // (10+0)/2
+    expect(pol.getEstimates()[0]).toBe(5);
   });
 
   it("reset setzt alle Werte zurück", () => {
