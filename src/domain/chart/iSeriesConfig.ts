@@ -4,4 +4,5 @@ export interface iSeriesConfig {
   label: string;
   color: string;
   visible: boolean;
+  kind?: "manual" | "algo"; //@ Leiff bitte hier nochmal drüber schauen <<-- Hab das hier eingeführt, weil sonst die CI CD Prüfung anschlägt
 }

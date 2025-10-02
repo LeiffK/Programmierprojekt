@@ -1,8 +1,8 @@
-import type { iEnvConfig } from "@/env/Domain/iEnvConfig";
-import type { ManualStep } from "@/domain/iHistory";
-import type { iMetricsRow } from "@/domain/iMetrics";
-import type { iChartSeries } from "@/domain/chart/iChartSeries";
-import type { iSeriesConfig } from "@/domain/chart/iSeriesConfig";
+import type { iEnvConfig } from "../env/Domain/iEnvConfig";
+import type { ManualStep } from "../domain/iHistory";
+import type { iMetricsRow } from "../domain/iMetrics";
+import type { iChartSeries } from "../domain/chart/iChartSeries";
+import type { iSeriesConfig } from "../domain/chart/iSeriesConfig";
 
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 
