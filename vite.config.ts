@@ -8,5 +8,7 @@ export default defineConfig(({ command }) => ({
   resolve: {
     alias: { "@": path.resolve(__dirname, "src") },
   },
-  base: command === "build" ? "/Programmierprojekt/" : "/",
-}));
+
+  base: "./", //
+});
+
