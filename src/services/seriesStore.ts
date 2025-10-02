@@ -27,3 +27,10 @@ export function resetSeriesStore() {
     visible: true,
   };
 }
+
+
+export function ensurePolicies() {
+    // gut unterscheidbare Farben (passen zum Chart)
+    ensureSeries("greedy", "Greedy", "#4fc3f7");
+    ensureSeries("epsgreedy", "Epsilon-Greedy", "#f39c12");
+}

@@ -89,42 +89,29 @@
 </template>
 
 <script setup lang="ts">
-/**
- * Hier läuft alles zusammen: Setup links, Chart/Debug/Tabelle rechts.
- */
-
 import { computed, ref } from "vue";
-
-// --- Domain: Env/Client
 import type { iEnvConfig } from "./env/Domain/iEnvConfig";
 import { getEnvSnapshot, pullAction } from "./api/banditClient";
 
-// --- UI-Komponenten
-import EnvSetup from "./components/EnvSetup.vue";
-import DebugPanel from "./components/DebugPanel.vue";
-import ThumbnailCard from "./components/ThumbnailCard.vue";
-import RunnerControls from "./components/RunnerControls.vue";
-import ModeSwitch from "./components/ModeSwitch.vue";
-import ChartArea from "./components/ChartArea.vue";
-import ComparisonTable from "./components/ComparisonTable.vue";
+/* UI */
+import EnvSetup from "@/components/EnvSetup.vue";
+import DebugPanel from "@/components/DebugPanel.vue";
+import ThumbnailCard from "@/components/ThumbnailCard.vue";
+import RunnerControls from "@/components/RunnerControls.vue";
+import ModeSwitch from "@/components/ModeSwitch.vue";
+import ChartArea from "@/components/ChartArea.vue";
+import ComparisonTable from "@/components/ComparisonTable.vue";
 
-// --- Datenformen & Services
+/* Domain/Services */
 import type { ManualStep } from "./domain/iHistory";
 import type { iMetricsRow } from "./domain/iMetrics";
 import type { iChartSeries } from "./domain/chart/iChartSeries";
 import type { ChartMetric } from "./domain/chart/iChartMetric";
-import {
-  getSeriesState,
-  setSeriesVisible,
-  resetSeriesStore,
-  ensureSeries,
-} from "./services/seriesStore";
-import {
-  buildMetricsRowFromManual,
-  buildSeriesFromManual,
-} from "./services/metrics";
+import { getSeriesState, setSeriesVisible, resetSeriesStore, ensureSeries } from "./services/seriesStore";
+import { ensurePolicies } from "./services/seriesStore";
+import { buildMetricsRowFromH2istory, buildSeriesFromHistory } from "./services/metrics";
+import { algorithmsRunner } from "./services/algorithmsRunner";
 
-// Minimaler Snapshot-Typ, der für Debug/Texte reicht
 type EnvSnapshot = {
   config: iEnvConfig;
   optimalAction: number;
@@ -132,7 +119,6 @@ type EnvSnapshot = {
   estimates: number[];
 };
 
-// --- State
 const form = ref<iEnvConfig>({ type: "gaussian", arms: 6, seed: 12345 });
 const envId = ref("");
 const busy = ref(false);
@@ -140,39 +126,26 @@ const busy = ref(false);
 const snapshot = ref<EnvSnapshot | null>(null);
 const lastResult = ref("");
 const lastEventText = ref("—");
-
-// Modus: „manual“ oder „algo“
 const mode = ref<"manual" | "algo">("manual");
 
-// Tabelle fold/unfold
 const tableOpen = ref(false);
-
-// Chart: Welche Kennzahl gucken wir uns gerade an?
 const chartMetric = ref<ChartMetric>("cumReward");
 
-// Historie der Handklicks
+/* Historien */
 const manualHistory = ref<ManualStep[]>([]);
 
-// Sichtbarkeiten & Farben der Serien
+/* Sichtbarkeiten/Farben */
 const seriesState = getSeriesState();
 
-/* ── Helferlein (klein & nützlich) ───────────────────────────────────────── */
-
-function setLast(msg: string) {
-  lastResult.value = msg; // einfach wegschreiben und gut
-}
-
+function setLast(msg: string) { lastResult.value = msg; }
 function onModeChange(v: "manual" | "algo") {
   setLast(`Modus gewechselt: ${v === "manual" ? "Manuell" : "Algorithmus"}`);
 }
-
-// Snapshot nachladen (wenn ein Env existiert)
 function refresh() {
   if (!envId.value) return;
   snapshot.value = getEnvSnapshot(envId.value);
 }
 
-// Texte für die Thumbnails
 function estimateText(idx: number) {
   const q = snapshot.value?.estimates[idx] ?? 0;
   return `${q.toFixed(0)}s`;
@@ -180,42 +153,36 @@ function estimateText(idx: number) {
 function truthText(idx: number) {
   const cfg = snapshot.value?.config;
   if (!cfg) return "—";
-  const mu = cfg.means?.[idx];
-  const sd = cfg.stdDev?.[idx];
-  return mu != null && sd != null
-    ? `${mu.toFixed(0)}s ± ${sd.toFixed(0)}s`
-    : "—";
+  const mu = cfg.means?.[idx]; const sd = cfg.stdDev?.[idx];
+  return mu != null && sd != null ? `${mu.toFixed(0)}s ± ${sd.toFixed(0)}s` : "—";
 }
 
-// Neues Env initialisiert? -> Alles frisch machen.
 function onInited({ envId: id }: { envId: string; optimalAction: number }) {
   envId.value = id;
-  manualHistory.value = []; // zurück auf Anfang (Reset tut gut)
-  resetSeriesStore(); // Sichtbarkeiten/Farben resseten (ja, mit 2 s, kann pasieren)
-  ensureSeries("manual", "Manuell", "#4caf50"); // grün = manuell, easy zu merken
-  refresh();
+  manualHistory.value = [];
+
+  // Sichtbarkeiten/Farben zurücksetzen & vorhanden machen
+  resetSeriesStore();
+  ensureSeries("manual", "Manuell", "#4caf50");
+  ensurePolicies();
+
+  refresh(); // snapshot füllen
+  // Policies auf Basis der echten Env-Konfig starten (Shadow-Env)
+  if (snapshot.value) algorithmsRunner.init(snapshot.value.config);
 }
 
-// Ein manueller Klick (=> 1 Zuschauer) – wir ziehen am Env und loggen das Ergebnis
 async function onManual(a: number) {
   if (!envId.value) return;
   busy.value = true;
   try {
     const res = await pullAction(envId.value, a);
+    manualHistory.value.push({ action: res.action, reward: res.reward, isOptimal: res.isOptimal });
 
-    // ab in die Historie
-    manualHistory.value.push({
-      action: res.action,
-      reward: res.reward,
-      isOptimal: res.isOptimal,
-    });
+    // Policies einmal mitziehen
+    algorithmsRunner.stepAll();
 
-    // bisschen Feedback fürs testen später
     setLast(JSON.stringify({ manual: true, ...res }, null, 2));
-    lastEventText.value = `Thumbnail ${String.fromCharCode(65 + a)} → Watchtime ${res.reward.toFixed(
-      0,
-    )}s · optimal: ${res.isOptimal ? "ja" : "nein"}`;
-
+    lastEventText.value = `Thumbnail ${String.fromCharCode(65 + a)} → Watchtime ${res.reward.toFixed(0)}s · optimal: ${res.isOptimal ? "ja" : "nein"}`;
     refresh();
   } catch (e: any) {
     setLast(`Fehler: ${e?.message ?? e}`);
@@ -225,39 +192,57 @@ async function onManual(a: number) {
   }
 }
 
-/* ── Abgeleitete Daten (Tabelle & Chart) ─────────────────────────────────── */
-
-// 1) Tabelle: aktuell nur „Manuell“ (Algos kommen dazu, dann werden es mehrere Rows)
+/* --- Tabelle: Manuell + Policies --- */
 const metricRows = computed<iMetricsRow[]>(() => {
-  const s = seriesState.manual; // Sichtbarkeit/Farbe aus dem Store
-  return [
-    buildMetricsRowFromManual(manualHistory.value, snapshot.value?.config, s),
-  ];
-});
+  const cfg = snapshot.value?.config;
+  const rows: iMetricsRow[] = [];
 
-// 2) Chart-Serien: dito – aktuell nur „Manuell“
-const chartSeries = computed<iChartSeries[]>(() => {
-  const s = seriesState.manual;
-  const serie = buildSeriesFromManual(
-    manualHistory.value,
-    snapshot.value?.config,
-    s,
+  // Manuell
+  rows.push(
+      buildMetricsRowFromHistory(
+          "manual",
+          "Manuell",
+          "manual",
+          manualHistory.value,
+          cfg,
+          seriesState.manual,
+      ),
   );
-  return [serie];
+
+  // Policies
+  for (const p of algorithmsRunner.getAll()) {
+    const s = seriesState[p.id] ?? { color: p.color, visible: true }; // fallback
+    rows.push(
+        buildMetricsRowFromHistory(p.id, p.label, "algo", p.history, cfg, s),
+    );
+  }
+  return rows;
 });
 
-// Tabelle toggelt Sichtbarkeit -> Store aktualisieren
-function onToggleSeries({
-  seriesId,
-  visible,
-}: {
-  seriesId: string;
-  visible: boolean;
-}) {
+/* --- Chart: Manuell + Policies --- */
+const chartSeries = computed<iChartSeries[]>(() => {
+  const cfg = snapshot.value?.config;
+  const out: iChartSeries[] = [];
+
+  // Manuell
+  out.push(
+      buildSeriesFromHistory("manual", "Manuell", "manual", manualHistory.value, cfg, seriesState.manual),
+  );
+
+  // Policies
+  for (const p of algorithmsRunner.getAll()) {
+    const s = seriesState[p.id] ?? { color: p.color, visible: true };
+    out.push(
+        buildSeriesFromHistory(p.id, p.label, "algo", p.history, cfg, s),
+    );
+  }
+  return out;
+});
+
+/* Sichtbarkeit toggeln (von Tabelle und vom Chart aus) */
+function onToggleSeries({ seriesId, visible }: { seriesId: string; visible: boolean }) {
   setSeriesVisible(seriesId, visible);
 }
-
-// Chart toggelt Sichtbarkeit -> gleiche Funktion (Single Source of Truth, baby)
 function onChartToggle({ id, visible }: { id: string; visible: boolean }) {
   setSeriesVisible(id, visible);
 }
