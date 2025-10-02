@@ -28,7 +28,6 @@ export function resetSeriesStore() {
   };
 }
 
-
 export function ensurePolicies() {
     // gut unterscheidbare Farben (passen zum Chart)
     ensureSeries("greedy", "Greedy", "#4fc3f7");

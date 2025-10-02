@@ -90,8 +90,8 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import type { iEnvConfig } from "./env/Domain/iEnvConfig";
-import { getEnvSnapshot, pullAction } from "./api/banditClient";
+import type { iEnvConfig } from "@/env/Domain/iEnvConfig";
+import { getEnvSnapshot, pullAction } from "@/api/banditClient";
 
 /* UI */
 import EnvSetup from "@/components/EnvSetup.vue";
@@ -103,14 +103,14 @@ import ChartArea from "@/components/ChartArea.vue";
 import ComparisonTable from "@/components/ComparisonTable.vue";
 
 /* Domain/Services */
-import type { ManualStep } from "./domain/iHistory";
-import type { iMetricsRow } from "./domain/iMetrics";
-import type { iChartSeries } from "./domain/chart/iChartSeries";
-import type { ChartMetric } from "./domain/chart/iChartMetric";
-import { getSeriesState, setSeriesVisible, resetSeriesStore, ensureSeries } from "./services/seriesStore";
-import { ensurePolicies } from "./services/seriesStore";
-import { buildMetricsRowFromH2istory, buildSeriesFromHistory } from "./services/metrics";
-import { algorithmsRunner } from "./services/algorithmsRunner";
+import type { ManualStep } from "@/domain/iHistory";
+import type { iMetricsRow } from "@/domain/iMetrics";
+import type { iChartSeries } from "@/domain/chart/iChartSeries";
+import type { ChartMetric } from "@/domain/chart/iChartMetric";
+import { getSeriesState, setSeriesVisible, resetSeriesStore, ensureSeries } from "@/services/seriesStore";
+import { ensurePolicies } from "@/services/seriesStore";
+import { buildMetricsRowFromHistory, buildSeriesFromHistory } from "@/services/metrics";
+import { algorithmsRunner } from "@/services/algorithmsRunner";
 
 type EnvSnapshot = {
   config: iEnvConfig;
