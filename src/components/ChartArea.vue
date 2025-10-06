@@ -5,14 +5,14 @@
       <span class="label">Kennzahl</span>
       <div class="metric-pills" role="radiogroup" aria-label="Kennzahl wählen">
         <button
-            v-for="m in metrics"
-            :key="m.key"
-            class="pill metric"
-            :class="{ active: localMetric === m.key }"
-            role="radio"
-            :aria-checked="localMetric === m.key"
-            type="button"
-            @click="localMetric = m.key"
+          v-for="m in metrics"
+          :key="m.key"
+          class="pill metric"
+          :class="{ active: localMetric === m.key }"
+          role="radio"
+          :aria-checked="localMetric === m.key"
+          type="button"
+          @click="localMetric = m.key"
         >
           {{ m.label }}
         </button>
@@ -22,14 +22,18 @@
     <!-- Serien-Pillen -->
     <div class="series-toolbar" aria-label="Serien wählen">
       <button
-          v-for="s in series"
-          :key="s.config.id"
-          type="button"
-          class="pill series"
-          :class="{ off: !s.config.visible }"
-          :aria-pressed="s.config.visible"
-          :title="s.config.visible ? `${s.config.label} ausblenden` : `${s.config.label} einblenden`"
-          @click="onToggleSeries(s)"
+        v-for="s in series"
+        :key="s.config.id"
+        type="button"
+        class="pill series"
+        :class="{ off: !s.config.visible }"
+        :aria-pressed="s.config.visible"
+        :title="
+          s.config.visible
+            ? `${s.config.label} ausblenden`
+            : `${s.config.label} einblenden`
+        "
+        @click="onToggleSeries(s)"
       >
         <span class="dot" :style="{ background: s.config.color }" />
         <span class="name">{{ s.config.label }}</span>
@@ -37,12 +41,12 @@
     </div>
 
     <v-chart
-        ref="chartRef"
-        class="echart"
-        :option="option"
-        :update-options="updateOpts"
-        :autoresize="true"
-        @legendselectchanged="onLegendSelect"
+      ref="chartRef"
+      class="echart"
+      :option="option"
+      :update-options="updateOpts"
+      :autoresize="true"
+      @legendselectchanged="onLegendSelect"
     />
   </div>
 </template>
@@ -76,7 +80,10 @@ use([
 
 const chartRef = ref<InstanceType<typeof VChart> | null>(null);
 
-const props = defineProps<{ series: iChartSeries[]; modelValue?: ChartMetric }>();
+const props = defineProps<{
+  series: iChartSeries[];
+  modelValue?: ChartMetric;
+}>();
 const emit = defineEmits<{
   (e: "update:modelValue", v: ChartMetric): void;
   (e: "toggle", payload: { id: string; visible: boolean }): void;
@@ -90,25 +97,35 @@ const metrics: { key: ChartMetric; label: string }[] = [
   { key: "bestRate", label: "Best-Quote" },
 ];
 const localMetric = ref<ChartMetric>(props.modelValue ?? "cumReward");
-watch(() => props.modelValue, (v) => { if (v) localMetric.value = v; });
+watch(
+  () => props.modelValue,
+  (v) => {
+    if (v) localMetric.value = v;
+  },
+);
 watch(localMetric, (v) => emit("update:modelValue", v));
 
 /* Smoother Updates */
 const updateOpts = { notMerge: false, lazyUpdate: true } as const;
 
 const legendSelected = computed<Record<string, boolean>>(() =>
-    Object.fromEntries(props.series.map((s) => [s.config.id, !!s.config.visible])),
+  Object.fromEntries(
+    props.series.map((s) => [s.config.id, !!s.config.visible]),
+  ),
 );
-const labelById = computed<Record<string, string>>(
-    () => Object.fromEntries(props.series.map((s) => [s.config.id, s.config.label])),
+const labelById = computed<Record<string, string>>(() =>
+  Object.fromEntries(props.series.map((s) => [s.config.id, s.config.label])),
 );
 
 /* Tween-Dauern für weiche Übergänge bei niedrigen Raten */
 const TWEEN_MS = 850;
-const INIT_MS  = 300;
+const INIT_MS = 300;
 
 const option = computed<EChartsOption>(() => {
-  const maxStep = Math.max(1, ...props.series.map((s) => s.points.cumReward.length));
+  const maxStep = Math.max(
+    1,
+    ...props.series.map((s) => s.points.cumReward.length),
+  );
 
   // Achsen als 'any' typisiert, um TS-Inkompatibilitäten zwischen ECharts-Versionen zu vermeiden
   const xAxis: any = {
@@ -138,16 +155,16 @@ const option = computed<EChartsOption>(() => {
     formatter: (params: any[]) => {
       const step = params?.[0]?.value?.[0];
       const rows = params
-          .map((p) => {
-            const label = labelById.value[p.seriesName] ?? p.seriesName;
-            return `
+        .map((p) => {
+          const label = labelById.value[p.seriesName] ?? p.seriesName;
+          return `
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="width:10px;height:10px;border-radius:999px;background:${p.color};display:inline-block"></span>
               <span style="flex:1;color:#cfd3d8">${label}</span>
               <b>${fmt(p.value?.[1])}</b>
             </div>`;
-          })
-          .join("");
+        })
+        .join("");
       return `<div style="font-weight:700;margin-bottom:6px">Schritt ${step}</div>${rows}`;
     },
   };
@@ -191,7 +208,11 @@ const option = computed<EChartsOption>(() => {
       areaStyle: {
         opacity: 0.16,
         color: {
-          type: "linear", x: 0, y: 0, x2: 0, y2: 1,
+          type: "linear",
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
           colorStops: [
             { offset: 0, color: s.config.color },
             { offset: 1, color: "rgba(0,0,0,0)" },
@@ -217,31 +238,77 @@ function onLegendSelect(e: any) {
 /* Helper */
 function fmt(n: number) {
   if (!Number.isFinite(n)) return "0";
-  return Math.abs(n) >= 100 ? Math.round(n).toString() : (Math.round(n * 10) / 10).toString();
+  return Math.abs(n) >= 100
+    ? Math.round(n).toString()
+    : (Math.round(n * 10) / 10).toString();
 }
 </script>
 
 <style scoped>
-.chart-wrap { display: grid; gap: 10px; }
+.chart-wrap {
+  display: grid;
+  gap: 10px;
+}
 
 /* Toolbars */
-.chart-toolbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.metric-pills { display: flex; gap: 8px; flex-wrap: wrap; }
-.series-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
+.chart-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.metric-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.series-toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 4px;
+}
 
 /* Pillen */
 .pill {
-  height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 8px;
-  border: 1px solid var(--line); border-radius: 999px; background: #151515; color: #d8d8d8;
-  cursor: pointer; user-select: none;
-  transition: transform var(--dur-quick) var(--ease-quick), box-shadow var(--dur-quick) var(--ease-quick),
-  background var(--dur-quick) var(--ease-quick), border-color var(--dur-quick) var(--ease-quick),
-  color var(--dur-quick) var(--ease-quick);
+  height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #151515;
+  color: #d8d8d8;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    transform var(--dur-quick) var(--ease-quick),
+    box-shadow var(--dur-quick) var(--ease-quick),
+    background var(--dur-quick) var(--ease-quick),
+    border-color var(--dur-quick) var(--ease-quick),
+    color var(--dur-quick) var(--ease-quick);
 }
-.pill:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.25); }
-.pill.metric.active { background: #ff0000; border-color: #ff0000; color: #fff; }
-.pill.series.off { opacity: 0.55; filter: grayscale(0.08); }
-.pill.series .dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
+.pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+.pill.metric.active {
+  background: #ff0000;
+  border-color: #ff0000;
+  color: #fff;
+}
+.pill.series.off {
+  opacity: 0.55;
+  filter: grayscale(0.08);
+}
+.pill.series .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
 
 /* Chart-Container */
 .echart {

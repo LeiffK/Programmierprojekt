@@ -13,21 +13,29 @@
     <div class="form-grid">
       <div class="col-4">
         <NumericStepper
-            v-model="totalSteps"
-            label="Ziel-Iterationen (n)"
-            :min="1"
-            :step="1"
-            @bump="(p) => pushLog(`n ${p.delta > 0 ? 'erhöht' : 'verringert'} → ${p.value}`)"
+          v-model="totalSteps"
+          label="Ziel-Iterationen (n)"
+          :min="1"
+          :step="1"
+          @bump="
+            (p) =>
+              pushLog(`n ${p.delta > 0 ? 'erhöht' : 'verringert'} → ${p.value}`)
+          "
         />
       </div>
 
       <div class="col-4">
         <NumericStepper
-            v-model="rate"
-            label="Rate (Schritte/Sek.)"
-            :min="1"
-            :step="1"
-            @bump="(p) => pushLog(`Rate ${p.delta > 0 ? 'erhöht' : 'verringert'} → ${p.value}/s`)"
+          v-model="rate"
+          label="Rate (Schritte/Sek.)"
+          :min="1"
+          :step="1"
+          @bump="
+            (p) =>
+              pushLog(
+                `Rate ${p.delta > 0 ? 'erhöht' : 'verringert'} → ${p.value}/s`,
+              )
+          "
         />
       </div>
 
@@ -39,21 +47,21 @@
         <!-- EnvSetup-Style: segmentierte Gruppe -->
         <div class="control-group group-2">
           <button
-              class="group-btn"
-              type="button"
-              :disabled="!envId"
-              @click="onConfigure"
-              title="Konfiguration aus Environment übernehmen"
+            class="group-btn"
+            type="button"
+            :disabled="!envId"
+            @click="onConfigure"
+            title="Konfiguration aus Environment übernehmen"
           >
             Konfigurieren
           </button>
 
           <button
-              class="group-btn"
-              type="button"
-              :disabled="!canStep"
-              @click="onStep"
-              title="Einen Schritt ausführen"
+            class="group-btn"
+            type="button"
+            :disabled="!canStep"
+            @click="onStep"
+            title="Einen Schritt ausführen"
           >
             +1 Schritt
           </button>
@@ -62,24 +70,36 @@
         <!-- Play/Pause: runder Button, auf gleicher Zeile, vertikal zentriert -->
         <div class="fab-inline">
           <button
-              class="fab"
-              :class="fabClass"
-              type="button"
-              :disabled="!canToggle"
-              @click="onToggleRun"
-              :aria-label="running ? 'Pausieren' : 'Starten'"
-              :title="running ? 'Pausieren' : 'Starten'"
+            class="fab"
+            :class="fabClass"
+            type="button"
+            :disabled="!canToggle"
+            @click="onToggleRun"
+            :aria-label="running ? 'Pausieren' : 'Starten'"
+            :title="running ? 'Pausieren' : 'Starten'"
           >
             <!-- Play -->
-            <svg v-if="!running" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-              <path d="M8 5v14l11-7z" fill="currentColor"/>
+            <svg
+              v-if="!running"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              aria-hidden="true"
+            >
+              <path d="M8 5v14l11-7z" fill="currentColor" />
             </svg>
             <!-- Pause -->
-            <svg v-else viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-              <path d="M6 5h4v14H6zM14 5h4v14h-4z" fill="currentColor"/>
+            <svg
+              v-else
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              aria-hidden="true"
+            >
+              <path d="M6 5h4v14H6zM14 5h4v14h-4z" fill="currentColor" />
             </svg>
           </button>
-          <span class="fab-label">{{ running ? 'Pause' : 'Start' }}</span>
+          <span class="fab-label">{{ running ? "Pause" : "Start" }}</span>
         </div>
       </div>
     </div>
@@ -121,7 +141,10 @@ function pushLog(line: string) {
   logBuf.push(`[${ts}] ${line}`);
   if (rafPending) return;
   rafPending = true;
-  requestAnimationFrame(() => { rafPending = false; flushLogs(); });
+  requestAnimationFrame(() => {
+    rafPending = false;
+    flushLogs();
+  });
 }
 
 /* Ergebnis-Logs drosseln */
@@ -139,7 +162,10 @@ const off = algorithmsRunner.on((msg) => {
       running.value = false;
       currentStep.value = 0;
       statusText.value = "Konfiguriert";
-      logEvery.value = msg.payload.totalSteps > 0 ? Math.max(1, Math.floor(msg.payload.totalSteps / 40)) : 10;
+      logEvery.value =
+        msg.payload.totalSteps > 0
+          ? Math.max(1, Math.floor(msg.payload.totalSteps / 40))
+          : 10;
       pushLog(`Ziel ${msg.payload.totalSteps}, Rate ${msg.payload.rate}/s`);
       break;
     case "STARTED":
@@ -162,7 +188,7 @@ const off = algorithmsRunner.on((msg) => {
       const t = msg.payload.total;
       if (s <= 3 || s % logEvery.value === 0 || (t > 0 && s === t)) {
         pushLog(
-            `#${s}/${t} · ${msg.payload.policyId} → Arm ${msg.payload.action} · r=${msg.payload.reward.toFixed(2)}${msg.payload.isOptimal ? " (optimal)" : ""}`,
+          `#${s}/${t} · ${msg.payload.policyId} → Arm ${msg.payload.action} · r=${msg.payload.reward.toFixed(2)}${msg.payload.isOptimal ? " (optimal)" : ""}`,
         );
       }
       currentStep.value = s;
@@ -179,15 +205,27 @@ const off = algorithmsRunner.on((msg) => {
   }
 });
 
-const canStart  = computed(() => configured.value && !running.value && currentStep.value < totalSteps.value);
-const canStep   = computed(() => configured.value && !running.value && currentStep.value < totalSteps.value);
+const canStart = computed(
+  () =>
+    configured.value && !running.value && currentStep.value < totalSteps.value,
+);
+const canStep = computed(
+  () =>
+    configured.value && !running.value && currentStep.value < totalSteps.value,
+);
 const canToggle = computed(() => running.value || canStart.value);
 
 /* Statusklassen */
 const statusClass = computed(() => {
   if (running.value) return "is-running";
-  if (configured.value && currentStep.value >= totalSteps.value && totalSteps.value > 0) return "is-stopped";
-  if (configured.value && !running.value && currentStep.value > 0) return "is-paused";
+  if (
+    configured.value &&
+    currentStep.value >= totalSteps.value &&
+    totalSteps.value > 0
+  )
+    return "is-stopped";
+  if (configured.value && !running.value && currentStep.value > 0)
+    return "is-paused";
   return "is-ready";
 });
 const fabClass = computed(() => ({
@@ -213,19 +251,36 @@ async function onConfigure() {
   running.value = false;
   currentStep.value = 0;
   statusText.value = "Konfiguriert";
-  pushLog(`Konfiguriert: n=${totalSteps.value}, rate=${rate.value}/s, arms=${snap?.config?.arms ?? "?"}`);
+  pushLog(
+    `Konfiguriert: n=${totalSteps.value}, rate=${rate.value}/s, arms=${snap?.config?.arms ?? "?"}`,
+  );
 }
 
 /* Start/Pause */
-function onStart() { if (canStart.value) algorithmsRunner.start(); }
-function onPause() { algorithmsRunner.pause(); }
-function onToggleRun() { running.value ? onPause() : onStart(); }
+function onStart() {
+  if (canStart.value) algorithmsRunner.start();
+}
+function onPause() {
+  algorithmsRunner.pause();
+}
+function onToggleRun() {
+  running.value ? onPause() : onStart();
+}
 
 /* Einzelschritt */
 function onStep() {
-  if (!configured.value) { pushLog("Bitte zuerst konfigurieren."); return; }
-  if (running.value)     { pushLog("Während des Laufs sind Einzelschritte gesperrt."); return; }
-  if (currentStep.value >= totalSteps.value) { pushLog("Ziel erreicht. Bitte neu konfigurieren oder n erhöhen."); return; }
+  if (!configured.value) {
+    pushLog("Bitte zuerst konfigurieren.");
+    return;
+  }
+  if (running.value) {
+    pushLog("Während des Laufs sind Einzelschritte gesperrt.");
+    return;
+  }
+  if (currentStep.value >= totalSteps.value) {
+    pushLog("Ziel erreicht. Bitte neu konfigurieren oder n erhöhen.");
+    return;
+  }
   algorithmsRunner.stepOnce();
 }
 
@@ -252,18 +307,32 @@ onBeforeUnmount(() => {
   font-size: 12px;
   line-height: 1;
   border: 1px solid #2a2a2a;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255, 255, 255, 0.04);
   color: #d9d9d9;
 }
 .head-status .dot {
-  width: 8px; height: 8px; border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   background: #9ca3af;
-  box-shadow: 0 0 0 2px rgba(156,163,175,0.25);
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.25);
 }
-.head-status.is-ready  .dot { background:#9ca3af; box-shadow:0 0 0 2px rgba(156,163,175,.25); }
-.head-status.is-running .dot { background:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,.25); }
-.head-status.is-paused  .dot { background:#f59e0b; box-shadow:0 0 0 2px rgba(245,158,11,.25); }
-.head-status.is-stopped .dot { background:#ef4444; box-shadow:0 0 0 2px rgba(239,68,68,.25); }
+.head-status.is-ready .dot {
+  background: #9ca3af;
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.25);
+}
+.head-status.is-running .dot {
+  background: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+.head-status.is-paused .dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+}
+.head-status.is-stopped .dot {
+  background: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+}
 
 /* Grid analog EnvSetup */
 .form-grid {
@@ -272,11 +341,19 @@ onBeforeUnmount(() => {
   gap: 12px;
   align-items: end;
 }
-.col-4 { grid-column: span 4; }
-@media (max-width: 980px) { .col-4 { grid-column: 1 / -1; } }
+.col-4 {
+  grid-column: span 4;
+}
+@media (max-width: 980px) {
+  .col-4 {
+    grid-column: 1 / -1;
+  }
+}
 
 /* Actions-Zeile */
-.actions { margin-top: 12px; }
+.actions {
+  margin-top: 12px;
+}
 .control-row {
   display: flex;
   align-items: center; /* vertikal zentriert: FAB auf einer Ebene */
@@ -285,59 +362,117 @@ onBeforeUnmount(() => {
 
 /* Segmentierte Gruppe – EnvSetup-Style */
 .control-group {
-  height: 44px; flex: 1;
-  display: grid; background: #111;
-  border: 1px solid #333; border-radius: 10px; overflow: hidden;
+  height: 44px;
+  flex: 1;
+  display: grid;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 10px;
+  overflow: hidden;
 }
-.group-2 { grid-template-columns: 1fr 1fr; }
+.group-2 {
+  grid-template-columns: 1fr 1fr;
+}
 
 .group-btn {
-  height: 42px; background: #1a1a1a; color: #fff;
-  border: 0; border-right: 1px solid #333; cursor: pointer;
-  padding: 0 12px; text-align: center; display: inline-flex;
-  align-items: center; justify-content: center; font-weight: 600;
+  height: 42px;
+  background: #1a1a1a;
+  color: #fff;
+  border: 0;
+  border-right: 1px solid #333;
+  cursor: pointer;
+  padding: 0 12px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
 }
-.group-btn:last-child { border-right: 0; }
-.group-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.group-btn:last-child {
+  border-right: 0;
+}
+.group-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 /* FAB + Label inline */
-.fab-inline { display: inline-flex; align-items: center; gap: 8px; }
+.fab-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
 
 /* Play/Pause: runder Button (YT-rot idle, Blau running, Amber pausiert) */
 .fab {
   --yt-red: #ff0000;
   --run-blue: #2563eb;
   --pause-amber: #f59e0b;
-  width: 56px; height: 56px; border-radius: 999px;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
   border: 2px solid var(--yt-red);
-  background: rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: saturate(140%) blur(6px);
   -webkit-backdrop-filter: saturate(140%) blur(6px);
-  display: inline-flex; align-items: center; justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--yt-red);
   box-shadow:
-      0 0 0 4px rgba(255,0,0,0.12),
-      inset 0 1px 0 rgba(255,255,255,0.08);
-  transition: transform .06s ease, box-shadow .2s ease, color .15s ease, border-color .15s ease, background-color .15s ease;
+    0 0 0 4px rgba(255, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition:
+    transform 0.06s ease,
+    box-shadow 0.2s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
-.fab:not(:disabled):hover { box-shadow: 0 0 0 6px rgba(255,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.10); }
-.fab:active:not(:disabled) { transform: scale(0.97); }
-.fab:disabled { opacity: .5; cursor: not-allowed; }
+.fab:not(:disabled):hover {
+  box-shadow:
+    0 0 0 6px rgba(255, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.fab:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.fab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .fab.running {
   color: var(--run-blue);
   border-color: var(--run-blue);
-  box-shadow: 0 0 0 4px rgba(37,99,235,0.16), inset 0 1px 0 rgba(255,255,255,0.10);
+  box-shadow:
+    0 0 0 4px rgba(37, 99, 235, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 .fab.paused {
   color: var(--pause-amber);
   border-color: var(--pause-amber);
-  box-shadow: 0 0 0 4px rgba(245,158,11,0.16), inset 0 1px 0 rgba(255,255,255,0.10);
+  box-shadow:
+    0 0 0 4px rgba(245, 158, 11, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.fab-label { font-size: 12px; color: #cfcfcf; user-select: none; }
+.fab-label {
+  font-size: 12px;
+  color: #cfcfcf;
+  user-select: none;
+}
 
 /* Log-Ausgabe */
-.out .label { font-size: 12px; opacity: 0.7; }
-.pre { background: #151515; border: 1px solid #2a2a2a; border-radius: 10px; padding: 10px; overflow: auto; }
+.out .label {
+  font-size: 12px;
+  opacity: 0.7;
+}
+.pre {
+  background: #151515;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 10px;
+  overflow: auto;
+}
 </style>

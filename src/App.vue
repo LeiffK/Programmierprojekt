@@ -11,10 +11,10 @@
         <!-- Linke Spalte: Environment + Interaktion -->
         <div class="col-left">
           <EnvSetup
-              v-model="form"
-              :busy="busy"
-              @inited="onInited"
-              @log="setLast"
+            v-model="form"
+            :busy="busy"
+            @inited="onInited"
+            @log="setLast"
           >
             <template #actions>
               <ModeSwitch v-model="mode" @change="onModeChange" />
@@ -25,19 +25,20 @@
           <section class="card" v-if="mode === 'manual'">
             <h2>Manuell testen</h2>
             <p class="muted">
-              Jeder Klick triggert zusätzlich alle Algorithmen für einen Schritt.
+              Jeder Klick triggert zusätzlich alle Algorithmen für einen
+              Schritt.
             </p>
 
             <div class="thumb-grid">
               <ThumbnailCard
-                  v-for="i in form.arms"
-                  :key="i"
-                  :label="`Thumbnail ${String.fromCharCode(64 + i)}`"
-                  :variant="`Variante ${String.fromCharCode(64 + i)}`"
-                  :n="snapshot?.counts[i - 1] || 0"
-                  :estimate="estimateText(i - 1)"
-                  :truth="truthText(i - 1)"
-                  @pick="onManual(i - 1)"
+                v-for="i in form.arms"
+                :key="i"
+                :label="`Thumbnail ${String.fromCharCode(64 + i)}`"
+                :variant="`Variante ${String.fromCharCode(64 + i)}`"
+                :n="snapshot?.counts[i - 1] || 0"
+                :estimate="estimateText(i - 1)"
+                :truth="truthText(i - 1)"
+                @pick="onManual(i - 1)"
               />
             </div>
 
@@ -49,9 +50,9 @@
 
           <!-- Algorithmus-Modus -->
           <RunnerControls
-              v-else
-              :envId="envId || null"
-              :arms="snapshot?.config?.arms || form.arms"
+            v-else
+            :envId="envId || null"
+            :arms="snapshot?.config?.arms || form.arms"
           />
         </div>
 
@@ -60,19 +61,19 @@
           <section class="card">
             <h2>Verläufe</h2>
             <ChartArea
-                :series="chartSeries"
-                v-model="chartMetric"
-                @toggle="onChartToggle"
+              :series="chartSeries"
+              v-model="chartMetric"
+              @toggle="onChartToggle"
             />
           </section>
 
           <DebugPanel :snapshot="snapshot" :lastResult="lastResult" />
 
           <ComparisonTable
-              class="card"
-              :rows="metricRows"
-              v-model:open="tableOpen"
-              @toggleSeries="onToggleSeries"
+            class="card"
+            :rows="metricRows"
+            v-model:open="tableOpen"
+            @toggleSeries="onToggleSeries"
           />
         </div>
       </div>
@@ -140,7 +141,7 @@ const manualHistory = ref<ManualStep[]>([]);
 const seriesState = getSeriesState();
 
 const algoHistory = ref<Record<string, ManualStep[]>>(
-    Object.fromEntries(algoCatalog.map((a) => [a.id, []])),
+  Object.fromEntries(algoCatalog.map((a) => [a.id, []])),
 );
 
 // rAF-Drosselung für Re-Renders
@@ -175,7 +176,9 @@ function truthText(idx: number) {
   if (!cfg) return "—";
   const mu = (cfg as any).means?.[idx];
   const sd = (cfg as any).stdDev?.[idx];
-  return mu != null && sd != null ? `${mu.toFixed(0)}s ± ${sd.toFixed(0)}s` : "—";
+  return mu != null && sd != null
+    ? `${mu.toFixed(0)}s ± ${sd.toFixed(0)}s`
+    : "—";
 }
 
 /* Serien dauerhaft registrieren (Pillen) */
@@ -231,7 +234,7 @@ async function onManual(a: number) {
 
     setLast(JSON.stringify({ manual: true, ...res }, null, 2));
     lastEventText.value = `Thumbnail ${String.fromCharCode(65 + a)} → Watchtime ${res.reward.toFixed(
-        0,
+      0,
     )}s · optimal: ${res.isOptimal ? "ja" : "nein"}`;
 
     algorithmsRunner.stepOnce(); // ein Schritt für alle Policies
@@ -281,10 +284,22 @@ const metricRows = computed<iMetricsRow[]>(() => {
   void algoRev.value; // rAF-getaktet
   const rows: iMetricsRow[] = [];
 
-  rows.push(buildMetricsRowFromManual(manualHistory.value, snapshot.value?.config, seriesState.manual));
+  rows.push(
+    buildMetricsRowFromManual(
+      manualHistory.value,
+      snapshot.value?.config,
+      seriesState.manual,
+    ),
+  );
   for (const a of algoCatalog) {
     const s = (seriesState as any)[a.id];
-    rows.push(buildMetricsRowFromManual(algoHistory.value[a.id] ?? [], snapshot.value?.config, s));
+    rows.push(
+      buildMetricsRowFromManual(
+        algoHistory.value[a.id] ?? [],
+        snapshot.value?.config,
+        s,
+      ),
+    );
   }
   return rows;
 });
@@ -294,16 +309,34 @@ const chartSeries = computed<iChartSeries[]>(() => {
   void algoRev.value; // rAF-getaktet
   const out: iChartSeries[] = [];
 
-  out.push(buildSeriesFromManual(manualHistory.value, snapshot.value?.config, seriesState.manual));
+  out.push(
+    buildSeriesFromManual(
+      manualHistory.value,
+      snapshot.value?.config,
+      seriesState.manual,
+    ),
+  );
   for (const a of algoCatalog) {
     const s = (seriesState as any)[a.id];
-    out.push(buildSeriesFromManual(algoHistory.value[a.id] ?? [], snapshot.value?.config, s));
+    out.push(
+      buildSeriesFromManual(
+        algoHistory.value[a.id] ?? [],
+        snapshot.value?.config,
+        s,
+      ),
+    );
   }
   return out;
 });
 
 /* Sichtbarkeiten syncen */
-function onToggleSeries({ seriesId, visible }: { seriesId: string; visible: boolean }) {
+function onToggleSeries({
+  seriesId,
+  visible,
+}: {
+  seriesId: string;
+  visible: boolean;
+}) {
   setSeriesVisible(seriesId, visible);
 }
 function onChartToggle({ id, visible }: { id: string; visible: boolean }) {
@@ -364,12 +397,18 @@ function onChartToggle({ id, visible }: { id: string; visible: boolean }) {
 }
 
 @media (max-width: 1200px) {
-  .page-grid { grid-template-columns: 1fr; }
+  .page-grid {
+    grid-template-columns: 1fr;
+  }
 }
 @media (max-width: 980px) {
-  .thumb-grid { grid-template-columns: repeat(2, 1fr); }
+  .thumb-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 @media (max-width: 620px) {
-  .thumb-grid { grid-template-columns: 1fr; }
+  .thumb-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
