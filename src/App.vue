@@ -67,7 +67,7 @@
             />
           </section>
 
-          <DebugPanel :snapshot="snapshot" :lastResult="lastResult" />
+          <DebugPanel />
 
           <ComparisonTable
             class="card"
@@ -111,6 +111,7 @@ import {
 } from "./services/metrics";
 
 import { algorithmsRunner } from "./services/algorithmsRunner";
+import { debug, attachRunner } from "./services/debugStore";
 
 type EnvSnapshot = {
   config: iEnvConfig;
@@ -156,12 +157,17 @@ function scheduleRender() {
   });
 }
 
+/* Runner-Events global ins Debug-Panel streamen */
+const offDebugRunner = attachRunner(algorithmsRunner);
+
 /* Helpers */
 function setLast(msg: string) {
   lastResult.value = msg;
+  debug.log(msg, "info");
 }
 function onModeChange(v: "manual" | "algo") {
-  setLast(`Modus gewechselt: ${v === "manual" ? "Manuell" : "Algorithmus"}`);
+  const txt = `Modus gewechselt: ${v === "manual" ? "Manuell" : "Algorithmus"}`;
+  setLast(txt); // kein zweiter debug.log → vermeidet Duplikate
 }
 function refresh() {
   if (!envId.value) return;
@@ -199,7 +205,13 @@ function configureAlgoRunnerForCurrentEnv() {
 }
 
 /* Env initialisiert */
-function onInited({ envId: id }: { envId: string; optimalAction: number }) {
+function onInited({
+  envId: id,
+  optimalAction,
+}: {
+  envId: string;
+  optimalAction: number;
+}) {
   envId.value = id;
 
   manualHistory.value = [];
@@ -213,6 +225,12 @@ function onInited({ envId: id }: { envId: string; optimalAction: number }) {
 
   refresh();
   configureAlgoRunnerForCurrentEnv();
+
+  debug.log(
+    `Environment initialisiert · envId=${id.slice(0, 8)}… · optimal=${optimalAction}`,
+    "env",
+    { envId: id, optimalAction },
+  );
 }
 
 /* Manuelle Interaktion: zusätzlich alle Algorithmen steppen */
@@ -232,23 +250,28 @@ async function onManual(a: number) {
       isOptimal: res.isOptimal,
     });
 
+    const logMsg = `Manuell · Arm ${String.fromCharCode(65 + a)} · r=${res.reward.toFixed(2)} · ${
+      res.isOptimal ? "optimal" : "suboptimal"
+    }`;
     setLast(JSON.stringify({ manual: true, ...res }, null, 2));
     lastEventText.value = `Thumbnail ${String.fromCharCode(65 + a)} → Watchtime ${res.reward.toFixed(
       0,
     )}s · optimal: ${res.isOptimal ? "ja" : "nein"}`;
+    debug.log(logMsg, "result", res);
 
     algorithmsRunner.stepOnce(); // ein Schritt für alle Policies
     refresh();
     scheduleRender();
   } catch (e: any) {
     setLast(`Fehler: ${e?.message ?? e}`);
+    debug.error(`Manueller Zug fehlgeschlagen: ${e?.message ?? e}`);
     console.error(e);
   } finally {
     busy.value = false;
   }
 }
 
-/* Runner-Events → Algorithmen-Historie */
+/* Runner-Events → Algorithmen-Historie (nur UI-State, kein Logging hier) */
 const offRunner = algorithmsRunner.on((e) => {
   switch (e.type) {
     case "CONFIGURED": {
@@ -277,6 +300,7 @@ const offRunner = algorithmsRunner.on((e) => {
 
 onBeforeUnmount(() => {
   offRunner();
+  offDebugRunner?.();
 });
 
 /* Tabelle */
