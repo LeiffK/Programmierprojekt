@@ -1,62 +1,48 @@
-import type { iPullResult, iEnvConfig } from "./Domain/iEnvConfig";
-import { BanditEnv } from "./BanditEnv";
+import type { iEnvConfig } from "./Domain/iEnvConfig";
+import type { iPullResult } from "./Domain/iPullResult";
+import { BanditEnv } from "./BanditEnv.ts";
+import { randBernoulli } from "../utils/randBernoulli.ts";
 
 /**
  * Bernoulli Bandit Environment.
  *
- * Modelliert eine Bandit-Umgebung, bei der jeder Arm eine Bernoulli-
- * Verteilung besitzt:
- * - Jeder Zug liefert entweder Reward = 1 (Erfolg) oder 0 (Misserfolg).
- * - Die Wahrscheinlichkeit eines Erfolges ist pro Arm festgelegt.
- *
- * Hauptaufgabe:
- * - Simulation der Rewards für gegebene Aktionen (Arme).
- * - Bestimmung des optimalen Arms (höchste Erfolgswahrscheinlichkeit).
+ * Modelliert eine Umgebung mit binären Rewards (0 oder 1).
+ * Jeder Arm hat eine feste Erfolgswahrscheinlichkeit p.
+ * Ziel: Simulation der Rewards und Bestimmung des optimalen Arms.
  */
 export class BernoulliBanditEnv extends BanditEnv {
-  private readonly probs: number[]; // Erfolgswahrscheinlichkeit je Arm
+  private readonly probs: number[];
 
-  /**
-   * Konstruktor der Bernoulli-Umgebung.
-   *
-   * @param config - Environment-Konfiguration mit:
-   *   type  = "bernoulli"
-   *   arms  = Anzahl der Arme
-   *   probs = Erfolgswahrscheinlichkeit je Arm
-   *
-   * Validierungen:
-   * - probs muss definiert sein.
-   * - Länge von probs muss der Anzahl der Arme entsprechen.
-   * - optimalAction wird automatisch aus max(probs) bestimmt.
-   */
   constructor(config: iEnvConfig) {
     super(config);
 
-    if (!config.probs || config.probs.length !== config.arms) {
-      throw new Error("Bernoulli config must define probs for each arm.");
+    // Prüfen: Typ muss bernoulli sein
+    if (config.type !== "bernoulli") {
+      throw new Error(`BernoulliBanditEnv expects type to be "bernoulli".`);
     }
 
+    // Prüfen: probs definiert und Länge korrekt
+    if (!config.probs || config.probs.length !== config.arms) {
+      throw new Error(`Bernoulli config must define 'probs' for each arm.`);
+    }
+
+    // Erfolgswahrscheinlichkeiten speichern
     this.probs = config.probs;
-    this.optimalAction = this.probs.indexOf(Math.max(...this.probs));
+
+    // Optimalen Arm (höchste p) ermitteln
+    const bestP = Math.max(...this.probs);
+    this.optimalAction = this.probs.indexOf(bestP);
   }
 
   /**
-   * Simuliert das Ziehen eines Arms.
-   *
-   * Ablauf:
-   * 1. Hole Erfolgswahrscheinlichkeit p des gewählten Arms.
-   * 2. Ziehe Reward = 1 (mit Wahrscheinlichkeit p) oder 0 (mit Wahrscheinlichkeit 1-p).
-   * 3. Gib PullResult zurück:
-   *    - action    = gewählter Arm
-   *    - reward    = 0 oder 1
-   *    - isOptimal = true, falls gewählter Arm = optimaler Arm
+   * Simuliert das Ziehen eines Arms: liefert Reward ∈ {0,1}.
    *
    * @param action - Index des gewählten Arms
-   * @returns iPullResult Objekt mit Reward und Info
+   * @returns Ergebnisobjekt mit Reward und Info, ob optimaler Arm
    */
   pull(action: number): iPullResult {
     const p = this.probs[action];
-    const reward = this.rng() < p ? 1 : 0;
+    const reward = randBernoulli(this.rng, p);
 
     return {
       action,

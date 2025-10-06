@@ -2,7 +2,7 @@ import type { iBanditEnv } from "./Domain/iBanditEnv";
 import type { iEnvConfig } from "./Domain/iEnvConfig";
 import type { iPullResult } from "./Domain/iPullResult";
 import seedrandom from "seedrandom";
-//Das ist die Klasse von welcher Gaussian und Bernoulli
+//Das ist die Klasse von welcher Gaussian und Bernoulli erben
 
 export abstract class BanditEnv implements iBanditEnv {
   config: iEnvConfig; // Konfigurationsobjekt der Umgebung mit Parametern wie Anzahl Arme und Wahrscheinlichkeiten

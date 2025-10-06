@@ -1,39 +1,36 @@
 import { describe, it, expect } from "vitest";
-import { BernoulliBanditEnv } from "../BernoulliBanditEnv";
+import { BernoulliBanditEnv } from "../BernoulliBanditEnv.ts";
 import type { iEnvConfig } from "../Domain/iEnvConfig";
 
-/**
- * Test-Suite für BernoulliBanditEnv.
- *
- * Prüft zentrale Eigenschaften der Bandit-Umgebung:
- * - Rewards liegen immer in {0,1}.
- * - Optimaler Arm wird korrekt ermittelt und markiert.
- * - Ungültige Konfigurationen werfen Fehler.
- */
 describe("BernoulliBanditEnv", () => {
-  // Basis-Konfiguration für Tests:
-  // Zwei Arme mit Erfolgswahrscheinlichkeiten 0.8 (optimal) und 0.2
-  const config: iEnvConfig = { type: "bernoulli", arms: 2, probs: [0.8, 0.2], seed: 1234 };
+  // Basis-Konfiguration für Tests mit 2 Armen,
+  // wobei Arm 0 eine Erfolgswahrscheinlichkeit von 0.8 hat und Arm 1 von 0.2.
+  const config: iEnvConfig = {
+    type: "bernoulli",
+    arms: 2,
+    probs: [0.8, 0.2],
+    seed: 1234,
+  };
 
   /**
    * Test: Rewards sind immer 0 oder 1.
    * Erwartung:
-   * - Beim Ziehen eines Arms (hier: Arm 0) wird nie ein anderer Wert zurückgegeben.
+   * - Bei 100 Ziehungen des Arms 0 werden ausschließlich Werte 0 oder 1 ausgegeben.
    */
   it("returns only 0 or 1 as rewards", () => {
     const env = new BernoulliBanditEnv(config);
     for (let i = 0; i < 100; i++) {
-      const res = env.pull(0);
-      expect([0, 1]).toContain(res.reward);
+      const result = env.pull(0);
+      expect([0, 1]).toContain(result.reward);
     }
   });
 
   /**
-   * Test: Optimaler Arm wird richtig markiert.
+   * Test: Optimaler Arm wird korrekt markiert.
    * Erwartung:
-   * - optimalAction ist 0 (da 0.8 > 0.2).
-   * - Ziehen von Arm 0 liefert isOptimal = true.
-   * - Ziehen von Arm 1 liefert isOptimal = false.
+   * - optimalAction ist korrekt auf Arm 0 gesetzt (da 0.8 > 0.2).
+   * - Ist der gezogene Arm der optimale, wird isOptimal true zurückgegeben.
+   * - Bei einem anderen Arm ist isOptimal false.
    */
   it("marks optimal arm correctly", () => {
     const env = new BernoulliBanditEnv(config);
@@ -45,12 +42,17 @@ describe("BernoulliBanditEnv", () => {
   /**
    * Test: Ungültige Konfiguration wirft Fehler.
    * Erwartung:
-   * - Wenn Anzahl Wahrscheinlichkeiten (probs) != Anzahl Arme,
-   *   wird ein Error geworfen.
+   * - Wird die Anzahl der Wahrscheinlichkeiten nicht passend zur Anzahl der Arme übergeben,
+   *   muss ein Fehler geworfen werden.
    */
   it("throws on invalid config", () => {
     expect(() =>
-      new BernoulliBanditEnv({ type: "bernoulli", arms: 2, probs: [0.8] } as iEnvConfig)
+      new BernoulliBanditEnv({
+        type: "bernoulli",
+        arms: 2,
+        probs: [0.8], // falsche Anzahl Wahrscheinlichkeiten
+        seed: 42,
+      } as iEnvConfig),
     ).toThrow();
   });
 });

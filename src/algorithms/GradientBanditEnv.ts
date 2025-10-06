@@ -1,6 +1,6 @@
 import type { iPullResult } from "../env/Domain/iPullResult";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv";
-import { BasePolicy } from "./BasePolicy";
+import { BasePolicy } from "./BasePolicy.ts";
 
 /**
  * Gradient Bandit Algorithmus.
@@ -12,8 +12,8 @@ import { BasePolicy } from "./BasePolicy";
  * - Nutzt das inkrementelle Mittel der Rewards als Base-Line.
  */
 export class GradientBandit extends BasePolicy {
-  private preferences: number[] = [];   // Präferenzen der Arme (werden via Softmax in Wahrscheinlichkeiten übersetzt)
-  private averageReward: number = 0;    // Durchschnittlicher Reward als Baseline für Updates
+  protected preferences: number[] = [];   // Präferenzen der Arme (werden via Softmax in Wahrscheinlichkeiten übersetzt)
+  protected averageReward: number = 0;     // Durchschnittlicher Reward als Baseline für Updates
 
   /**
    * Konstruktor der Policy.
@@ -55,14 +55,13 @@ export class GradientBandit extends BasePolicy {
    * H_a(t+1) = H_a(t) - α * (R - baseline) * π_a         sonst
    */
   override update(result: iPullResult): void {
-    const alpha = this.cfg.alpha ?? 0.1;                        // Schrittweite (default: 0.1)
-    super.update(result);                                       // Q und N Updates der Basisklasse
+    const alpha = this.cfg.alpha ?? 0.1;                         // Schrittweite (default: 0.1)
+    super.update(result);                                        // Q und N Updates der Basisklasse
     this.averageReward += (result.reward - this.averageReward) / this.t;  // inkrementelles Mittel
 
     const action = result.action;
     const pi = this.getActionProbabilities();                   // Aktuelle Aktionswahrscheinlichkeiten
 
-    // Update jeder Präferenz abhängig davon, ob Arm gespielt wurde oder nicht
     for (let a = 0; a < this.nArms; a++) {
       const baseline = this.averageReward;
       if (a === action) {
@@ -103,5 +102,14 @@ export class GradientBandit extends BasePolicy {
     const expPrefs = this.preferences.map((p) => Math.exp(p - maxPref));
     const sumExp = expPrefs.reduce((a, b) => a + b, 0);
     return expPrefs.map((val) => val / sumExp);
+  }
+
+  /** Getter für Tests und Zugriff */
+  public getPreferences(): number[] {
+    return this.preferences;
+  }
+
+  public getAverageReward(): number {
+    return this.averageReward;
   }
 }
