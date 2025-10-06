@@ -1,27 +1,28 @@
 <template>
   <section class="card">
-    <!-- Header mit Toggle -->
-    <div
-      class="header"
-      @click="toggle()"
+    <!-- Header wie im Debug-Panel -->
+    <header
+      class="head"
       role="button"
       tabindex="0"
+      @click="toggle()"
       @keydown.enter.prevent="toggle()"
       @keydown.space.prevent="toggle()"
     >
-      <div class="title">
-        <span class="chev" :class="{ open }">▸</span>
-        <h2>Vergleich & Kennzahlen</h2>
+      <h2>Vergleich & Kennzahlen</h2>
+      <div class="meta">
+        <span class="badge">{{ rows.length }} Serien</span>
+        <button class="ghost" type="button">
+          {{ open ? "Einklappen" : "Einblenden" }}
+        </button>
       </div>
-      <div class="hint muted">{{ open ? "Einklappen" : "Ausklappen" }}</div>
-    </div>
+    </header>
 
     <transition name="fade-slide">
       <div v-if="open" class="body">
         <div class="table" role="table" aria-label="Vergleichstabelle">
           <div class="thead" role="rowgroup">
             <div class="tr head" role="row">
-              <!-- keine separate Sichtbar-Spalte mehr -->
               <div class="th col-series" role="columnheader">Serie</div>
               <div class="th col-type" role="columnheader">Typ</div>
               <div class="th" role="columnheader" title="Anzahl Züge">n</div>
@@ -109,17 +110,12 @@
 import { computed, ref, watch } from "vue";
 import type { iMetricsRow } from "../domain/iMetrics";
 
-// Props & v-model:open
-const props = defineProps<{
-  rows: iMetricsRow[];
-  open?: boolean;
-}>();
+const props = defineProps<{ rows: iMetricsRow[]; open?: boolean }>();
 const emit = defineEmits<{
   (e: "update:open", v: boolean): void;
   (e: "toggleSeries", payload: { seriesId: string; visible: boolean }): void;
 }>();
 
-// interne Open/Close-Logik
 const inner = ref<boolean>(props.open ?? true);
 watch(
   () => props.open,
@@ -134,17 +130,12 @@ function toggle() {
   emit("update:open", inner.value);
 }
 
-// gesamte Zeile toggelt Sichtbarkeit (UI-only, Parent macht den eigentlichen Switch)
 function onRowClick(r: iMetricsRow) {
   emit("toggleSeries", { seriesId: r.seriesId, visible: !r.visible });
 }
 
-// farbiger Punkt – leicht abgedunkelt wenn unsichtbar
 function dotStyle(r: iMetricsRow) {
-  return {
-    background: r.color || "#888",
-    opacity: r.visible ? 1 : 0.4,
-  };
+  return { background: r.color || "#888", opacity: r.visible ? 1 : 0.4 };
 }
 
 function fmtNum(n: number) {
@@ -154,32 +145,40 @@ function fmtNum(n: number) {
 </script>
 
 <style scoped>
-.header {
+/* Header-Style wie Debug & Log */
+.head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 8px;
   cursor: pointer;
 }
-.title {
+.meta {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.chev {
-  display: inline-block;
-  transform: rotate(0deg);
-  transition: transform var(--dur-quick, var(--dur-soft))
-    var(--ease-quick, var(--ease-soft));
+.badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #1e1e1e;
+  border: 1px solid #333;
 }
-.chev.open {
-  transform: rotate(90deg);
+.ghost {
+  background: #1a1a1a;
+  color: #ddd;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
 }
 
+/* Body/Content */
 .body {
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
+/* Tabelle */
 .table {
   width: 100%;
   border: 1px solid var(--line);
@@ -213,7 +212,7 @@ function fmtNum(n: number) {
   background: #161616;
 }
 
-/* aktive Zeile bekommt linken Farbstreifen + leichten Lift */
+/* aktive Zeile mit Farbstreifen */
 .tr.active {
   background: #191919;
   box-shadow: inset 4px 0 0 var(--row-accent, #ff0000);
@@ -229,7 +228,7 @@ function fmtNum(n: number) {
   white-space: nowrap;
 }
 
-/* Punkt in Serien-Spalte */
+/* Punkt */
 .dot {
   width: 10px;
   height: 10px;
