@@ -18,7 +18,7 @@ export abstract class BasePolicy implements iBanditPolicy {
   protected t = 0; // gesamt Steps, wie oft Aktionen gewählt wurden
   protected Q: number[] = []; // Schätzungen je Arm (mittlere Belohnung)
   protected N: number[] = []; // Zählungen je Arm, wie oft gewählt
-  protected rng: () => number; // Zufallsfunktion für Tiebreaks und mehr
+  protected rng!: () => number; // Zufallsfunktion für Tiebreaks und mehr
   protected cfg: iBanditPolicyConfig;
   /**
    * Konstruktor.
@@ -29,7 +29,6 @@ export abstract class BasePolicy implements iBanditPolicy {
   constructor(cfg: iBanditPolicyConfig = {}) {
     // kein Parameter-Property mehr
     this.cfg = cfg; // Zuweisung
-    this.rng = seedrandom(String(cfg.seed ?? "policy"));
   }
 
   /**
@@ -46,6 +45,8 @@ export abstract class BasePolicy implements iBanditPolicy {
     this.Q = Array(this.nArms).fill(optimisticValue); // optimistische Startwerte fördern Exploration
     this.N = Array(this.nArms).fill(0); // Zähler für Ziehungen je Arm
     this.t = 0; // Gesamtanzahl Ziehungen
+    this.cfg.seed = env.config.seed;
+    this.rng = seedrandom(String(this.cfg.seed));
   }
   protected setOptimisticInitialValue(): number {
     // Methode, damit in Greedy oder E Greedy der Startwert für die Arme leichter angepasst werden kann--> Ansonsten öfters Gefahr, dass Algo sich einfach auf einen Anfangsarm einigt
