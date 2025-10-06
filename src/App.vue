@@ -2,44 +2,42 @@
   <div class="shell">
     <header class="bar">
       <div class="bar-inner">
-        <!-- kleine Brand-Ecke. Wow, so minimalistisch. -->
         <div class="brand">Bandit Lab</div>
       </div>
     </header>
 
     <main class="wrap">
       <div class="page-grid">
-        <!--  LINKS: Setup, Modus & Interaktion (manuell/worker) -->
+        <!-- Linke Spalte: Environment + Interaktion -->
         <div class="col-left">
-          <!--  hier wird das Environment zurechtgebastelt -->
           <EnvSetup
-            v-model="form"
-            :busy="busy"
-            @inited="onInited"
-            @log="setLast"
+              v-model="form"
+              :busy="busy"
+              @inited="onInited"
+              @log="setLast"
           >
-            <!-- Modus-Schalter: „Manuell“ oooder „Algorithmus“    -->
             <template #actions>
               <ModeSwitch v-model="mode" @change="onModeChange" />
             </template>
           </EnvSetup>
 
-          <!-- jeder Klick = 1 Zuschauer -->
+          <!-- Manuell: Klick = Zuschauer; Algorithmen steppen mit -->
           <section class="card" v-if="mode === 'manual'">
             <h2>Manuell testen</h2>
-            <p class="muted">Ein Klick entspricht genau einem Zuschauer.</p>
+            <p class="muted">
+              Jeder Klick triggert zusätzlich alle Algorithmen für einen Schritt.
+            </p>
 
-            <!-- Thumbnails -->
             <div class="thumb-grid">
               <ThumbnailCard
-                v-for="i in form.arms"
-                :key="i"
-                :label="`Thumbnail ${String.fromCharCode(64 + i)}`"
-                :variant="`Variante ${String.fromCharCode(64 + i)}`"
-                :n="snapshot?.counts[i - 1] || 0"
-                :estimate="estimateText(i - 1)"
-                :truth="truthText(i - 1)"
-                @pick="onManual(i - 1)"
+                  v-for="i in form.arms"
+                  :key="i"
+                  :label="`Thumbnail ${String.fromCharCode(64 + i)}`"
+                  :variant="`Variante ${String.fromCharCode(64 + i)}`"
+                  :n="snapshot?.counts[i - 1] || 0"
+                  :estimate="estimateText(i - 1)"
+                  :truth="truthText(i - 1)"
+                  @pick="onManual(i - 1)"
               />
             </div>
 
@@ -49,38 +47,32 @@
             </div>
           </section>
 
-          <!-- Falls der Modus „Algorithmus“ ist: Worker-Steuerung (Start/Pause etc.) -->
+          <!-- Algorithmus-Modus -->
           <RunnerControls
-            v-else
-            :envId="envId || null"
-            :arms="snapshot?.config?.arms || form.arms"
+              v-else
+              :envId="envId || null"
+              :arms="snapshot?.config?.arms || form.arms"
           />
         </div>
 
-        <!-- RECHTS: Chart oben, Debug & Tabelle unten -->
+        <!-- Rechte Spalte: Chart + Debug + Tabelle -->
         <div class="col-right">
           <section class="card">
             <h2>Verläufe</h2>
-            <!-- Chart bekommt:
-                 - series: die Daten (z.B. manuell, später algos)
-                 - v-model: aktive Kennzahl (Σ, Ø, Regret, ...)
-                 - @toggle: Sichtbarkeit einzelner Serien (Pillen oben) -->
             <ChartArea
-              :series="chartSeries"
-              v-model="chartMetric"
-              @toggle="onChartToggle"
+                :series="chartSeries"
+                v-model="chartMetric"
+                @toggle="onChartToggle"
             />
           </section>
 
-          <!-- Debug-Panel: kommt später weg. -->
           <DebugPanel :snapshot="snapshot" :lastResult="lastResult" />
 
-          <!-- Vergleichstabelle  -->
           <ComparisonTable
-            class="card"
-            :rows="metricRows"
-            v-model:open="tableOpen"
-            @toggleSeries="onToggleSeries"
+              class="card"
+              :rows="metricRows"
+              v-model:open="tableOpen"
+              @toggleSeries="onToggleSeries"
           />
         </div>
       </div>
@@ -89,17 +81,11 @@
 </template>
 
 <script setup lang="ts">
-/**
- * Hier läuft alles zusammen: Setup links, Chart/Debug/Tabelle rechts.
- */
+import { computed, ref, onBeforeUnmount } from "vue";
 
-import { computed, ref } from "vue";
-
-// --- Domain: Env/Client
 import type { iEnvConfig } from "./env/Domain/iEnvConfig";
 import { getEnvSnapshot, pullAction } from "./api/banditClient";
 
-// --- UI-Komponenten
 import EnvSetup from "./components/EnvSetup.vue";
 import DebugPanel from "./components/DebugPanel.vue";
 import ThumbnailCard from "./components/ThumbnailCard.vue";
@@ -108,7 +94,6 @@ import ModeSwitch from "./components/ModeSwitch.vue";
 import ChartArea from "./components/ChartArea.vue";
 import ComparisonTable from "./components/ComparisonTable.vue";
 
-// --- Datenformen & Services
 import type { ManualStep } from "./domain/iHistory";
 import type { iMetricsRow } from "./domain/iMetrics";
 import type { iChartSeries } from "./domain/chart/iChartSeries";
@@ -124,7 +109,8 @@ import {
   buildSeriesFromManual,
 } from "./services/metrics";
 
-// Minimaler Snapshot-Typ, der für Debug/Texte reicht
+import { algorithmsRunner } from "./services/algorithmsRunner";
+
 type EnvSnapshot = {
   config: iEnvConfig;
   optimalAction: number;
@@ -132,7 +118,12 @@ type EnvSnapshot = {
   estimates: number[];
 };
 
-// --- State
+const algoCatalog = [
+  { id: "greedy", label: "Greedy", color: "#4fc3f7" },
+  { id: "epsgreedy", label: "ε-Greedy", color: "#f39c12" },
+] as const;
+type AlgoId = (typeof algoCatalog)[number]["id"];
+
 const form = ref<iEnvConfig>({ type: "gaussian", arms: 6, seed: 12345 });
 const envId = ref("");
 const busy = ref(false);
@@ -141,38 +132,40 @@ const snapshot = ref<EnvSnapshot | null>(null);
 const lastResult = ref("");
 const lastEventText = ref("—");
 
-// Modus: „manual“ oder „algo“
 const mode = ref<"manual" | "algo">("manual");
-
-// Tabelle fold/unfold
 const tableOpen = ref(false);
-
-// Chart: Welche Kennzahl gucken wir uns gerade an?
 const chartMetric = ref<ChartMetric>("cumReward");
 
-// Historie der Handklicks
 const manualHistory = ref<ManualStep[]>([]);
-
-// Sichtbarkeiten & Farben der Serien
 const seriesState = getSeriesState();
 
-/* ── Helferlein (klein & nützlich) ───────────────────────────────────────── */
+const algoHistory = ref<Record<string, ManualStep[]>>(
+    Object.fromEntries(algoCatalog.map((a) => [a.id, []])),
+);
 
-function setLast(msg: string) {
-  lastResult.value = msg; // einfach wegschreiben und gut
+// rAF-Drosselung für Re-Renders
+const algoRev = ref(0);
+let rafPending = false;
+function scheduleRender() {
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => {
+    rafPending = false;
+    algoRev.value++;
+  });
 }
 
+/* Helpers */
+function setLast(msg: string) {
+  lastResult.value = msg;
+}
 function onModeChange(v: "manual" | "algo") {
   setLast(`Modus gewechselt: ${v === "manual" ? "Manuell" : "Algorithmus"}`);
 }
-
-// Snapshot nachladen (wenn ein Env existiert)
 function refresh() {
   if (!envId.value) return;
   snapshot.value = getEnvSnapshot(envId.value);
 }
-
-// Texte für die Thumbnails
 function estimateText(idx: number) {
   const q = snapshot.value?.estimates[idx] ?? 0;
   return `${q.toFixed(0)}s`;
@@ -180,43 +173,70 @@ function estimateText(idx: number) {
 function truthText(idx: number) {
   const cfg = snapshot.value?.config;
   if (!cfg) return "—";
-  const mu = cfg.means?.[idx];
-  const sd = cfg.stdDev?.[idx];
-  return mu != null && sd != null
-    ? `${mu.toFixed(0)}s ± ${sd.toFixed(0)}s`
-    : "—";
+  const mu = (cfg as any).means?.[idx];
+  const sd = (cfg as any).stdDev?.[idx];
+  return mu != null && sd != null ? `${mu.toFixed(0)}s ± ${sd.toFixed(0)}s` : "—";
 }
 
-// Neues Env initialisiert? -> Alles frisch machen.
+/* Serien dauerhaft registrieren (Pillen) */
+ensureSeries("manual", "Manuell", "#4caf50");
+for (const a of algoCatalog) ensureSeries(a.id, a.label, a.color);
+
+/* Runner-Konfiguration für aktuelles Env */
+function configureAlgoRunnerForCurrentEnv() {
+  if (!envId.value) return;
+  const snap = getEnvSnapshot(envId.value);
+  if (!snap?.config) return;
+
+  algorithmsRunner.configure({
+    envConfig: snap.config,
+    totalSteps: 0, // open-ended: nur stepOnce() on demand
+    rate: 1,
+  });
+}
+
+/* Env initialisiert */
 function onInited({ envId: id }: { envId: string; optimalAction: number }) {
   envId.value = id;
-  manualHistory.value = []; // zurück auf Anfang (Reset tut gut)
-  resetSeriesStore(); // Sichtbarkeiten/Farben resseten (ja, mit 2 s, kann pasieren)
-  ensureSeries("manual", "Manuell", "#4caf50"); // grün = manuell, easy zu merken
+
+  manualHistory.value = [];
+
+  resetSeriesStore();
+  ensureSeries("manual", "Manuell", "#4caf50");
+  for (const a of algoCatalog) ensureSeries(a.id, a.label, a.color);
+
+  for (const a of algoCatalog) algoHistory.value[a.id] = [];
+  scheduleRender();
+
   refresh();
+  configureAlgoRunnerForCurrentEnv();
 }
 
-// Ein manueller Klick (=> 1 Zuschauer) – wir ziehen am Env und loggen das Ergebnis
+/* Manuelle Interaktion: zusätzlich alle Algorithmen steppen */
 async function onManual(a: number) {
   if (!envId.value) return;
+
+  if (algorithmsRunner.getStatus() === "IDLE") {
+    configureAlgoRunnerForCurrentEnv();
+  }
+
   busy.value = true;
   try {
     const res = await pullAction(envId.value, a);
-
-    // ab in die Historie
     manualHistory.value.push({
       action: res.action,
       reward: res.reward,
       isOptimal: res.isOptimal,
     });
 
-    // bisschen Feedback fürs testen später
     setLast(JSON.stringify({ manual: true, ...res }, null, 2));
     lastEventText.value = `Thumbnail ${String.fromCharCode(65 + a)} → Watchtime ${res.reward.toFixed(
-      0,
+        0,
     )}s · optimal: ${res.isOptimal ? "ja" : "nein"}`;
 
+    algorithmsRunner.stepOnce(); // ein Schritt für alle Policies
     refresh();
+    scheduleRender();
   } catch (e: any) {
     setLast(`Fehler: ${e?.message ?? e}`);
     console.error(e);
@@ -225,46 +245,73 @@ async function onManual(a: number) {
   }
 }
 
-/* ── Abgeleitete Daten (Tabelle & Chart) ─────────────────────────────────── */
+/* Runner-Events → Algorithmen-Historie */
+const offRunner = algorithmsRunner.on((e) => {
+  switch (e.type) {
+    case "CONFIGURED": {
+      for (const m of algorithmsRunner.getAll()) {
+        ensureSeries(m.id, m.label, m.color);
+        if (!algoHistory.value[m.id]) algoHistory.value[m.id] = [];
+      }
+      scheduleRender();
+      break;
+    }
+    case "RESULT": {
+      const id = e.payload.policyId as AlgoId;
+      const arr = algoHistory.value[id] ?? (algoHistory.value[id] = []);
+      arr.push({
+        action: e.payload.action,
+        reward: e.payload.reward,
+        isOptimal: e.payload.isOptimal,
+      });
+      scheduleRender();
+      break;
+    }
+    default:
+      break;
+  }
+});
 
-// 1) Tabelle: aktuell nur „Manuell“ (Algos kommen dazu, dann werden es mehrere Rows)
+onBeforeUnmount(() => {
+  offRunner();
+});
+
+/* Tabelle */
 const metricRows = computed<iMetricsRow[]>(() => {
-  const s = seriesState.manual; // Sichtbarkeit/Farbe aus dem Store
-  return [
-    buildMetricsRowFromManual(manualHistory.value, snapshot.value?.config, s),
-  ];
+  void algoRev.value; // rAF-getaktet
+  const rows: iMetricsRow[] = [];
+
+  rows.push(buildMetricsRowFromManual(manualHistory.value, snapshot.value?.config, seriesState.manual));
+  for (const a of algoCatalog) {
+    const s = (seriesState as any)[a.id];
+    rows.push(buildMetricsRowFromManual(algoHistory.value[a.id] ?? [], snapshot.value?.config, s));
+  }
+  return rows;
 });
 
-// 2) Chart-Serien: dito – aktuell nur „Manuell“
+/* Chart */
 const chartSeries = computed<iChartSeries[]>(() => {
-  const s = seriesState.manual;
-  const serie = buildSeriesFromManual(
-    manualHistory.value,
-    snapshot.value?.config,
-    s,
-  );
-  return [serie];
+  void algoRev.value; // rAF-getaktet
+  const out: iChartSeries[] = [];
+
+  out.push(buildSeriesFromManual(manualHistory.value, snapshot.value?.config, seriesState.manual));
+  for (const a of algoCatalog) {
+    const s = (seriesState as any)[a.id];
+    out.push(buildSeriesFromManual(algoHistory.value[a.id] ?? [], snapshot.value?.config, s));
+  }
+  return out;
 });
 
-// Tabelle toggelt Sichtbarkeit -> Store aktualisieren
-function onToggleSeries({
-  seriesId,
-  visible,
-}: {
-  seriesId: string;
-  visible: boolean;
-}) {
+/* Sichtbarkeiten syncen */
+function onToggleSeries({ seriesId, visible }: { seriesId: string; visible: boolean }) {
   setSeriesVisible(seriesId, visible);
 }
-
-// Chart toggelt Sichtbarkeit -> gleiche Funktion (Single Source of Truth, baby)
 function onChartToggle({ id, visible }: { id: string; visible: boolean }) {
   setSeriesVisible(id, visible);
 }
 </script>
 
 <style scoped>
-/*  wir wollen volle Breite. */
 .wrap {
   max-width: none;
   width: 100%;
@@ -272,7 +319,6 @@ function onChartToggle({ id, visible }: { id: string; visible: boolean }) {
   box-sizing: border-box;
 }
 
-/* Kopfzele */
 .bar-inner {
   display: flex;
   align-items: center;
@@ -283,7 +329,6 @@ function onChartToggle({ id, visible }: { id: string; visible: boolean }) {
   box-sizing: border-box;
 }
 
-/* Zwei-Spalten */
 .page-grid {
   display: grid;
   gap: 16px;
@@ -294,14 +339,12 @@ function onChartToggle({ id, visible }: { id: string; visible: boolean }) {
   position: relative;
 }
 
-/* Thumbnails: drei pro Reihe. */
 .thumb-grid {
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(3, 1fr);
 }
 
-/* kleines Toast-Element  */
 .toast {
   display: flex;
   align-items: center;
@@ -320,20 +363,13 @@ function onChartToggle({ id, visible }: { id: string; visible: boolean }) {
   font-size: 12px;
 }
 
-/* für mobile und kleinere displays */
 @media (max-width: 1200px) {
-  .page-grid {
-    grid-template-columns: 1fr;
-  }
+  .page-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 980px) {
-  .thumb-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .thumb-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 620px) {
-  .thumb-grid {
-    grid-template-columns: 1fr;
-  }
+  .thumb-grid { grid-template-columns: 1fr; }
 }
 </style>
