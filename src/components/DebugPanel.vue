@@ -1,86 +1,142 @@
 <template>
-  <section class="card" v-if="snapshot">
-    <h2>Status & Debug</h2>
+  <section class="card">
+    <!-- Kopf wie beim Vergleich-Panel: Titel links, Badges/Actions rechts -->
+    <div
+      class="header"
+      @click="toggle()"
+      role="button"
+      tabindex="0"
+      @keydown.enter.prevent="toggle()"
+      @keydown.space.prevent="toggle()"
+    >
+      <h2>Debug &amp; Log</h2>
 
-    <div class="badges">
-      <span class="badge"
-        >Typ: <b>{{ snapshot.config.type }}</b></span
-      >
-      <span class="badge"
-        >Arms: <b>{{ snapshot.config.arms }}</b></span
-      >
-      <span class="badge"
-        >Optimal: <b>{{ snapshot.optimalAction }}</b></span
-      >
-    </div>
-
-    <div class="out">
-      <div class="label">Letzte Antwort / Fehler</div>
-      <pre class="pre" v-if="lastResult">{{ lastResult }}</pre>
-      <div class="muted" v-else>—</div>
-    </div>
-
-    <div style="margin-top: 12px">
-      <div class="label">Counts & Schätzungen</div>
-      <div
-        class="grid"
-        style="grid-template-columns: repeat(3, 1fr); gap: 10px"
-      >
-        <div
-          v-for="i in snapshot.config.arms"
-          :key="'dbg-' + i"
-          class="dbg-cell"
-        >
-          <div>
-            <b>{{ String.fromCharCode(64 + i) }}</b>
-          </div>
-          <div class="muted">n={{ snapshot.counts[i - 1] || 0 }}</div>
-          <div class="muted">q={{ estimateText(i - 1) }}</div>
-          <div class="muted small">wahr: {{ truthText(i - 1) }}</div>
-        </div>
+      <div class="head-actions" @click.stop>
+        <span class="pill-count">{{ count }} Einträge</span>
+        <button class="btn ghost" type="button" @click="toggle()">
+          {{ open ? "Ausblenden" : "Einblenden" }}
+        </button>
       </div>
     </div>
+
+    <transition name="fade-slide">
+      <div v-if="open" class="body">
+        <div class="toolbar">
+          <button class="btn ghost" type="button" @click="copy()">
+            Kopieren
+          </button>
+          <button class="btn ghost" type="button" @click="clear()">
+            Leeren
+          </button>
+        </div>
+
+        <pre class="pre" aria-live="polite">{{ text }}</pre>
+      </div>
+    </transition>
   </section>
 </template>
 
 <script setup lang="ts">
-import type { iEnvConfig } from "../env/Domain/iEnvConfig.js";
+import { computed } from "vue";
+import { debug } from "../services/debugStore";
 
-type EnvSnapshot = {
-  config: iEnvConfig;
-  optimalAction: number;
-  counts: number[];
-  estimates: number[];
-};
+const open = debug.open;
+const count = debug.count;
 
-const props = defineProps<{
-  snapshot: EnvSnapshot | null;
-  lastResult: string;
-}>();
-
-function estimateText(idx: number) {
-  const q = props.snapshot?.estimates[idx] ?? 0;
-  return `${q.toFixed(0)}s`; // watchtime.
+function toggle() {
+  debug.toggle();
 }
-function truthText(idx: number) {
-  const cfg = props.snapshot?.config;
-  if (!cfg) return "—";
-  const mu = cfg.means?.[idx];
-  const sd = cfg.stdDev?.[idx];
-  return mu != null && sd != null
-    ? `${mu.toFixed(0)}s ± ${sd.toFixed(0)}s`
-    : "—";
+function clear() {
+  debug.clear();
+}
+
+const text = computed(() =>
+  debug.entries.value
+    .map((e) => {
+      const d = new Date(e.ts);
+      const t = `${String(d.getHours()).padStart(2, "0")}:${String(
+        d.getMinutes(),
+      ).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
+      const tag = (e.kind || "info").toUpperCase();
+      return `[${t}] ${tag} — ${e.msg}`;
+    })
+    .join("\n"),
+);
+
+async function copy() {
+  try {
+    await navigator.clipboard.writeText(text.value);
+  } catch {
+    /* noop */
+  }
 }
 </script>
 
 <style scoped>
-.dbg-cell {
-  border: 1px solid #2a2a2a;
-  border-radius: 8px;
-  padding: 8px 10px;
-  background: #1a1a1a;
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  cursor: pointer;
 }
-.muted.small {
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pill-count {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--line, #2a2a2a);
+  border-radius: 999px;
+  background: #171717;
+  color: #cfd3d8;
   font-size: 12px;
+}
+.btn {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line, #2a2a2a);
+  background: #171717;
+  color: #d9d9d9;
+  cursor: pointer;
+}
+.btn.ghost:hover {
+  filter: brightness(1.05);
+}
+.body {
+  margin-top: 8px;
+}
+.toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.pre {
+  background: #111;
+  border: 1px solid var(--line, #2a2a2a);
+  border-radius: 10px;
+  padding: 10px;
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* weich ein-/ausblenden */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition:
+    opacity 0.22s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
 }
 </style>
