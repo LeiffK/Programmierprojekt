@@ -1,10 +1,17 @@
 <template>
   <section class="card">
-    <h2>Automatischer Lauf (Algorithmen kommen später)</h2>
+    <!-- Titel + Status rechts daneben -->
+    <div class="card-head head-with-status">
+      <h2>Automatischer Lauf</h2>
+      <div class="head-status" :class="statusClass" title="Runner-Status">
+        <span class="dot" />
+        <span class="txt">{{ statusText }}</span>
+      </div>
+    </div>
 
-    <!-- Kopf: zwei einheitliche Stepper -->
-    <div class="grid">
-      <div>
+    <!-- Grid wie im EnvSetup -->
+    <div class="form-grid">
+      <div class="col-4">
         <NumericStepper
           v-model="totalSteps"
           label="Ziel-Iterationen (n)"
@@ -16,10 +23,11 @@
           "
         />
       </div>
-      <div>
+
+      <div class="col-4">
         <NumericStepper
           v-model="rate"
-          label="Rate (n pro Sekunde)"
+          label="Rate (Schritte/Sek.)"
           :min="1"
           :step="1"
           @bump="
@@ -31,250 +39,341 @@
         />
       </div>
 
-      <!-- Platzhalter-Spalte, damit das Grid visuell ruhig bleibt -->
-      <div class="placeholder"></div>
+      <div class="col-4"></div>
     </div>
 
-    <!-- Aktionsleiste -->
     <div class="actions">
-      <div class="control-group group-4">
-        <button
-          class="group-btn"
-          type="button"
-          :disabled="!envId"
-          @click="onConfigure"
-        >
-          Konfigurieren
-        </button>
+      <div class="control-row">
+        <!-- EnvSetup-Style: segmentierte Gruppe -->
+        <div class="control-group group-2">
+          <button
+            class="group-btn"
+            type="button"
+            :disabled="!envId"
+            @click="onConfigure"
+            title="Konfiguration aus Environment übernehmen"
+          >
+            Konfigurieren
+          </button>
 
-        <button
-          class="group-btn"
-          type="button"
-          :disabled="!envId || running"
-          @click="onStep"
-        >
-          +1 Schritt
-        </button>
+          <button
+            class="group-btn"
+            type="button"
+            :disabled="!canStep"
+            @click="onStep"
+            title="Einen Schritt ausführen"
+          >
+            +1 Schritt
+          </button>
+        </div>
 
-        <button
-          class="group-btn primary"
-          type="button"
-          :disabled="!envId || running"
-          @click="onStart"
-        >
-          Start
-        </button>
-
-        <button
-          class="group-btn ghost"
-          type="button"
-          :disabled="!envId || !running"
-          @click="onPause"
-        >
-          Pause
-        </button>
+        <!-- Play/Pause: runder Button, auf gleicher Zeile, vertikal zentriert -->
+        <div class="fab-inline">
+          <button
+            class="fab"
+            :class="fabClass"
+            type="button"
+            :disabled="!canToggle"
+            @click="onToggleRun"
+            :aria-label="running ? 'Pausieren' : 'Starten'"
+            :title="running ? 'Pausieren' : 'Starten'"
+          >
+            <!-- Play -->
+            <svg
+              v-if="!running"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              aria-hidden="true"
+            >
+              <path d="M8 5v14l11-7z" fill="currentColor" />
+            </svg>
+            <!-- Pause -->
+            <svg
+              v-else
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              aria-hidden="true"
+            >
+              <path d="M6 5h4v14H6zM14 5h4v14h-4z" fill="currentColor" />
+            </svg>
+          </button>
+          <span class="fab-label">{{ running ? "Pause" : "Start" }}</span>
+        </div>
       </div>
-
-      <span class="muted status" v-if="statusText"
-        >Status: {{ statusText }}</span
-      >
     </div>
 
     <div class="out">
       <div class="label">Protokoll</div>
-      <pre class="pre" style="max-height: 220px">{{ logText }}</pre>
+      <pre class="pre" style="max-height: 240px">{{ logText }}</pre>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watch } from "vue";
+import { ref, computed, onBeforeUnmount } from "vue";
 import NumericStepper from "./ui/NumericStepper.vue";
+import { algorithmsRunner } from "../services/algorithmsRunner";
+import { getEnvSnapshot } from "../api/banditClient";
 
 const props = defineProps<{ envId: string | null; arms: number }>();
 
 const totalSteps = ref<number>(100);
 const rate = ref<number>(5);
 
-const statusText = ref<string>(""); // „Bereit“, „Konfiguriert“, „Läuft“, „Pausiert“
-const running = ref<boolean>(false); // steuert Start/Pause
-const logs: string[] = [];
+const statusText = ref<string>("Bereit");
+const configured = ref<boolean>(false);
+const running = ref<boolean>(false);
+const currentStep = ref<number>(0);
+
+/* rAF-gepufferte Logs */
 const logText = ref<string>("");
-
-let worker: Worker | null = null;
-
-watch(
-  () => props.envId,
-  (id) => {
-    if (!id) {
-      statusText.value = "Kein Environment";
-      running.value = false;
-      return;
-    }
-    ensureWorker();
-    statusText.value = "Bereit";
-  },
-);
-
-function ensureWorker() {
-  if (worker) return;
-  worker = new Worker(new URL("../workers/banditWorkers.ts", import.meta.url), {
-    type: "module",
-  });
-
-  worker.addEventListener("message", (e: MessageEvent) => {
-    const msg = e.data;
-
-    switch (msg.type) {
-      case "READY":
-        pushLog("Worker bereit.");
-        break;
-
-      case "CONFIGURED":
-        pushLog(
-          `Konfiguriert: env=${msg.payload.envId.substring(0, 8)} steps=${msg.payload.totalSteps} rate=${msg.payload.rate}/s`,
-        );
-        statusText.value = "Konfiguriert";
-        running.value = false; // falls zwischendrin geklickt wurde -> neutralisieren
-        break;
-
-      case "STARTED":
-        statusText.value = "Läuft";
-        running.value = true;
-        pushLog("Lauf gestartet.");
-        break;
-
-      case "STOPPED": {
-        const reason = msg.payload?.reason ?? "";
-        const isPause =
-          reason === "Manuell gestoppt" ||
-          reason === "" ||
-          reason.startsWith("Ziel");
-        statusText.value = isPause ? "Pausiert" : "Gestoppt";
-        running.value = false;
-        pushLog(`Lauf angehalten. ${reason}`.trim());
-        break;
-      }
-
-      case "REQUEST_ACTION":
-        {
-          //erweitern, sobald algorithmen implementiert sind.
-        }
-        break;
-
-      case "RESULT":
-        // später kommen hier mehrere Serien rein; heute reicht die Ausgabe
-        pushLog(
-          `Schritt ${msg.payload.step}: Arm ${msg.payload.action} → Reward ${msg.payload.reward.toFixed(2)} (${msg.payload.isOptimal ? "optimal" : "—"})`,
-        );
-        break;
-
-      case "PROGRESS":
-        pushLog(
-          `Fortschritt: ${msg.payload.step}/${msg.payload.total} (rest ${msg.payload.remaining})`,
-        );
-        break;
-
-      case "ERROR":
-        pushError(msg.payload.message);
-        running.value = false;
-        break;
-
-      default:
-        pushError("Unbekannte Worker-Antwort.");
-    }
-  });
+let logBuf: string[] = [];
+let rafPending = false;
+function flushLogs() {
+  if (!logBuf.length) return;
+  logText.value += logBuf.join("\n") + "\n";
+  logBuf = [];
 }
-
-function onConfigure() {
-  if (!props.envId) return;
-  ensureWorker();
-  running.value = false;
-  pushLog(`Konfigurieren → n=${totalSteps.value}, rate=${rate.value}/s`);
-  worker!.postMessage({
-    type: "CONFIGURE",
-    payload: {
-      envId: props.envId,
-      totalSteps: totalSteps.value,
-      rate: rate.value,
-    },
-  });
-}
-
-function onStart() {
-  if (!props.envId) return;
-  ensureWorker();
-  pushLog("Start");
-  worker!.postMessage({ type: "START" });
-}
-
-function onPause() {
-  if (!props.envId) return;
-  ensureWorker();
-  pushLog("Pause");
-  worker!.postMessage({ type: "STOP" }); // Worker interpretiert „STOP“ als anhalten
-}
-
-function onStep() {
-  if (!props.envId) return;
-  ensureWorker();
-  pushLog("Einzelschritt");
-  worker!.postMessage({ type: "STEP" });
-}
-
 function pushLog(line: string) {
-  logs.unshift(`• ${line}`);
-  logText.value = logs.slice(0, 80).join("\n");
+  const ts = new Date().toLocaleTimeString();
+  logBuf.push(`[${ts}] ${line}`);
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => {
+    rafPending = false;
+    flushLogs();
+  });
 }
-function pushError(line: string) {
-  pushLog(`FEHLER: ${line}`);
+
+/* Ergebnis-Logs drosseln */
+const logEvery = ref<number>(5);
+
+/* Runner-Events */
+const off = algorithmsRunner.on((msg) => {
+  switch (msg.type) {
+    case "READY":
+      statusText.value = "Bereit";
+      pushLog("Runner bereit.");
+      break;
+    case "CONFIGURED":
+      configured.value = true;
+      running.value = false;
+      currentStep.value = 0;
+      statusText.value = "Konfiguriert";
+      logEvery.value =
+        msg.payload.totalSteps > 0
+          ? Math.max(1, Math.floor(msg.payload.totalSteps / 40))
+          : 10;
+      pushLog(`Ziel ${msg.payload.totalSteps}, Rate ${msg.payload.rate}/s`);
+      break;
+    case "STARTED":
+      running.value = true;
+      statusText.value = "Läuft";
+      pushLog("Lauf gestartet.");
+      break;
+    case "PAUSED":
+      running.value = false;
+      statusText.value = "Pausiert";
+      pushLog("Pausiert.");
+      break;
+    case "STOPPED":
+      running.value = false;
+      statusText.value = "Gestoppt";
+      pushLog(`Lauf angehalten. ${msg.payload.reason}`);
+      break;
+    case "RESULT": {
+      const s = msg.payload.step;
+      const t = msg.payload.total;
+      if (s <= 3 || s % logEvery.value === 0 || (t > 0 && s === t)) {
+        pushLog(
+          `#${s}/${t} · ${msg.payload.policyId} → Arm ${msg.payload.action} · r=${msg.payload.reward.toFixed(2)}${msg.payload.isOptimal ? " (optimal)" : ""}`,
+        );
+      }
+      currentStep.value = s;
+      break;
+    }
+    case "LOG":
+      pushLog(msg.payload.message);
+      break;
+    case "PROGRESS":
+      break;
+    case "ERROR":
+      pushLog(`FEHLER: ${msg.payload.message}`);
+      break;
+  }
+});
+
+const canStart = computed(
+  () =>
+    configured.value && !running.value && currentStep.value < totalSteps.value,
+);
+const canStep = computed(
+  () =>
+    configured.value && !running.value && currentStep.value < totalSteps.value,
+);
+const canToggle = computed(() => running.value || canStart.value);
+
+/* Statusklassen */
+const statusClass = computed(() => {
+  if (running.value) return "is-running";
+  if (
+    configured.value &&
+    currentStep.value >= totalSteps.value &&
+    totalSteps.value > 0
+  )
+    return "is-stopped";
+  if (configured.value && !running.value && currentStep.value > 0)
+    return "is-paused";
+  return "is-ready";
+});
+const fabClass = computed(() => ({
+  running: running.value,
+  paused: !running.value && configured.value && currentStep.value > 0,
+}));
+
+/* Konfiguration übernehmen */
+async function onConfigure() {
+  if (!props.envId) {
+    statusText.value = "Kein Environment";
+    pushLog("Kein Environment vorhanden.");
+    return;
+  }
+  const snap: any = await getEnvSnapshot(props.envId);
+  algorithmsRunner.configure({
+    envConfig: snap.config,
+    totalSteps: totalSteps.value,
+    rate: rate.value,
+  });
+
+  configured.value = true;
+  running.value = false;
+  currentStep.value = 0;
+  statusText.value = "Konfiguriert";
+  pushLog(
+    `Konfiguriert: n=${totalSteps.value}, rate=${rate.value}/s, arms=${snap?.config?.arms ?? "?"}`,
+  );
+}
+
+/* Start/Pause */
+function onStart() {
+  if (canStart.value) algorithmsRunner.start();
+}
+function onPause() {
+  algorithmsRunner.pause();
+}
+function onToggleRun() {
+  running.value ? onPause() : onStart();
+}
+
+/* Einzelschritt */
+function onStep() {
+  if (!configured.value) {
+    pushLog("Bitte zuerst konfigurieren.");
+    return;
+  }
+  if (running.value) {
+    pushLog("Während des Laufs sind Einzelschritte gesperrt.");
+    return;
+  }
+  if (currentStep.value >= totalSteps.value) {
+    pushLog("Ziel erreicht. Bitte neu konfigurieren oder n erhöhen.");
+    return;
+  }
+  algorithmsRunner.stepOnce();
 }
 
 onBeforeUnmount(() => {
-  if (worker) {
-    worker.terminate();
-    worker = null;
-  }
+  off();
+  algorithmsRunner.pause();
 });
 </script>
 
 <style scoped>
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-}
-.placeholder {
-  /* einfach leer lassen, tut nur fürs Layout */
-}
-
-.control {
-  height: 44px;
-  width: 100%;
-  background: #111;
-  color: #eee;
-  border: 1px solid #333;
-  border-radius: 10px;
-  padding: 0 12px;
-}
-
-.actions {
+/* Kopf mit Status rechts */
+.head-with-status {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 12px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
 }
+.head-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1;
+  border: 1px solid #2a2a2a;
+  background: rgba(255, 255, 255, 0.04);
+  color: #d9d9d9;
+}
+.head-status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9ca3af;
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.25);
+}
+.head-status.is-ready .dot {
+  background: #9ca3af;
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.25);
+}
+.head-status.is-running .dot {
+  background: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+.head-status.is-paused .dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+}
+.head-status.is-stopped .dot {
+  background: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+}
+
+/* Grid analog EnvSetup */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+  align-items: end;
+}
+.col-4 {
+  grid-column: span 4;
+}
+@media (max-width: 980px) {
+  .col-4 {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Actions-Zeile */
+.actions {
+  margin-top: 12px;
+}
+.control-row {
+  display: flex;
+  align-items: center; /* vertikal zentriert: FAB auf einer Ebene */
+  gap: 14px;
+}
+
+/* Segmentierte Gruppe – EnvSetup-Style */
 .control-group {
   height: 44px;
-  width: 100%;
+  flex: 1;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
   background: #111;
   border: 1px solid #333;
   border-radius: 10px;
   overflow: hidden;
 }
+.group-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
 .group-btn {
   height: 42px;
   background: #1a1a1a;
@@ -283,23 +382,97 @@ onBeforeUnmount(() => {
   border-right: 1px solid #333;
   cursor: pointer;
   padding: 0 12px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
 }
 .group-btn:last-child {
   border-right: 0;
-}
-.group-btn.primary {
-  background: #ff0000;
-  border-right: 1px solid #ff0000;
-}
-.group-btn.ghost {
-  background: #2a1b1b;
 }
 .group-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.status {
-  white-space: nowrap;
+/* FAB + Label inline */
+.fab-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Play/Pause: runder Button (YT-rot idle, Blau running, Amber pausiert) */
+.fab {
+  --yt-red: #ff0000;
+  --run-blue: #2563eb;
+  --pause-amber: #f59e0b;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: 2px solid var(--yt-red);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: saturate(140%) blur(6px);
+  -webkit-backdrop-filter: saturate(140%) blur(6px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--yt-red);
+  box-shadow:
+    0 0 0 4px rgba(255, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition:
+    transform 0.06s ease,
+    box-shadow 0.2s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+.fab:not(:disabled):hover {
+  box-shadow:
+    0 0 0 6px rgba(255, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.fab:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.fab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fab.running {
+  color: var(--run-blue);
+  border-color: var(--run-blue);
+  box-shadow:
+    0 0 0 4px rgba(37, 99, 235, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.fab.paused {
+  color: var(--pause-amber);
+  border-color: var(--pause-amber);
+  box-shadow:
+    0 0 0 4px rgba(245, 158, 11, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.fab-label {
+  font-size: 12px;
+  color: #cfcfcf;
+  user-select: none;
+}
+
+/* Log-Ausgabe */
+.out .label {
+  font-size: 12px;
+  opacity: 0.7;
+}
+.pre {
+  background: #151515;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 10px;
+  overflow: auto;
 }
 </style>
