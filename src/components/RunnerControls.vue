@@ -122,7 +122,7 @@
     </div>
 
     <transition name="fade">
-      <div v-if="showCustomEditor" class="editor-body">
+      <div v-if="showCustomEditor" class="card-body">
         <AlgorithmEditor @policyLoaded="onCustomPolicyLoaded" />
       </div>
     </transition>
@@ -136,6 +136,7 @@ import { algorithmsRunner } from "../services/algorithmsRunner";
 import { getEnvSnapshot } from "../api/banditClient";
 import AlgorithmEditor from "@/components/AlgorithmEditor.vue";
 import { debug } from "../services/debugStore";
+
 const showCustomEditor = ref(false);
 const customPolicy = ref<any | null>(null);
 
@@ -148,6 +149,11 @@ const statusText = ref<string>("Bereit");
 const configured = ref<boolean>(false);
 const running = ref<boolean>(false);
 const currentStep = ref<number>(0);
+
+function onCustomPolicyLoaded(data: any) {
+  console.log("Policy geladen:", data);
+  customPolicy.value = data;
+}
 
 /* Runner-Events → nur UI-State, Logging zentral via attachRunner */
 const off = algorithmsRunner.on((msg) => {
