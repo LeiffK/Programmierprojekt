@@ -48,6 +48,7 @@ export type RunnerEvent =
         total: number;
         action: number;
         reward: number;
+        expected: number;
         isOptimal: boolean;
       };
     }
@@ -121,12 +122,13 @@ class AlgorithmsRunner {
         });
 
       const greedy = new Greedy({
-        ...(cfg.policyConfigs?.greedy ?? {}),
+        ...(cfg.policyConfigs?.greedy ?? undefined),
+        // optimisticInitialValue: cfg.policyConfigs?.greedy?.optimisticInitialValue,
         arms: cfg.envConfig.arms,
       } as iBanditPolicyConfig);
 
       const eps = new EpsilonGreedy({
-        ...(cfg.policyConfigs?.epsgreedy ?? {}),
+        ...(cfg.policyConfigs?.epsgreedy ?? undefined),
         arms: cfg.envConfig.arms,
       } as iBanditPolicyConfig);
 
@@ -134,10 +136,8 @@ class AlgorithmsRunner {
       const epsEnv = mkEnv(23);
 
       greedy.initialize(greedyEnv);
-      greedy.reset();
 
       eps.initialize(epsEnv);
-      eps.reset();
 
       this.items.set("greedy", {
         id: "greedy",
@@ -267,6 +267,7 @@ class AlgorithmsRunner {
           total: this.totalSteps,
           action: res.action,
           reward: res.reward,
+          expected: it.policy.getEstimates()[res.action],
           isOptimal: res.isOptimal,
         },
       });

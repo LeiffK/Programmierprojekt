@@ -82,7 +82,7 @@ export function attachRunner(runner: {
         break;
       case "RESULT":
         debug.log(
-          `#${e.payload?.step}/${e.payload?.total} • ${e.payload?.policyId} • a=${e.payload?.action} • r=${Number(e.payload?.reward).toFixed(2)}${e.payload?.isOptimal ? " • optimal" : ""}`,
+          `#${e.payload?.step}/${e.payload?.total} • ${e.payload?.policyId} • a=${e.payload?.action} • r=${Number(e.payload?.reward).toFixed(2)} • q=${Number(e.payload?.expected).toFixed(2)} ${e.payload?.isOptimal ? " • optimal" : ""}`,
           "result",
           e.payload,
         );
