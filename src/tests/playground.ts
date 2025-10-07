@@ -1,23 +1,37 @@
-import type { iEnvConfig } from "./Domain/iEnvConfig";
-import { GaussianBanditEnv } from "./GaussianBanditEnv.ts";
+import { CustomPolicyLoader } from "../algorithms/CustomPolicyLoader.ts";
+import { GaussianBanditEnv } from "../env/GaussianBanditEnv.ts";
+import type { iEnvConfig } from "../env/Domain/iEnvConfig";
+
+const userCode = `
+  const { BasePolicy } = require("./BasePolicy");
+
+  export class MyTestPolicy extends BasePolicy {
+    selectAction() {
+      // Einfach zufälligen Arm wählen
+      return this.randomArm();
+    }
+  }
+`;
+
+const policy = CustomPolicyLoader.loadPolicy(userCode, "typescript");
 
 const cfg: iEnvConfig = {
   type: "gaussian",
   arms: 3,
-  seed: 43, // damit die Ergebnisse reproduzierbar sind
+  seed: 43,
 };
 
 const env = new GaussianBanditEnv(cfg);
 
-console.log("Konfiguration:");
-console.log("Means:", env.config.means);
-console.log("StdDevs:", env.config.stdDev);
-console.log("Optimaler Arm:", env.optimalAction);
+policy.initialize(env);
 
-console.log("\nZiehe ein paar Arme:");
 for (let i = 0; i < 5; i++) {
-  const action = Math.floor(Math.random() * cfg.arms);
+  const action = policy.selectAction();
   const result = env.pull(action);
-  console.log(`Pull ${i + 1}:`, result);
+  policy.update(result);
+  console.log(`Step ${i + 1}:`, { action, reward: result.reward });
 }
-// console.log("funktioniert das überhaupt????")
+
+console.log("Q-Schätzungen:", policy.getEstimates());
+console.log("Zählungen:", policy.getCounts());
+console.log("Info:", policy.getInfo());

@@ -1,0 +1,70 @@
+:root {
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-quick: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-quick: 120ms;
+  --dur-soft: 220ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Buttons / Gruppen */
+.btn,
+.group-btn {
+  transition:
+    transform var(--dur-quick) var(--ease-quick),
+    box-shadow var(--dur-quick) var(--ease-quick),
+    background-color var(--dur-quick) var(--ease-quick),
+    border-color var(--dur-quick) var(--ease-quick),
+    filter var(--dur-quick) var(--ease-quick);
+  will-change: transform, filter;
+}
+.btn:hover,
+.group-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-1);
+}
+.btn:active,
+.group-btn:active {
+  transform: translateY(0);
+  filter: brightness(0.96);
+}
+
+/* Inputs / Frames */
+.control,
+.control-group {
+  transition:
+    border-color var(--dur-quick) var(--ease-quick),
+    box-shadow var(--dur-quick) var(--ease-quick),
+    background-color var(--dur-quick) var(--ease-quick);
+}
+.control:hover,
+.control-group:hover {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Cards */
+.card {
+  transition:
+    box-shadow var(--dur-soft) var(--ease-soft),
+    background-color var(--dur-soft) var(--ease-soft);
+}
+.card:hover {
+  box-shadow: var(--shadow-1);
+}
+
+/* Section Transition (Manuell/Algo) */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition:
+    opacity var(--dur-soft) var(--ease-soft),
+    transform var(--dur-soft) var(--ease-soft);
+}
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}

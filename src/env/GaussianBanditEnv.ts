@@ -1,6 +1,6 @@
-import type { iBanditEnv } from "./Domain/iBanditEnv";
 import type { iEnvConfig } from "./Domain/iEnvConfig";
 import type { iPullResult } from "./Domain/iPullResult";
+import type { iBanditEnv } from "./Domain/iBanditEnv.ts";
 import { randGaussianDist } from "../utils/randGaussianDist.ts";
 import { BanditEnv } from "./BanditEnv.ts";
 import { randNormal } from "../utils/randNormal.ts";
@@ -52,7 +52,11 @@ export class GaussianBanditEnv extends BanditEnv implements iBanditEnv {
     //Übergabewert ist die Zahl des Arms
     const mean = this.config.means![action];
     const stdDev = this.config.stdDev![action];
-    const reward = randNormal(this.rng, mean, stdDev);
+    let reward: number;
+    do {
+      // solange der Gezogene Wert negativ ist zieh einen neuen
+      reward = randNormal(this.rng, mean, stdDev);
+    } while (reward < 0);
 
     return {
       action,

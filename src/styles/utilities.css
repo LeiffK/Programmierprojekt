@@ -1,0 +1,159 @@
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    16px/1.55 Inter,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial;
+}
+
+.wrap {
+  max-width: 100vw; /* volle Breite */
+  width: 100%;
+  margin: 0; /* kein zentriertes Container-Limit */
+  padding: 20px 24px; /* moderates Seitenpadding */
+  box-sizing: border-box;
+}
+
+/* App-Bar */
+.bar {
+  position: sticky;
+  top: 0;
+  background: #1a1a1a;
+  border-bottom: 1px solid #262626;
+  padding: 10px 16px;
+  z-index: 5;
+}
+.brand {
+  font-weight: 800;
+}
+
+/* Karten */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin: var(--space-3) 0;
+}
+
+/* Überschriften kompakter & präsent */
+h2 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--fs-22);
+  letter-spacing: 0.2px;
+}
+
+/* Hilfsfarben */
+.muted {
+  color: var(--muted);
+}
+
+/* Standard-Grids */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-3);
+}
+.row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: var(--space-2);
+}
+
+/* Controls/Buttons */
+.input,
+select,
+.control {
+  width: 100%;
+  background: #111;
+  color: #eee;
+  border: 1px solid #333;
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+.btn {
+  background: #2b2b2b;
+  color: #fff;
+  border: 1px solid #3a3a3a;
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  cursor: pointer;
+}
+.btn.primary {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.out {
+  margin-top: var(--space-3);
+}
+.label {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.pre {
+  background: #0d0d0d;
+  border: 1px solid #262626;
+  border-radius: var(--radius);
+  padding: 12px;
+  overflow: auto;
+}
+
+/* Badges */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.badge {
+  font-size: var(--fs-12);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background: #1e1e1e;
+  color: #cbd5e1;
+}
+
+/* Thumbnail Grid responsiv */
+.thumb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: var(--space-3);
+}
+@media (max-width: 980px) {
+  .grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .thumb-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 620px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .thumb-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Kleine Utility für Kopfzeilen mit Actions (z.B. ModeSwitch) */
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
