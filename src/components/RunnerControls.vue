@@ -109,6 +109,25 @@
       <pre class="pre" style="max-height: 240px">{{ logText }}</pre>
     </div>
   </section>
+  <section class="card">
+    <div class="card-head head-with-toggle">
+      <h2>Eigenen Algorithmus</h2>
+      <div class="head-actions">
+        <button
+          class="toggle-btn"
+          @click="showCustomEditor = !showCustomEditor"
+        >
+          {{ showCustomEditor ? "Verbergen" : "Einblenden" }}
+        </button>
+      </div>
+    </div>
+
+    <transition name="fade">
+      <div v-if="showCustomEditor" class="editor-body">
+        <AlgorithmEditor @policyLoaded="onCustomPolicyLoaded" />
+      </div>
+    </transition>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -116,6 +135,10 @@ import { ref, computed, onBeforeUnmount } from "vue";
 import NumericStepper from "./ui/NumericStepper.vue";
 import { algorithmsRunner } from "../services/algorithmsRunner";
 import { getEnvSnapshot } from "../api/banditClient";
+import AlgorithmEditor from "@/components/AlgorithmEditor.vue";
+
+const showCustomEditor = ref(false);
+const customPolicy = ref<any | null>(null);
 
 const props = defineProps<{ envId: string | null; arms: number }>();
 
@@ -474,5 +497,66 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   padding: 10px;
   overflow: auto;
+}
+.card {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 16px;
+  color: #fff;
+}
+
+/* Kopfzeile mit Buttons rechts */
+.card-head.head-with-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+/* Chip (z. B. "3 Serien") */
+.chip {
+  background: #1f1f1f;
+  border: 1px solid #333;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #bbb;
+  margin-right: 8px;
+}
+
+/* Toggle Button (Einblenden / Verbergen) */
+.toggle-btn {
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 4px 10px;
+  color: #ddd;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.toggle-btn:hover {
+  background: #222;
+}
+
+/* Card Body (Inhalt beim Aufklappen) */
+.card-body {
+  margin-top: 16px;
+  background: #181818;
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid #2a2a2a;
+}
+
+/* Fade-Transition fürs sanfte Einblenden */
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>

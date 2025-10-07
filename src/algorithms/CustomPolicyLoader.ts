@@ -9,10 +9,10 @@ export class CustomPolicyLoader {
    * Lädt eine benutzerdefinierte Policy aus TypeScript oder JavaScript-Code.
    * Erwartet, dass der Code eine Klasse exportiert, die von BasePolicy erbt.
    */
-  static loadPolicy(
+  static async loadPolicy(
     code: string,
     lang: "typescript" | "javascript" = "typescript",
-  ): iBanditPolicy {
+  ): Promise<iBanditPolicy> {
     //Methode kriegt Code und Sprache übergeben. Bei Default Typescript
     //static--> Gehört rein zu dieser Klasse und kann nicht vererbt werden
 
@@ -25,8 +25,12 @@ export class CustomPolicyLoader {
         : code; // Ansonsten gib einfach den Eingangs Code zurück
 
     // 2. BasePolicy-Quellcode einlesen und auch transpilen
-    const basePath = path.resolve("./src/algorithms/BasePolicy.ts");
-    const baseSrc = fs.readFileSync(basePath, "utf8");
+    const baseSrc = await fetch("/src/algorithms/BasePolicy.ts")
+      .then((r) => r.text())
+      .catch(() => {
+        throw new Error("BasePolicy konnte nicht geladen werden");
+      });
+
     const jsBase = ts.transpileModule(baseSrc, {
       compilerOptions: { module: ts.ModuleKind.CommonJS },
     }).outputText;
@@ -44,10 +48,10 @@ export class CustomPolicyLoader {
         //Wenn im Code versucht wird BasePolicy zu importieren...
         return { BasePolicy: BasePolicyRef }; //...dann wird die Referenz auf unsere BasePolicy-Klasse übergeben
       }
-      if (mod === "seedrandom") {
+
+      if (mod.includes("seedrandom")) {
         //Require ist die JS Form von Import (bei TS).
-        //Hier: Wenn im BasePolicy-Code "seedrandom" importiert wird, geben wir das Modul manuell weiter.
-        // ⬇️ das ist der entscheidende Fix:
+        //   //Hier: Wenn im BasePolicy-Code "seedrandom" importiert wird, geben wir das Modul manuell weiter.
         return { __esModule: true, default: seedrandom }; //seedrandom wird im Sandbox-Kontext erlaubt
       }
       throw new Error(`Unbekanntes Modul: ${mod}`); // Ansonsten Error weil dann versucht wird andere Imports zu machen (Abuse Vermeidung)
