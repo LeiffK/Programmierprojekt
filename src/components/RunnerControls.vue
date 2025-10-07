@@ -19,7 +19,10 @@
           :step="1"
           @bump="
             (p) =>
-              pushLog(`n ${p.delta > 0 ? 'erhöht' : 'verringert'} → ${p.value}`)
+              debug.log(
+                `n ${p.delta > 0 ? 'erhöht' : 'verringert'} → ${p.value}`,
+                'runner',
+              )
           "
         />
       </div>
@@ -32,8 +35,9 @@
           :step="1"
           @bump="
             (p) =>
-              pushLog(
+              debug.log(
                 `Rate ${p.delta > 0 ? 'erhöht' : 'verringert'} → ${p.value}/s`,
+                'runner',
               )
           "
         />
@@ -103,11 +107,6 @@
         </div>
       </div>
     </div>
-
-    <div class="out">
-      <div class="label">Protokoll</div>
-      <pre class="pre" style="max-height: 240px">{{ logText }}</pre>
-    </div>
   </section>
   <section class="card">
     <div class="card-head head-with-toggle">
@@ -136,7 +135,7 @@ import NumericStepper from "./ui/NumericStepper.vue";
 import { algorithmsRunner } from "../services/algorithmsRunner";
 import { getEnvSnapshot } from "../api/banditClient";
 import AlgorithmEditor from "@/components/AlgorithmEditor.vue";
-
+import { debug } from "../services/debugStore";
 const showCustomEditor = ref(false);
 const customPolicy = ref<any | null>(null);
 
@@ -150,80 +149,40 @@ const configured = ref<boolean>(false);
 const running = ref<boolean>(false);
 const currentStep = ref<number>(0);
 
-/* rAF-gepufferte Logs */
-const logText = ref<string>("");
-let logBuf: string[] = [];
-let rafPending = false;
-function flushLogs() {
-  if (!logBuf.length) return;
-  logText.value += logBuf.join("\n") + "\n";
-  logBuf = [];
-}
-function pushLog(line: string) {
-  const ts = new Date().toLocaleTimeString();
-  logBuf.push(`[${ts}] ${line}`);
-  if (rafPending) return;
-  rafPending = true;
-  requestAnimationFrame(() => {
-    rafPending = false;
-    flushLogs();
-  });
-}
-
-/* Ergebnis-Logs drosseln */
-const logEvery = ref<number>(5);
-
-/* Runner-Events */
+/* Runner-Events → nur UI-State, Logging zentral via attachRunner */
 const off = algorithmsRunner.on((msg) => {
   switch (msg.type) {
     case "READY":
       statusText.value = "Bereit";
-      pushLog("Runner bereit.");
       break;
     case "CONFIGURED":
       configured.value = true;
       running.value = false;
       currentStep.value = 0;
       statusText.value = "Konfiguriert";
-      logEvery.value =
-        msg.payload.totalSteps > 0
-          ? Math.max(1, Math.floor(msg.payload.totalSteps / 40))
-          : 10;
-      pushLog(`Ziel ${msg.payload.totalSteps}, Rate ${msg.payload.rate}/s`);
       break;
     case "STARTED":
       running.value = true;
       statusText.value = "Läuft";
-      pushLog("Lauf gestartet.");
       break;
     case "PAUSED":
       running.value = false;
       statusText.value = "Pausiert";
-      pushLog("Pausiert.");
       break;
     case "STOPPED":
       running.value = false;
       statusText.value = "Gestoppt";
-      pushLog(`Lauf angehalten. ${msg.payload.reason}`);
       break;
-    case "RESULT": {
-      const s = msg.payload.step;
-      const t = msg.payload.total;
-      if (s <= 3 || s % logEvery.value === 0 || (t > 0 && s === t)) {
-        pushLog(
-          `#${s}/${t} · ${msg.payload.policyId} → Arm ${msg.payload.action} · r=${msg.payload.reward.toFixed(2)}${msg.payload.isOptimal ? " (optimal)" : ""}`,
-        );
-      }
-      currentStep.value = s;
+    case "RESULT":
+      currentStep.value = msg.payload.step;
       break;
-    }
     case "LOG":
-      pushLog(msg.payload.message);
+      // Logging übernimmt attachRunner
       break;
     case "PROGRESS":
       break;
     case "ERROR":
-      pushLog(`FEHLER: ${msg.payload.message}`);
+      debug.error(msg.payload.message);
       break;
   }
 });
@@ -256,11 +215,11 @@ const fabClass = computed(() => ({
   paused: !running.value && configured.value && currentStep.value > 0,
 }));
 
-/* Konfiguration übernehmen */
+/* Konfiguration übernehmen (Logging via Runner-Events/attachRunner) */
 async function onConfigure() {
   if (!props.envId) {
     statusText.value = "Kein Environment";
-    pushLog("Kein Environment vorhanden.");
+    debug.log("Kein Environment vorhanden.", "env");
     return;
   }
   const snap: any = await getEnvSnapshot(props.envId);
@@ -274,9 +233,6 @@ async function onConfigure() {
   running.value = false;
   currentStep.value = 0;
   statusText.value = "Konfiguriert";
-  pushLog(
-    `Konfiguriert: n=${totalSteps.value}, rate=${rate.value}/s, arms=${snap?.config?.arms ?? "?"}`,
-  );
 }
 
 /* Start/Pause */
@@ -292,18 +248,9 @@ function onToggleRun() {
 
 /* Einzelschritt */
 function onStep() {
-  if (!configured.value) {
-    pushLog("Bitte zuerst konfigurieren.");
-    return;
-  }
-  if (running.value) {
-    pushLog("Während des Laufs sind Einzelschritte gesperrt.");
-    return;
-  }
-  if (currentStep.value >= totalSteps.value) {
-    pushLog("Ziel erreicht. Bitte neu konfigurieren oder n erhöhen.");
-    return;
-  }
+  if (!configured.value) return;
+  if (running.value) return;
+  if (currentStep.value >= totalSteps.value) return;
   algorithmsRunner.stepOnce();
 }
 
