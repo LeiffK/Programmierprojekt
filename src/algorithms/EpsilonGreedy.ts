@@ -21,6 +21,6 @@ export class EpsilonGreedy extends BasePolicy {
     return raw;
   }
   protected override setOptimisticInitialValue(): number {
-    return this.cfg.optimisticInitialValue ?? 150;
+    return this.cfg.optimisticInitialValue ?? 500;
   }
 }
