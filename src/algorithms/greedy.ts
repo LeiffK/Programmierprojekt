@@ -6,6 +6,6 @@ export class Greedy extends BasePolicy {
     return this.tiebreak(this.getEstimates() as number[]);
   }
   protected override setOptimisticInitialValue(): number {
-    return this.cfg.optimisticInitialValue ?? 100; // Hier geringerer Wert weil Greedy sonst "zu oft" den passenden Arm gefunden hat
+    return this.cfg.optimisticInitialValue ?? 350; // Hier geringerer Wert weil Greedy sonst "zu oft" den passenden Arm gefunden hat
   }
 }

@@ -30,6 +30,7 @@ type RunnerEvent =
         policyId: string;
         action: number;
         reward: number;
+        expected: number;
         isOptimal: boolean;
         // Progress-Felder für Debug/Logs:
         k: number;              // aktueller Schritt (1-basiert)
@@ -58,6 +59,63 @@ class AlgorithmsRunner {
     on(cb: (e: RunnerEvent) => void) {
         this.listeners.add(cb);
         return () => this.listeners.delete(cb);
+      const greedy = new Greedy({
+        ...(cfg.policyConfigs?.greedy ?? undefined),
+        // optimisticInitialValue: cfg.policyConfigs?.greedy?.optimisticInitialValue,
+        arms: cfg.envConfig.arms,
+      } as iBanditPolicyConfig);
+
+      const eps = new EpsilonGreedy({
+        ...(cfg.policyConfigs?.epsgreedy ?? undefined),
+        arms: cfg.envConfig.arms,
+      } as iBanditPolicyConfig);
+
+      const greedyEnv = mkEnv(11);
+      const epsEnv = mkEnv(23);
+
+      greedy.initialize(greedyEnv);
+
+      eps.initialize(epsEnv);
+
+      this.items.set("greedy", {
+        id: "greedy",
+        label: "Greedy",
+        color: "#4fc3f7",
+        policy: greedy,
+        env: greedyEnv,
+        history: [],
+        visible: true,
+      });
+
+      this.items.set("epsgreedy", {
+        id: "epsgreedy",
+        label: "ε-Greedy",
+        color: "#f39c12",
+        policy: eps,
+        env: epsEnv,
+        history: [],
+        visible: true,
+      });
+
+      this.totalSteps = Math.max(0, cfg.totalSteps);
+      this.rate = Math.max(1, cfg.rate);
+      this.status = "CONFIGURED";
+
+      this.emit({
+        type: "CONFIGURED",
+        payload: { totalSteps: this.totalSteps, rate: this.rate },
+      });
+      this.emit({
+        type: "LOG",
+        payload: {
+          message: `Konfiguriert: ${this.items.size} Algorithmen · Ziel ${this.totalSteps} Schritte · Rate ${this.rate}/s`,
+        },
+      });
+    } catch (err: any) {
+      this.emit({
+        type: "ERROR",
+        payload: { message: err?.message ?? String(err) },
+      });
     }
     private emit(e: RunnerEvent) { this.listeners.forEach((l) => l(e)); }
 
@@ -153,6 +211,35 @@ class AlgorithmsRunner {
     pause() {
         if (this.timer != null) { window.clearTimeout(this.timer); this.timer = null; }
         if (this.status === "RUNNING") this.setStatus("PAUSED");
+    this.stepAll();
+  }
+
+  // intern
+  private stepAll() {
+    this.step += 1;
+
+    for (const it of this.items.values()) {
+      const action = it.policy.selectAction();
+      const res: iPullResult = it.env.pull(action);
+      it.policy.update(res);
+      it.history.push({
+        action: res.action,
+        reward: res.reward,
+        isOptimal: res.isOptimal,
+      });
+
+      this.emit({
+        type: "RESULT",
+        payload: {
+          policyId: it.id,
+          step: this.step,
+          total: this.totalSteps,
+          action: res.action,
+          reward: res.reward,
+          expected: it.policy.getEstimates()[res.action],
+          isOptimal: res.isOptimal,
+        },
+      });
     }
 
     stop(reason = "Stop") {

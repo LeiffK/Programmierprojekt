@@ -6,8 +6,22 @@ export class EpsilonGreedy extends BasePolicy {
 
     // Exploration
     if (this.rng() < epsilon) {
-      //Wählt in Epsilon-% Der Fälle einen zufälligen Arm
-      return this.randomArm();
+      const estimates = this.getEstimates() as number[];
+      const bestArm = this.tiebreak(estimates); // der Arm mit höchstem Q
+
+      // alle Arme außer dem besten filtern
+      const otherArms = estimates
+        .map((_, i) => i) // Alle Indizes bekommen
+        .filter((i) => i !== bestArm); // Den Indize vom besten Arm entfernen
+
+      // falls alle gleich gut (z. B. am Anfang) einfach zufälligen Arm
+      if (otherArms.length === 0) {
+        return this.randomArm();
+      }
+
+      // zufälligen Arm aus den "nicht-besten" wählen
+      const idx = Math.floor(this.rng() * otherArms.length);
+      return otherArms[idx];
     }
 
     return this.tiebreak(this.getEstimates() as number[]); // Wenn du nicht zufällig wählst nimm den Arm mit dem höchsten estimate Reward
@@ -21,6 +35,6 @@ export class EpsilonGreedy extends BasePolicy {
     return raw;
   }
   protected override setOptimisticInitialValue(): number {
-    return this.cfg.optimisticInitialValue ?? 150;
+    return this.cfg.optimisticInitialValue ?? 500; // Hier steht der Default Parameter für E Greedy
   }
 }

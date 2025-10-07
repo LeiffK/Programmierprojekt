@@ -57,7 +57,7 @@ export abstract class BasePolicy implements iBanditPolicy {
    * Q und N auf Startwerte (bzw. 0) setzen, t auf 0.
    */
   reset(): void {
-    const optimisticValue = this.cfg.optimisticInitialValue ?? 0;
+    const optimisticValue = this.setOptimisticInitialValue();
     this.Q.fill(optimisticValue); // alle Q-Werte auf Anfang setzen (optimistisch)
     this.N.fill(0); // Zähler zurücksetzen
     this.t = 0; // Gesamtanzahl Steps zurücksetzen
@@ -75,7 +75,9 @@ export abstract class BasePolicy implements iBanditPolicy {
     this.N[a] += 1; // Zähler des Arms erhöhen
     const n = this.N[a]; // Anzahl Ziehungen dieses Arms
     // Mittelwert-Update mit inkrementeller Form
-    this.Q[a] += (result.reward - this.Q[a]) / n;
+    this.Q[a] += (result.reward - this.Q[a]) / (n + 1);
+    //Alt
+    // this.Q[a] += (result.reward - this.Q[a]) / n+1;
     this.t += 1; // Gesamtanzahl Schritte erhöhen
   }
 
