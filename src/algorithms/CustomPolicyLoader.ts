@@ -25,11 +25,24 @@ export class CustomPolicyLoader {
         : code; // Ansonsten gib einfach den Eingangs Code zurück
 
     // 2. BasePolicy-Quellcode einlesen und auch transpilen
-    const baseSrc = await fetch("/src/algorithms/BasePolicy.ts")
-      .then((r) => r.text())
-      .catch(() => {
-        throw new Error("BasePolicy konnte nicht geladen werden");
-      });
+    let baseSrc: string;
+    try {
+      if (typeof window !== "undefined") {
+        // Browser-Variante: per fetch laden
+        baseSrc = await fetch("/src/algorithms/BasePolicy.ts").then((r) =>
+          r.text(),
+        );
+      } else {
+        // Node/Vitest-Variante: per fs laden
+        const basePath = path.resolve(
+          process.cwd(),
+          "src/algorithms/BasePolicy.ts",
+        );
+        baseSrc = fs.readFileSync(basePath, "utf8");
+      }
+    } catch (err) {
+      throw new Error("BasePolicy konnte nicht geladen werden");
+    }
 
     const jsBase = ts.transpileModule(baseSrc, {
       compilerOptions: { module: ts.ModuleKind.CommonJS },
