@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { CustomPolicyLoader } from "src/algorithms/CustomPolicyLoader.ts";
+import { CustomPolicyLoader } from "../algorithms/CustomPolicyLoader.ts";
 
 const emit = defineEmits(["policyLoaded"]);
 const userCode = ref(`import { BasePolicy } from "./BasePolicy";
