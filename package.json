@@ -41,7 +41,7 @@
     "typescript": "~5.8.3",
     "vite": "^7.1.9",
     "vitest": "^3.2.4",
-    "vue-tsc": "^3.0.5",
     "shepherd.js": "^14.5.1"
+    "vue-tsc": "^3.1.1"
   }
 }
