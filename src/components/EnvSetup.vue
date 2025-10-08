@@ -18,12 +18,7 @@
 
       <div class="field col-4">
         <label class="label">Anzahl Thumbnails</label>
-        <NumericStepper
-            v-model="local.arms"
-            :min="1"
-            :max="64"
-            :step="1"
-        />
+        <NumericStepper v-model="local.arms" :min="1" :max="64" :step="1" />
       </div>
 
       <!-- Seed/μ/σ wurden aus EnvSetup entfernt; Bedienung liegt nun in AdvancedSettings -->
@@ -54,18 +49,18 @@ const local = reactive<iEnvConfig>({
 });
 
 watch(
-    () => props.modelValue,
-    (v) => Object.assign(local, v),
-    { deep: true },
+  () => props.modelValue,
+  (v) => Object.assign(local, v),
+  { deep: true },
 );
 
 watch(
-    local,
-    (v) => {
-      if (v.type !== "gaussian") v.type = "gaussian";
-      emit("update:modelValue", { ...v });
-    },
-    { deep: true },
+  local,
+  (v) => {
+    if (v.type !== "gaussian") v.type = "gaussian";
+    emit("update:modelValue", { ...v });
+  },
+  { deep: true },
 );
 
 const envId = computed(() => (local as any)._envId as string | undefined);
@@ -79,9 +74,9 @@ function scheduleInit() {
   }, 300) as unknown as number;
 }
 watch(
-    () => [local.type, local.arms, local.seed, local.means, local.stdDev],
-    () => scheduleInit(),
-    { deep: true },
+  () => [local.type, local.arms, local.seed, local.means, local.stdDev],
+  () => scheduleInit(),
+  { deep: true },
 );
 // initial beim Mount einmal
 scheduleInit();
@@ -117,8 +112,12 @@ async function init() {
   flex-direction: column;
   gap: 6px;
 }
-.col-4 { grid-column: span 4; }
-.label { font-weight: 600; }
+.col-4 {
+  grid-column: span 4;
+}
+.label {
+  font-weight: 600;
+}
 .control {
   height: 42px;
   background: #1a1a1a;

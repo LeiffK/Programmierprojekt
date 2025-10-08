@@ -11,7 +11,12 @@
     <div class="controls one-line" role="group" aria-label="Runner Controls">
       <div class="field">
         <label class="label">Gesamtsteps</label>
-        <NumericStepper v-model="totalSteps" :min="1" :max="100000" :step="10" />
+        <NumericStepper
+          v-model="totalSteps"
+          :min="1"
+          :max="100000"
+          :step="10"
+        />
       </div>
 
       <div class="field">
@@ -24,11 +29,21 @@
           +1 Schritt
         </button>
 
-        <button class="btn danger" type="button" :disabled="!canToggle" @click="onReset">
+        <button
+          class="btn danger"
+          type="button"
+          :disabled="!canToggle"
+          @click="onReset"
+        >
           Zurücksetzen
         </button>
 
-        <button class="btn primary" type="button" :disabled="!canToggle" @click="onToggleRun">
+        <button
+          class="btn primary"
+          type="button"
+          :disabled="!canToggle"
+          @click="onToggleRun"
+        >
           <span v-if="running">⏸ Pausieren</span>
           <span v-else>▶︎ Starten</span>
         </button>
@@ -71,7 +86,11 @@ const statusClass = computed(() => ({
 /* Auto-Configuration */
 let cfgTimer: number | null = null;
 async function ensureConfigured(immediate = false) {
-  if (!props.envId) { configured.value = false; statusText.value = "Kein Environment"; return; }
+  if (!props.envId) {
+    configured.value = false;
+    statusText.value = "Kein Environment";
+    return;
+  }
 
   const doConfig = async () => {
     const snap: any = await getEnvSnapshot(props.envId!);
@@ -90,61 +109,163 @@ async function ensureConfigured(immediate = false) {
   if (immediate) await doConfig();
   else {
     if (cfgTimer != null) window.clearTimeout(cfgTimer);
-    cfgTimer = window.setTimeout(() => void doConfig(), 150) as unknown as number;
+    cfgTimer = window.setTimeout(
+      () => void doConfig(),
+      150,
+    ) as unknown as number;
   }
 }
-watch(() => props.envId, () => ensureConfigured());
-watch(() => props.policyConfigs, () => ensureConfigured(), { deep: true });
+watch(
+  () => props.envId,
+  () => ensureConfigured(),
+);
+watch(
+  () => props.policyConfigs,
+  () => ensureConfigured(),
+  { deep: true },
+);
 watch(rate, () => ensureConfigured());
 watch(totalSteps, () => ensureConfigured());
 onMounted(() => ensureConfigured(true));
 
 /* Controls */
-async function onStart() { await ensureConfigured(true); algorithmsRunner.start(); running.value = true; statusText.value = "Läuft"; }
-function onPause() { algorithmsRunner.pause(); running.value = false; statusText.value = "Pausiert"; }
-function onToggleRun() { running.value ? onPause() : onStart(); }
-async function onStep() { await ensureConfigured(true); await algorithmsRunner.stepOnce(); statusText.value = "Manueller Schritt"; }
-function onReset() { algorithmsRunner.stop("Reset"); running.value = false; configured.value = false; statusText.value = "Zurückgesetzt"; emit("reset"); }
+async function onStart() {
+  await ensureConfigured(true);
+  algorithmsRunner.start();
+  running.value = true;
+  statusText.value = "Läuft";
+}
+function onPause() {
+  algorithmsRunner.pause();
+  running.value = false;
+  statusText.value = "Pausiert";
+}
+function onToggleRun() {
+  running.value ? onPause() : onStart();
+}
+async function onStep() {
+  await ensureConfigured(true);
+  await algorithmsRunner.stepOnce();
+  statusText.value = "Manueller Schritt";
+}
+function onReset() {
+  algorithmsRunner.stop("Reset");
+  running.value = false;
+  configured.value = false;
+  statusText.value = "Zurückgesetzt";
+  emit("reset");
+}
 </script>
 
 <style scoped>
-:host { --control-h: 44px; --btn-radius: 8px; }
+:host {
+  --control-h: 44px;
+  --btn-radius: 8px;
+}
 
-.row.one-line { display:flex; align-items:center; gap:8px; justify-content:space-between; margin-bottom:6px; }
-.title { margin:0; }
-.status { display:flex; align-items:center; gap:8px; font-weight:600; color:#bbb; }
-.status .dot { width:8px; height:8px; border-radius:50%; background:#666; }
-.status.running .dot { background:#2563eb; }
-.status.paused  .dot { background:#f59e0b; }
+.row.one-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.title {
+  margin: 0;
+}
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #bbb;
+}
+.status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #666;
+}
+.status.running .dot {
+  background: #2563eb;
+}
+.status.paused .dot {
+  background: #f59e0b;
+}
 
-.controls.one-line { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.field { display:flex; flex-direction:column; gap:6px; min-width:220px; }
-.label { font-weight:600; color:#cfcfcf; }
+.controls.one-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+.label {
+  font-weight: 600;
+  color: #cfcfcf;
+}
 
-.btn-cluster { display:flex; align-items:center; gap:10px; margin-left:auto; }
+.btn-cluster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
 
 /* Rechteckige Buttons mit sanfter Rundung (wie Input) */
 .btn {
   height: var(--control-h);
   padding: 0 16px;
   min-width: 140px;
-  display:inline-flex; align-items:center; justify-content:center;
-  background:#1a1a1a;
-  color:#eaeaea;
-  border:1px solid #333;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+  color: #eaeaea;
+  border: 1px solid #333;
   border-radius: var(--btn-radius);
-  cursor:pointer;
+  cursor: pointer;
 }
-.btn:hover { background:#1c1c1c; border-color:#3a3a3a; }
-.btn:active { background:#181818; }
-.btn:disabled { opacity:.6; cursor:not-allowed; }
+.btn:hover {
+  background: #1c1c1c;
+  border-color: #3a3a3a;
+}
+.btn:active {
+  background: #181818;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
-.btn.primary  { background:#1d2a44; border-color:#2b3f66; color:#d6e4ff; }
-.btn.primary:hover { background:#213152; border-color:#375183; }
-.btn.danger   { border-color:#553333; color:#ffbdbd; background:#1a1414; }
-.btn.danger:hover { background:#201616; border-color:#6a3c3c; }
+.btn.primary {
+  background: #1d2a44;
+  border-color: #2b3f66;
+  color: #d6e4ff;
+}
+.btn.primary:hover {
+  background: #213152;
+  border-color: #375183;
+}
+.btn.danger {
+  border-color: #553333;
+  color: #ffbdbd;
+  background: #1a1414;
+}
+.btn.danger:hover {
+  background: #201616;
+  border-color: #6a3c3c;
+}
 
 @media (max-width: 860px) {
-  .btn-cluster { width:100%; justify-content:flex-end; }
+  .btn-cluster {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 </style>
