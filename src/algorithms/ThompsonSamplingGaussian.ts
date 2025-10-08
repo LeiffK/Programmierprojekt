@@ -17,9 +17,9 @@ import { BasePolicy } from "./BasePolicy.ts";
  * - Bei Auswahl wird aus jeder Normal(mean, stdDev) eine Stichprobe gezogen; Arm mit höchstem Stichprobenwert wird gewählt.
  */
 export class ThompsonSamplingGaussian extends BasePolicy {
-  protected means: number[] = [];      // Posterior-Mittelwerte je Arm
+  protected means: number[] = []; // Posterior-Mittelwerte je Arm
   protected precisions: number[] = []; // Posterior-Präzisionen (1/Var) je Arm
-  protected priorVariance: number;     // Prior-Varianz (Var(mean_prior))
+  protected priorVariance: number; // Prior-Varianz (Var(mean_prior))
 
   /**
    * @param cfg.seed optionaler Seed, weitergegeben an BasePolicy
@@ -56,7 +56,8 @@ export class ThompsonSamplingGaussian extends BasePolicy {
     // Annahme: Beobachtungsvarianz = 1 => observation precision = 1
     const obsPrecision = 1;
     const precisionNew = priorPrecision + obsPrecision;
-    const meanNew = (priorPrecision * oldMean + obsPrecision * reward) / precisionNew;
+    const meanNew =
+      (priorPrecision * oldMean + obsPrecision * reward) / precisionNew;
 
     this.precisions[a] = precisionNew;
     this.means[a] = meanNew;
@@ -79,7 +80,8 @@ export class ThompsonSamplingGaussian extends BasePolicy {
    * Ziehe eine Normalstichprobe N(mean, stdDev^2) über Box-Muller.
    */
   private normalSample(mean: number, stdDev: number): number {
-    let u1 = 0, u2 = 0;
+    let u1 = 0,
+      u2 = 0;
     while (u1 === 0) u1 = this.rng();
     u2 = this.rng();
 

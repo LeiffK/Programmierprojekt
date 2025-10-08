@@ -5,15 +5,15 @@ import { BasePolicy } from "./BasePolicy.ts";
 /**
  * Gradient Bandit Algorithmus.
  * Lernt numerische Präferenzen pro Arm und wählt Aktionen über Softmax-Policy.
- * 
+ *
  * Besonderheit:
  * - Nutzt eine policy-basierte Methode (statt Wertschätzung Q).
  * - Hält "preferences" für jeden Arm, die in Wahrscheinlichkeiten umgerechnet werden.
  * - Nutzt das inkrementelle Mittel der Rewards als Base-Line.
  */
 export class GradientBandit extends BasePolicy {
-  protected preferences: number[] = [];   // Präferenzen der Arme (werden via Softmax in Wahrscheinlichkeiten übersetzt)
-  protected averageReward: number = 0;     // Durchschnittlicher Reward als Baseline für Updates
+  protected preferences: number[] = []; // Präferenzen der Arme (werden via Softmax in Wahrscheinlichkeiten übersetzt)
+  protected averageReward: number = 0; // Durchschnittlicher Reward als Baseline für Updates
 
   /**
    * Konstruktor der Policy.
@@ -49,18 +49,18 @@ export class GradientBandit extends BasePolicy {
    * - Berechnet inkrementellen Durchschnittsreward als Baseline.
    * - Erhöht Präferenz des gewählten Arms proportional zu (reward - baseline).
    * - Senkt gleichzeitig Präferenzen der nicht-gewählten Arme.
-   * 
+   *
    * Formel:
    * H_a(t+1) = H_a(t) + α * (R - baseline) * (1 - π_a)   falls Arm gewählt
    * H_a(t+1) = H_a(t) - α * (R - baseline) * π_a         sonst
    */
   override update(result: iPullResult): void {
-    const alpha = this.cfg.alpha ?? 0.1;                         // Schrittweite (default: 0.1)
-    super.update(result);                                        // Q und N Updates der Basisklasse
-    this.averageReward += (result.reward - this.averageReward) / this.t;  // inkrementelles Mittel
+    const alpha = this.cfg.alpha ?? 0.1; // Schrittweite (default: 0.1)
+    super.update(result); // Q und N Updates der Basisklasse
+    this.averageReward += (result.reward - this.averageReward) / this.t; // inkrementelles Mittel
 
     const action = result.action;
-    const pi = this.getActionProbabilities();                   // Aktuelle Aktionswahrscheinlichkeiten
+    const pi = this.getActionProbabilities(); // Aktuelle Aktionswahrscheinlichkeiten
 
     for (let a = 0; a < this.nArms; a++) {
       const baseline = this.averageReward;
@@ -94,7 +94,7 @@ export class GradientBandit extends BasePolicy {
   /**
    * Berechnet Softmax-Wahrscheinlichkeiten aus Präferenzen.
    * Trick: Subtrahiere maxPref für numerische Stabilität.
-   * 
+   *
    * π_a = exp(H_a - maxPref) / Σ exp(H_b - maxPref)
    */
   private getActionProbabilities(): number[] {

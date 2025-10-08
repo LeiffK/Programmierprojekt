@@ -52,7 +52,11 @@ describe("ThompsonSamplingBernoulli", () => {
   });
 
   it("updates successes and failures correctly", () => {
-    const resultSuccess: iPullResult = { action: 0, reward: 1, isOptimal: true };
+    const resultSuccess: iPullResult = {
+      action: 0,
+      reward: 1,
+      isOptimal: true,
+    };
     const resultFail: iPullResult = { action: 1, reward: 0, isOptimal: false };
 
     policy.update(resultSuccess);

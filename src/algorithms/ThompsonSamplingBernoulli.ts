@@ -17,7 +17,7 @@ import { BasePolicy } from "./BasePolicy.ts";
  */
 export class ThompsonSamplingBernoulli extends BasePolicy {
   protected successes: number[] = []; // α-Parameter: Erfolgszählungen je Arm
-  protected failures: number[] = [];  // β-Parameter: Misserfolgszählungen je Arm
+  protected failures: number[] = []; // β-Parameter: Misserfolgszählungen je Arm
 
   /**
    * Initialisierung der Policy mit Environment.
@@ -91,15 +91,15 @@ export class ThompsonSamplingBernoulli extends BasePolicy {
   private sampleGamma(shape: number, scale: number): number {
     if (shape < 1) {
       // Johnk's generator für shape < 1
-      const c = (1 / shape);
-      let d = ((1 - shape) * Math.pow(shape, shape / (1 - shape)));
+      const c = 1 / shape;
+      let d = (1 - shape) * Math.pow(shape, shape / (1 - shape));
       while (true) {
         const u = this.rng();
         const v = this.rng();
         const x = Math.pow(u, c);
         const y = Math.pow(v, 1 / (1 - shape));
         if (x + y <= 1) {
-          return -Math.log(this.rng()) * x / (x + y) * scale;
+          return ((-Math.log(this.rng()) * x) / (x + y)) * scale;
         }
       }
     } else {
@@ -116,7 +116,8 @@ export class ThompsonSamplingBernoulli extends BasePolicy {
         v = v * v * v;
         const u = this.rng();
         if (u < 1 - 0.0331 * x * x * x * x) return d * v * scale;
-        if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v * scale;
+        if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v)))
+          return d * v * scale;
       }
     }
   }
@@ -125,7 +126,8 @@ export class ThompsonSamplingBernoulli extends BasePolicy {
    * Hilfsfunktion: Standard-normalverteilter Zufallswert (Box-Muller-Transformation).
    */
   private standardNormal(): number {
-    let u = 0, v = 0;
+    let u = 0,
+      v = 0;
     while (u === 0) u = this.rng();
     while (v === 0) v = this.rng();
     return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);

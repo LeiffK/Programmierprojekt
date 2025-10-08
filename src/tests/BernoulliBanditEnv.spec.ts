@@ -27,13 +27,14 @@ describe("BernoulliBanditEnv", () => {
   });
 
   it("throws error on invalid config", () => {
-    expect(() =>
-      new BernoulliBanditEnv({
-        type: "bernoulli",
-        arms: 2,
-        probs: [0.8], // Ungültige Konfiguration
-        seed: 42,
-      } as iEnvConfig)
+    expect(
+      () =>
+        new BernoulliBanditEnv({
+          type: "bernoulli",
+          arms: 2,
+          probs: [0.8], // Ungültige Konfiguration
+          seed: 42,
+        } as iEnvConfig),
     ).toThrow();
   });
 });
