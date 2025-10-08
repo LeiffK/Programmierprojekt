@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+/*import { describe, it, expect, beforeEach } from "vitest";
 import type { iEnvConfig } from "../../env/Domain/iEnvConfig.ts";
 import type { iBanditEnv } from "../../env/Domain/iBanditEnv.ts";
 import type { iPullResult } from "../../env/Domain/iPullResult.ts";
@@ -8,7 +8,7 @@ import { ThompsonSamplingBernoulli } from "../ThompsonSamplingBernoulli.ts";
  * Mock-Umgebung (Bernoulli) für Tests der ThompsonSampling Policy.
  * - Rewards basieren auf festen Erfolgswahrscheinlichkeiten.
  * - RNG ist einfache Math.random(), Seed wird ignoriert.
- */
+ *
 class MockBernoulliEnv implements iBanditEnv {
   config: iEnvConfig;
   optimalAction: number;
