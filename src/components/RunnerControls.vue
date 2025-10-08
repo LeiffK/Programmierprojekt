@@ -25,21 +25,24 @@
       </div>
 
       <div class="btn-cluster">
-        <button class="btn" type="button" :disabled="!canStep" @click="onStep">
+        <button
+          class="btn btn-ghost btn-pill"
+          type="button"
+          :disabled="!canStep"
+          @click="onStep"
+        >
           +1 Schritt
         </button>
-
         <button
-          class="btn danger"
+          class="btn btn-ghost btn-danger btn-pill"
           type="button"
           :disabled="!canToggle"
           @click="onReset"
         >
           Zurücksetzen
         </button>
-
         <button
-          class="btn primary"
+          class="btn btn-pill"
           type="button"
           :disabled="!canToggle"
           @click="onToggleRun"
@@ -56,13 +59,14 @@
 import { ref, computed, watch, onMounted } from "vue";
 import NumericStepper from "./ui/NumericStepper.vue";
 import { algorithmsRunner } from "../services/algorithmsRunner";
-import { getEnvSnapshot } from "../api/banditClient";
-import { debug } from "../services/debugStore";
+import type { iEnvConfig } from "../env/Domain/iEnvConfig";
+import type { iBanditPolicyConfig } from "../algorithms/Domain/iBanditPolicyConfig";
 
 const props = defineProps<{
-  envId: string | null;
-  arms: number;
-  policyConfigs?: any;
+  envConfig: iEnvConfig | null;
+  policyConfigs?: Partial<
+    Record<"greedy" | "epsgreedy", iBanditPolicyConfig>
+  > & { variants?: any };
 }>();
 
 const emit = defineEmits<{ (e: "reset"): void }>();
@@ -74,8 +78,8 @@ const running = ref(false);
 const configured = ref(false);
 const statusText = ref("Bereit");
 
-const canStep = computed(() => !!props.envId);
-const canToggle = computed(() => !!props.envId);
+const canStep = computed(() => !!props.envConfig);
+const canToggle = computed(() => !!props.envConfig);
 
 const statusClass = computed(() => ({
   running: running.value,
@@ -83,40 +87,33 @@ const statusClass = computed(() => ({
   idle: !configured.value,
 }));
 
-/* Auto-Configuration */
 let cfgTimer: number | null = null;
-async function ensureConfigured(immediate = false) {
-  if (!props.envId) {
+function ensureConfigured(immediate = false) {
+  if (!props.envConfig) {
     configured.value = false;
     statusText.value = "Kein Environment";
     return;
   }
-
-  const doConfig = async () => {
-    const snap: any = await getEnvSnapshot(props.envId!);
+  const doConfig = () => {
     algorithmsRunner.configure({
-      envId: props.envId!,
-      envConfig: snap.config,
+      envConfig: props.envConfig!,
       totalSteps: totalSteps.value,
       rate: rate.value,
-      policyConfigs: props.policyConfigs,
+      policyConfigs: props.policyConfigs as any,
     });
     configured.value = true;
     statusText.value = running.value ? "Läuft" : "Konfiguriert";
-    debug.log("Runner automatisch konfiguriert.", "runner");
   };
-
-  if (immediate) await doConfig();
-  else {
+  if (immediate) {
+    doConfig();
+  } else {
     if (cfgTimer != null) window.clearTimeout(cfgTimer);
-    cfgTimer = window.setTimeout(
-      () => void doConfig(),
-      150,
-    ) as unknown as number;
+    cfgTimer = window.setTimeout(doConfig, 120) as unknown as number;
   }
 }
+
 watch(
-  () => props.envId,
+  () => props.envConfig,
   () => ensureConfigured(),
 );
 watch(
@@ -128,9 +125,8 @@ watch(rate, () => ensureConfigured());
 watch(totalSteps, () => ensureConfigured());
 onMounted(() => ensureConfigured(true));
 
-/* Controls */
-async function onStart() {
-  await ensureConfigured(true);
+function onStart() {
+  ensureConfigured(true);
   algorithmsRunner.start();
   running.value = true;
   statusText.value = "Läuft";
@@ -143,9 +139,9 @@ function onPause() {
 function onToggleRun() {
   running.value ? onPause() : onStart();
 }
-async function onStep() {
-  await ensureConfigured(true);
-  await algorithmsRunner.stepOnce();
+function onStep() {
+  ensureConfigured(true);
+  algorithmsRunner.stepOnce();
   statusText.value = "Manueller Schritt";
 }
 function onReset() {
@@ -158,11 +154,6 @@ function onReset() {
 </script>
 
 <style scoped>
-:host {
-  --control-h: 44px;
-  --btn-radius: 8px;
-}
-
 .row.one-line {
   display: flex;
   align-items: center;
@@ -196,70 +187,45 @@ function onReset() {
 .controls.one-line {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-width: 220px;
+  gap: 4px;
+  min-width: 200px;
 }
 .label {
   font-weight: 600;
   color: #cfcfcf;
 }
-
 .btn-cluster {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-left: auto;
 }
 
-/* Rechteckige Buttons mit sanfter Rundung (wie Input) */
+/* Pill-Buttons (gleiches Pattern wie AdvancedSettings) */
 .btn {
-  height: var(--control-h);
-  padding: 0 16px;
-  min-width: 140px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #1a1a1a;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #2d2d2d;
+  background: #171717;
   color: #eaeaea;
-  border: 1px solid #333;
-  border-radius: var(--btn-radius);
+  border-radius: 999px;
   cursor: pointer;
 }
-.btn:hover {
-  background: #1c1c1c;
-  border-color: #3a3a3a;
+.btn-ghost {
+  background: #161616;
 }
-.btn:active {
-  background: #181818;
-}
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn.primary {
-  background: #1d2a44;
-  border-color: #2b3f66;
-  color: #d6e4ff;
-}
-.btn.primary:hover {
-  background: #213152;
-  border-color: #375183;
-}
-.btn.danger {
+.btn-danger {
   border-color: #553333;
   color: #ffbdbd;
-  background: #1a1414;
 }
-.btn.danger:hover {
-  background: #201616;
-  border-color: #6a3c3c;
+.btn-pill {
+  border-radius: 999px;
 }
 
 @media (max-width: 860px) {

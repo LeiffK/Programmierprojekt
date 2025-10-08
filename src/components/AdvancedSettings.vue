@@ -1,556 +1,653 @@
 <template>
-  <section class="card">
-    <!-- Kopf -->
-    <header
+  <section class="card adv" aria-label="Erweiterte Einstellungen">
+    <!-- Header / Aufklappbar -->
+    <button
       class="head"
-      role="button"
-      tabindex="0"
-      @click="toggle()"
-      @keydown.enter.prevent="toggle()"
-      @keydown.space.prevent="toggle()"
+      @click="toggleOpen"
+      :aria-expanded="openLocal ? 'true' : 'false'"
     >
-      <h2>Erweiterte Einstellungen</h2>
-      <div class="meta">
-        <span class="badge">{{ modeLabel }}</span>
-        <button class="ghost" type="button">
-          {{ openLocal ? "Einklappen" : "Einblenden" }}
-        </button>
+      <div class="head-left">
+        <span class="badge">Erweiterte Einstellungen</span>
       </div>
-    </header>
+      <div class="head-right">
+        <span class="chev" :class="{ open: openLocal }">▾</span>
+      </div>
+    </button>
 
-    <transition name="fade-slide">
-      <div v-if="openLocal" class="body">
-        <!-- UMGEBUNG -->
-        <div class="card-subhead">
-          <h3>Umgebung</h3>
+    <div v-show="openLocal" class="body">
+      <!-- Umgebung -->
+      <div class="group" aria-labelledby="env-title">
+        <div id="env-title" class="group-head">
+          <span class="chip chip-neutral">Umgebung</span>
         </div>
-
-        <div class="env-grid">
-          <div class="field col-4">
-            <label class="label">Seed</label>
-            <div class="inline">
+        <div class="grid">
+          <div class="row">
+            <label class="lab" for="seed">Seed</label>
+            <div class="ctrl seed-line">
               <input
-                class="control no-spin"
+                id="seed"
+                class="input"
                 type="number"
-                min="0"
                 v-model.number="localEnv.seed"
-                @input="emitEnv()"
+                :min="0"
+                @change="emitEnv"
+                @blur="emitEnv"
               />
-              <button
-                type="button"
-                class="ghost roll"
-                title="Seed würfeln"
-                @click="rollSeed"
-              >
-                🎲 Würfeln
+              <button class="btn btn-pill" type="button" @click="rollSeed">
+                Würfeln
               </button>
             </div>
-            <small class="hint muted"
-              >Änderungen werden automatisch initialisiert.</small
-            >
           </div>
-        </div>
 
-        <!-- ALGORITHMEN -->
-        <div class="card-subhead">
-          <h3>Algorithmen</h3>
-        </div>
-
-        <div class="table" role="table" aria-label="Algorithmus-Parameter">
-          <div class="thead" role="rowgroup">
-            <div class="tr head" role="row">
-              <div class="th col-algo" role="columnheader">Algorithmus</div>
-              <div class="th col-param" role="columnheader">Parameter</div>
-              <div
-                class="th col-oiv"
-                role="columnheader"
-                title="Optimistic Initial Value"
-              >
-                OIV
-              </div>
-              <div class="th col-actions" role="columnheader">Aktionen</div>
+          <div class="row">
+            <label class="lab" for="arms">Arme</label>
+            <div class="ctrl">
+              <input
+                id="arms"
+                class="input"
+                type="number"
+                min="1"
+                v-model.number="localEnv.arms"
+                @change="emitEnv"
+                @blur="emitEnv"
+              />
             </div>
           </div>
+        </div>
+      </div>
 
-          <div class="tbody" role="rowgroup">
-            <!-- Greedy -->
-            <div class="tr" role="row">
-              <div class="td col-algo" role="cell">
-                <span class="pill algo">Greedy</span>
-              </div>
-              <div class="td col-param" role="cell">
-                <span class="muted">keine Parameter</span>
-              </div>
-              <div class="td col-oiv" role="cell">
-                <NumericStepper
-                  v-model="greedyOIV"
-                  :min="-9999"
-                  :max="9999"
-                  :step="1"
-                  @update:model-value="emitPolicies"
+      <!-- Algorithmen -->
+      <div class="group" aria-labelledby="algo-title">
+        <div id="algo-title" class="group-head">
+          <span class="chip chip-neutral">Algorithmen</span>
+        </div>
+
+        <!-- Greedy -->
+        <div class="algo-card">
+          <div class="algo-head">
+            <div class="pill pill-greedy">Greedy</div>
+          </div>
+          <div class="algo-grid">
+            <div class="row">
+              <label class="lab" for="greedy-oiv"
+                >Optimistic&nbsp;Initial&nbsp;Value</label
+              >
+              <div class="ctrl">
+                <input
+                  id="greedy-oiv"
+                  class="input"
+                  type="number"
+                  v-model.number="localPolicies.greedy.optimisticInitialValue"
+                  @change="emitPolicies"
+                  @blur="emitPolicies"
                 />
               </div>
-              <div class="td col-actions" role="cell">
-                <span class="muted">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ε-Greedy -->
+        <div class="algo-card">
+          <div class="algo-head">
+            <div class="pill pill-eps">ε-Greedy</div>
+          </div>
+
+          <div class="algo-grid">
+            <div class="row">
+              <label class="lab" for="eps-eps">ε (Basis)</label>
+              <div class="ctrl">
+                <input
+                  id="eps-eps"
+                  class="input"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="1"
+                  v-model.number="localPolicies.epsgreedy.epsilon"
+                  @change="emitPolicies"
+                  @blur="emitPolicies"
+                />
               </div>
             </div>
 
-            <!-- ε-Greedy Varianten -->
-            <div
-              class="tr"
-              v-for="(row, idx) in epsRows"
-              :key="'eps-' + idx"
-              role="row"
-            >
-              <div class="td col-algo" role="cell">
-                <span class="pill algo">ε-Greedy</span>
-                <span v-if="idx > 0" class="muted sm"
-                  >Variante {{ idx + 1 }}</span
-                >
+            <div class="row">
+              <label class="lab" for="eps-oiv"
+                >Optimistic&nbsp;Initial&nbsp;Value</label
+              >
+              <div class="ctrl">
+                <input
+                  id="eps-oiv"
+                  class="input"
+                  type="number"
+                  v-model.number="
+                    localPolicies.epsgreedy.optimisticInitialValue
+                  "
+                  @change="emitPolicies"
+                  @blur="emitPolicies"
+                />
               </div>
-              <div class="td col-param" role="cell">
-                <div class="inline-controls">
-                  <label class="label sm">ε</label>
-                  <NumericStepper
-                    v-model="row.epsilon"
-                    :min="0"
-                    :max="1"
-                    :step="0.01"
-                    @update:model-value="emitPolicies"
+            </div>
+          </div>
+
+          <!-- Varianten -->
+          <div class="variants">
+            <div class="variants-head">
+              <div class="title">Varianten</div>
+              <button class="btn btn-pill" type="button" @click="addVariant">
+                + Variante
+              </button>
+            </div>
+
+            <div
+              class="variants-table"
+              role="table"
+              aria-label="ε-Greedy Varianten"
+            >
+              <div class="variants-row variants-row--head" role="row">
+                <div class="cell" role="columnheader">Bezeichnung</div>
+                <div class="cell" role="columnheader">ε</div>
+                <div class="cell" role="columnheader">OIV</div>
+                <div class="cell cell--end" role="columnheader"></div>
+              </div>
+
+              <div
+                class="variants-row"
+                v-for="(v, i) in localPolicies.epsgreedy.variants"
+                :key="`v-${i}`"
+                role="row"
+                :class="{ 'is-alt': i % 2 === 1 }"
+              >
+                <div class="cell" role="cell">ε-Greedy v{{ i + 1 }}</div>
+                <div class="cell" role="cell">
+                  <input
+                    class="input input--sm"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="1"
+                    v-model.number="v.epsilon"
+                    @change="emitPolicies"
+                    @blur="emitPolicies"
+                    :aria-label="`ε für Variante ${i + 1}`"
                   />
                 </div>
-              </div>
-              <div class="td col-oiv" role="cell">
-                <NumericStepper
-                  v-model="row.oiv"
-                  :min="-9999"
-                  :max="9999"
-                  :step="1"
-                  @update:model-value="emitPolicies"
-                />
-              </div>
-              <div class="td col-actions" role="cell">
-                <button
-                  class="ghost danger"
-                  type="button"
-                  :disabled="idx === 0"
-                  title="Variante entfernen"
-                  @click="removeEps(idx)"
-                >
-                  Entfernen
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Plus-Zeile -->
-          <div class="tfoot" role="rowgroup">
-            <div class="tr foot" role="row">
-              <div class="td col-algo" role="cell">
-                <select class="control" v-model="newAlgo">
-                  <option disabled value="">Algorithmus wählen…</option>
-                  <option
-                    v-for="opt in addableAlgorithms"
-                    :key="opt.id"
-                    :value="opt.id"
+                <div class="cell" role="cell">
+                  <input
+                    class="input input--sm"
+                    type="number"
+                    v-model.number="v.optimisticInitialValue"
+                    @change="emitPolicies"
+                    @blur="emitPolicies"
+                    :aria-label="`OIV für Variante ${i + 1}`"
+                  />
+                </div>
+                <div class="cell cell--end" role="cell">
+                  <button
+                    class="btn btn-ghost btn-pill btn-sm"
+                    type="button"
+                    @click="removeVariant(i)"
+                    :aria-label="`Variante ${i + 1} entfernen`"
                   >
-                    {{ opt.label }}
-                  </option>
-                </select>
+                    Entfernen
+                  </button>
+                </div>
               </div>
-              <div class="td col-param" role="cell">
-                <span class="muted">nur parametrisierbare Algos (ε / c)</span>
-              </div>
-              <div class="td col-oiv" role="cell">
-                <span class="muted">—</span>
-              </div>
-              <div class="td col-actions" role="cell">
-                <button
-                  class="ghost"
-                  type="button"
-                  :disabled="!newAlgo"
-                  @click="addSelectedAlgo"
-                >
-                  + Hinzufügen
-                </button>
+
+              <div
+                v-if="!localPolicies.epsgreedy.variants.length"
+                class="variants-empty"
+              >
+                Keine Varianten angelegt.
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Divider -->
-        <div class="divider"></div>
-
-        <!-- EIGENER ALGORITHMUS – aufklappbar -->
-        <header
-          class="subhead"
-          role="button"
-          tabindex="0"
-          @click="toggleCustom()"
-          @keydown.enter.prevent="toggleCustom()"
-          @keydown.space.prevent="toggleCustom()"
-        >
-          <h3>Eigener Algorithmus</h3>
-          <button class="ghost" type="button">
-            {{ customOpen ? "Einklappen" : "Einblenden" }}
-          </button>
-        </header>
-
-        <transition name="fade-slide">
-          <div v-if="customOpen" class="custom-card">
-            <AlgorithmEditor @policyLoaded="onCustomPolicyLoaded" />
-            <small class="hint muted">
-              Der geladene eigene Algorithmus wird als separate Serie im Chart
-              angezeigt und im Runner mitgeführt.
-            </small>
+        <!-- Eigener Algorithmus -->
+        <details class="custom" :open="customOpen" @toggle="onCustomToggle">
+          <summary>Eigener Algorithmus</summary>
+          <div class="custom-body">
+            <p class="muted">
+              Hier kann der AlgorithmEditor eingeblendet werden.
+            </p>
           </div>
-        </transition>
+        </details>
       </div>
-    </transition>
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch, computed } from "vue";
-import NumericStepper from "@/components/ui/NumericStepper.vue";
-import AlgorithmEditor from "@/components/AlgorithmEditor.vue";
-import type { iEnvConfig } from "../env/Domain/iEnvConfig";
+import {
+  reactive,
+  ref,
+  watch,
+  withDefaults,
+  defineProps,
+  defineEmits,
+  nextTick,
+} from "vue";
 
 type Mode = "manual" | "algo";
-type PolicyId = "greedy" | "epsgreedy" | "ucb";
 
-const props = defineProps<{
+interface Props {
   mode: Mode;
-  env: iEnvConfig;
-  policyConfigs: any;
+  env: any; // iEnvConfig – bewusst locker gehalten
+  policyConfigs: any; // { greedy, epsgreedy, customPolicy? }
   open?: boolean;
-}>();
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  open: false,
+});
+
 const emit = defineEmits<{
-  (e: "update:env", v: iEnvConfig): void;
+  (e: "update:env", v: any): void;
   (e: "update:policyConfigs", v: any): void;
   (e: "update:open", v: boolean): void;
 }>();
 
-/* Offen/zu */
-const openLocal = ref<boolean>(props.open ?? false);
-watch(
-  () => props.open,
-  (v) => {
-    if (typeof v === "boolean") openLocal.value = v;
-  },
-);
-function toggle() {
-  openLocal.value = !openLocal.value;
-  emit("update:open", openLocal.value);
-}
-const modeLabel = computed(() =>
-  props.mode === "manual" ? "Manuell" : "Algorithmisch",
-);
-
-/* Custom-Editor auf/zu */
-const customOpen = ref<boolean>(false);
-function toggleCustom() {
-  customOpen.value = !customOpen.value;
-}
-
-/* Env Binding */
-const localEnv = reactive<iEnvConfig>({
-  type: props.env.type ?? "gaussian",
-  arms: props.env.arms ?? 6,
-  probs: props.env.probs,
-  means: props.env.means,
-  stdDev: props.env.stdDev,
-  seed: props.env.seed ?? 12345,
+/* Lokaler Shadow-State */
+const localEnv = reactive<any>({
+  type: props.env?.type ?? "gaussian",
+  arms: props.env?.arms ?? 6,
+  seed: props.env?.seed ?? 12345,
 });
+
+const localPolicies = reactive<any>({
+  greedy: {
+    optimisticInitialValue:
+      props.policyConfigs?.greedy?.optimisticInitialValue ?? 100,
+  },
+  epsgreedy: {
+    epsilon: props.policyConfigs?.epsgreedy?.epsilon ?? 0.1,
+    optimisticInitialValue:
+      props.policyConfigs?.epsgreedy?.optimisticInitialValue ?? 150,
+    variants: Array.isArray(props.policyConfigs?.epsgreedy?.variants)
+      ? [...props.policyConfigs.epsgreedy.variants]
+      : [],
+  },
+  customPolicy: props.policyConfigs?.customPolicy ?? null,
+});
+
+const openLocal = ref<boolean>(props.open);
+const customOpen = ref<boolean>(false);
+
+/* Sync außen → innen */
 watch(
   () => props.env,
-  (v) => Object.assign(localEnv, v ?? {}),
-  { deep: true },
-);
-function emitEnv() {
-  emit("update:env", { ...localEnv });
-}
-watch(localEnv, emitEnv, { deep: true });
-
-/* Seed würfeln */
-function rollSeed() {
-  localEnv.seed = Math.floor(Math.random() * 1_000_000_000);
-  emitEnv();
-}
-
-function onCustomPolicyLoaded(policy: any) {
-  const out = { ...(props.policyConfigs ?? {}), customPolicy: policy };
-  emit("update:policyConfigs", out);
-}
-
-/* Tabellenmodell: Greedy + ε-Greedy-Varianten */
-const greedyOIV = ref<number>(
-  props.policyConfigs?.greedy?.optimisticInitialValue ?? 100,
-);
-type EpsRow = { epsilon: number; oiv: number };
-const epsRows = ref<EpsRow[]>([
-  {
-    epsilon: props.policyConfigs?.epsgreedy?.epsilon ?? 0.1,
-    oiv: props.policyConfigs?.epsgreedy?.optimisticInitialValue ?? 150,
+  (v) => {
+    if (!v) return;
+    localEnv.type = v.type ?? localEnv.type;
+    localEnv.arms = v.arms ?? localEnv.arms;
+    localEnv.seed = v.seed ?? localEnv.seed;
   },
-]);
-
-const addableAlgorithms = computed(() =>
-  [
-    { id: "epsgreedy" as const, label: "ε-Greedy", enabled: true },
-    {
-      id: "ucb" as const,
-      label: "UCB",
-      enabled: !!props.policyConfigs?.ucb || false,
-    },
-  ].filter((x) => x.enabled),
+  { deep: true, immediate: true },
 );
-const newAlgo = ref<"" | PolicyId>("");
 
-function addSelectedAlgo() {
-  if (newAlgo.value === "epsgreedy") {
-    epsRows.value.push({ epsilon: 0.1, oiv: 150 });
-    emitPolicies();
-  }
-  newAlgo.value = "";
-}
-function removeEps(idx: number) {
-  if (idx === 0) return;
-  epsRows.value.splice(idx, 1);
-  emitPolicies();
-}
+watch(
+  () => props.policyConfigs,
+  (p) => {
+    if (!p) return;
+    localPolicies.greedy.optimisticInitialValue =
+      p.greedy?.optimisticInitialValue ??
+      localPolicies.greedy.optimisticInitialValue;
 
-/* Policies emittieren */
+    localPolicies.epsgreedy.epsilon =
+      p.epsgreedy?.epsilon ?? localPolicies.epsgreedy.epsilon;
+    localPolicies.epsgreedy.optimisticInitialValue =
+      p.epsgreedy?.optimisticInitialValue ??
+      localPolicies.epsgreedy.optimisticInitialValue;
+    localPolicies.epsgreedy.variants = Array.isArray(p.epsgreedy?.variants)
+      ? [...p.epsgreedy.variants]
+      : [];
+    localPolicies.customPolicy = p.customPolicy ?? null;
+  },
+  { deep: true, immediate: true },
+);
+
+watch(
+  () => props.open,
+  (v) => (openLocal.value = !!v),
+  { immediate: true },
+);
+
+/* Emits */
+function emitEnv() {
+  emit("update:env", { ...props.env, ...localEnv });
+}
 function emitPolicies() {
-  const variants = epsRows.value.map((r) => ({
-    epsilon: r.epsilon,
-    optimisticInitialValue: r.oiv,
-  }));
-  const out: any = {
+  const out = {
     ...props.policyConfigs,
     greedy: {
-      ...(props.policyConfigs?.greedy ?? {}),
-      optimisticInitialValue: greedyOIV.value,
+      optimisticInitialValue: localPolicies.greedy.optimisticInitialValue,
     },
     epsgreedy: {
-      ...(props.policyConfigs?.epsgreedy ?? {}),
-      epsilon: variants[0]?.epsilon ?? 0.1,
-      optimisticInitialValue: variants[0]?.optimisticInitialValue ?? 150,
-      variants,
+      epsilon: localPolicies.epsgreedy.epsilon,
+      optimisticInitialValue: localPolicies.epsgreedy.optimisticInitialValue,
+      variants: [...localPolicies.epsgreedy.variants],
     },
+    customPolicy: localPolicies.customPolicy ?? null,
   };
   emit("update:policyConfigs", out);
 }
 
-/* Sync */
-watch(
-  () => props.policyConfigs?.greedy?.optimisticInitialValue,
-  (v) => {
-    if (typeof v === "number") greedyOIV.value = v;
-  },
-);
-watch(
-  () => props.policyConfigs?.epsgreedy as any,
-  (v: any) => {
-    if (!v) return;
-    const list =
-      Array.isArray(v.variants) && v.variants.length
-        ? v.variants
-        : [
-            {
-              epsilon: v.epsilon ?? 0.1,
-              optimisticInitialValue: v.optimisticInitialValue ?? 150,
-            },
-          ];
-    epsRows.value = list.map((x: any) => ({
-      epsilon: Number(x.epsilon ?? 0.1),
-      oiv: Number(x.optimisticInitialValue ?? 150),
-    }));
-  },
-);
+/* UI-Interaktionen */
+function toggleOpen() {
+  openLocal.value = !openLocal.value;
+  emit("update:open", openLocal.value);
+}
+function rollSeed() {
+  localEnv.seed = Math.floor(Math.random() * 1_000_000);
+  emitEnv();
+}
+function addVariant() {
+  localPolicies.epsgreedy.variants.push({
+    epsilon: 0.1,
+    optimisticInitialValue: 150,
+  });
+  emitPolicies();
+  nextTick(); // sorgt dafür, dass neue Zeile direkt sichtbar wird
+}
+function removeVariant(i: number) {
+  localPolicies.epsgreedy.variants.splice(i, 1);
+  emitPolicies();
+}
+function onCustomToggle(e: Event) {
+  const el = e.target as HTMLDetailsElement;
+  customOpen.value = !!el?.open;
+}
 </script>
 
 <style scoped>
-/* Einheitliche Control-Höhe im Component */
-:host {
-  --control-h: 44px;
+/* Farb- & Kontrast-Token – abgestufte Grautöne */
+.adv {
+  --bg-00: #0e0e0e;
+  --bg-10: #111111;
+  --bg-12: #131313;
+  --bg-14: #141414;
+  --bg-15: #151515;
+  --bg-16: #161616;
+  --bg-17: #171717;
+  --bg-18: #181818;
+  --bg-19: #191919;
+  --bg-1a: #1a1a1a;
+  --br-22: #222222;
+  --br-26: #262626;
+  --br-2a: #2a2a2a;
+
+  --panel: var(--bg-14);
+  --panel-1: var(--bg-15);
+  --panel-2: var(--bg-18);
+  --header: var(--bg-17);
+  --row: var(--bg-16);
+  --row-alt: var(--bg-14);
+  --row-head: var(--bg-1a);
+  --border: var(--br-22);
+  --border-hr: var(--br-26);
+  --muted: #aeb4bd;
+
+  padding: 0;
+  background: var(--panel);
+  border-color: var(--border);
+  border-radius: 12px;
 }
 
+/* Header oben (Aufklappbar) */
 .head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  background: var(--header);
+  border-bottom: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+  color: #eaeaea;
   cursor: pointer;
 }
-.meta {
+.head:hover {
+  background: #1b1b1b;
+}
+.head-left {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 .badge {
-  display: inline-block;
-  border: 1px solid var(--line, #2a2a2a);
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 12px;
-  color: var(--muted);
-}
-.ghost {
-  background: #1a1a1a;
-  color: #ddd;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 6px 12px;
-  cursor: pointer;
-}
-.ghost.danger {
-  color: #ffb3b3;
-  border-color: #553333;
-}
-.body {
-  margin-top: 8px;
-}
-
-.env-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 320px;
-}
-.col-4 {
-  grid-column: span 4;
-}
-.inline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.control {
-  height: var(--control-h);
-  background: #1a1a1a;
-  border: 1px solid #333;
-  color: #fff;
-  padding: 0 12px;
-  border-radius: 10px;
-  min-width: 260px;
-}
-
-.button-base {
-  height: var(--control-h);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  border: 1px solid #333;
-  background: #1a1a1a;
-  color: #ddd;
-}
-
-/* würfeln: bewusst breiter und gleiche Höhe wie Input */
-.ghost.roll {
-  composes: button-base;
-  min-width: 140px; /* breiter */
-  padding: 0 16px;
-}
-
-.label {
   font-weight: 600;
 }
-.hint {
-  margin-top: -2px;
+.head-right .chev {
+  transition: transform 0.18s ease;
+}
+.head-right .chev.open {
+  transform: rotate(180deg);
+}
+.body {
+  padding: 12px;
+  background: var(--panel);
 }
 
-.card-subhead {
-  margin-top: 8px;
-  margin-bottom: 8px;
+/* Box-Gruppen */
+.group {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 12px;
+  background: var(--panel-1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
-.table {
-  width: 100%;
-  border: 1px solid var(--line, #2a2a2a);
-  border-radius: 10px;
-  overflow: hidden;
+.group-head {
+  margin: 2px 0 10px 0;
 }
-.thead,
-.tbody,
-.tfoot {
-  display: block;
-}
-.tr {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr 0.7fr 0.7fr;
-  align-items: center;
-}
-.tr.head {
-  background: #171717;
-  border-bottom: 1px solid var(--line, #2a2a2a);
-}
-.th,
-.td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #222;
-}
-.tfoot .tr.foot .td {
-  border-bottom: 0;
-}
-.col-actions {
-  text-align: right;
-}
-.pill {
+.chip {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid var(--line, #2a2a2a);
-  background: #1f1f2b;
-  color: #cfd1ff;
   font-size: 12px;
+  background: var(--bg-18);
+  border: 1px solid var(--border);
+  color: #e8e8e8;
 }
-.muted {
-  color: var(--muted);
+
+/* Grid/Rows */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
-.muted.sm {
-  font-size: 12px;
-}
-.inline-controls {
+.row {
   display: flex;
+  gap: 10px;
   align-items: center;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--row);
+}
+.row + .row {
+  margin-top: 6px;
+}
+.lab {
+  width: 180px;
+  opacity: 0.95;
+}
+.ctrl {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.seed-line {
+  display: flex;
   gap: 8px;
 }
 
-.divider {
-  height: 1px;
-  background: #222;
-  margin: 16px 0;
+/* Inputs */
+.input {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #121212;
+  color: #f1f1f1;
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.3);
 }
-.subhead {
+.input--sm {
+  height: 30px;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--br-2a);
+  box-shadow: 0 0 0 2px rgba(120, 160, 255, 0.15);
+}
+
+/* Buttons */
+.btn {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  background: #191b1f;
+  color: #eaeaea;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #1e2126;
+}
+.btn-pill {
+  border-radius: 999px;
+}
+.btn-ghost {
+  background: #161616;
+}
+.btn-sm {
+  height: 28px;
+  padding: 0 10px;
+}
+
+/* Algo-Karten (leichter Kontrast + Kante) */
+.algo-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  background: var(--panel-2);
+  margin-top: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+.algo-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.pill {
+  display: inline-block;
+  background: #1a1a1a;
+  border: 1px solid #262626;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.pill-greedy {
+  border-color: #3aa9d6;
+  color: #cdefff;
+}
+.pill-eps {
+  border-color: #d68a2a;
+  color: #fde3bf;
+}
+.algo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Varianten – bessere Absetzung & Zebra */
+.variants {
+  margin-top: 10px;
+}
+.variants-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
-  cursor: pointer;
-}
-.custom-card {
-  border: 1px solid #222;
+  padding: 8px 10px;
+  background: var(--bg-18);
+  border: 1px solid var(--border);
   border-radius: 10px;
+}
+.variants-table {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--row-alt);
+}
+.variants-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 0.6fr;
+  gap: 0;
+  border-top: 1px solid var(--border);
+  background: #151515;
+}
+.variants-row.is-alt {
+  background: #131313;
+}
+.variants-row:first-child {
+  border-top: none;
+}
+.variants-row--head {
+  background: var(--row-head);
+  font-weight: 600;
+}
+.cell {
+  padding: 10px;
+  border-right: 1px solid var(--border);
+}
+.cell:last-child {
+  border-right: none;
+}
+.cell--end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.variants-empty {
   padding: 12px;
-  background: #141414;
+  color: var(--muted);
 }
 
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition:
-    opacity 0.22s cubic-bezier(0.22, 0.61, 0.36, 1),
-    transform 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+/* Custom-Editor */
+.custom {
+  margin-top: 10px;
+  background: var(--panel-1);
+  border-radius: 12px;
+  border: 1px solid var(--border);
 }
-.fade-slide-enter-from,
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateY(6px);
+.custom summary {
+  cursor: pointer;
+  padding: 10px;
+}
+.custom summary:hover {
+  background: #1b1b1b;
+}
+.custom-body {
+  padding: 10px;
+  border-top: 1px solid var(--border);
+  background: #151515;
+  border-radius: 0 0 12px 12px;
+}
+.muted {
+  color: var(--muted);
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+  .grid,
+  .algo-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

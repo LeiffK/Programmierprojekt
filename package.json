@@ -16,6 +16,7 @@
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
     "seedrandom": "^3.0.5",
+    "shepherd.js": "^14.5.1",
     "vue": "^3.5.22",
     "vue-echarts": "^7.0.3",
     "vue-router": "^4.5.1"
@@ -40,6 +41,7 @@
     "typescript": "~5.8.3",
     "vite": "^7.1.9",
     "vitest": "^3.2.4",
+    "shepherd.js": "^14.5.1",
     "vue-tsc": "^3.1.1"
   }
 }
