@@ -1,154 +1,240 @@
 <template>
-  <section class="card">
-    <!-- Header wie im Debug-Panel -->
+  <div>
+    <!-- Gesamter Header klickbar -->
     <header
-      class="head"
+      class="accordion-head"
       role="button"
       tabindex="0"
       @click="toggle()"
       @keydown.enter.prevent="toggle()"
       @keydown.space.prevent="toggle()"
     >
-      <h2>Vergleich & Kennzahlen</h2>
+      <h2>Vergleich &amp; Kennzahlen</h2>
       <div class="meta">
-        <span class="badge">{{ rows.length }} Serien</span>
-        <button class="ghost" type="button">
+        <span class="badge">{{ seriesBadge }}</span>
+        <button class="btn btn-ghost btn-pill" type="button">
           {{ open ? "Einklappen" : "Einblenden" }}
         </button>
       </div>
     </header>
 
     <transition name="fade-slide">
-      <div v-if="open" class="body">
-        <div class="table" role="table" aria-label="Vergleichstabelle">
-          <div class="thead" role="rowgroup">
-            <div class="tr head" role="row">
-              <div class="th col-series" role="columnheader">Serie</div>
-              <div class="th col-type" role="columnheader">Typ</div>
-              <div class="th" role="columnheader" title="Anzahl Züge">n</div>
-              <div class="th" role="columnheader" title="Kumulierte Belohnung">
-                Σ Reward
-              </div>
-              <div class="th" role="columnheader" title="Durchschnitts-Reward">
-                Ø Reward
-              </div>
-              <div
-                class="th"
-                role="columnheader"
-                title="Optimale Wahl in Prozent"
-              >
-                Best-Quote
-              </div>
-              <div
-                class="th"
-                role="columnheader"
-                title="Verpasster Erwartungswert (je kleiner desto besser)"
-              >
-                Regret
-              </div>
-              <div
-                class="th col-last"
-                role="columnheader"
-                title="Letzter Zug (Debug)"
-              >
-                Zuletzt
-              </div>
-            </div>
-          </div>
-
-          <div class="tbody" role="rowgroup">
-            <div
-              v-for="r in rows"
-              :key="r.seriesId"
-              class="tr"
-              :class="{ active: r.visible }"
-              :style="{ '--row-accent': r.color || '#ff0000' }"
-              role="row"
+      <div v-if="open" class="table-wrap">
+        <table class="metrics-table">
+          <thead>
+            <tr>
+              <th>Serie</th>
+              <th>Typ</th>
+              <th class="num">n</th>
+              <th class="num">Σ&nbsp;Reward</th>
+              <th class="num">Ø&nbsp;Reward</th>
+              <th class="num">Best-Quote</th>
+              <th class="num">Regret</th>
+              <th class="num">Zuletzt</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(r, i) in rows"
+              :key="(r as any).seriesId ?? r.label ?? i"
+              :class="{ off: !isVisible(r, i) }"
+              role="button"
               tabindex="0"
-              @click="onRowClick(r)"
-              @keydown.enter.prevent="onRowClick(r)"
-              @keydown.space.prevent="onRowClick(r)"
+              @click="onRowToggle(r, i)"
+              @keydown.enter.prevent="onRowToggle(r, i)"
+              @keydown.space.prevent="onRowToggle(r, i)"
             >
-              <div class="td col-series" role="cell">
-                <span class="dot" :style="dotStyle(r)" />
-                {{ r.label }}
-              </div>
-
-              <div class="td col-type" role="cell">
-                <span class="pill" :class="r.kind">{{
-                  r.kind === "manual" ? "Manuell" : "Algorithmus"
-                }}</span>
-              </div>
-
-              <div class="td" role="cell">{{ r.n }}</div>
-              <div class="td" role="cell">{{ fmtNum(r.cumReward) }}</div>
-              <div class="td" role="cell">{{ fmtNum(r.avgReward) }}</div>
-              <div class="td" role="cell">
-                {{ (r.bestChoiceRate * 100).toFixed(1) }}%
-              </div>
-              <div class="td" role="cell">{{ fmtNum(r.regret) }}</div>
-              <div class="td col-last" role="cell">
-                <span class="muted" v-if="r.lastAction == null">—</span>
-                <span v-else
-                  >Arm {{ String.fromCharCode(65 + r.lastAction) }} ·
-                  {{ fmtNum(r.lastReward ?? 0) }}</span
+              <!-- linke Farbleiste + Serien-Pille -->
+              <td
+                class="series-cell"
+                :style="{ borderLeft: `4px solid ${r.color || '#666'}` }"
+              >
+                <span
+                  class="series-chip"
+                  :style="{ borderColor: r.color, color: r.color }"
                 >
-              </div>
-            </div>
-          </div>
-        </div>
+                  {{ r.label }}
+                </span>
+              </td>
 
-        <p class="footnote muted">
-          Fußnote, falls wir hier noch was tolles hinschreiben wollen
-        </p>
+              <!-- Typ -->
+              <td>{{ deriveType(r) }}</td>
+
+              <!-- n -->
+              <td class="num">{{ pickInt(r.n, r.count, r.steps) }}</td>
+
+              <!-- Σ Reward -->
+              <td class="num">
+                {{ fmt(pickNum(r.cumReward, r.totalReward, r.sum)) }}
+              </td>
+
+              <!-- Ø Reward -->
+              <td class="num">
+                {{ fmt(pickNum(r.avgReward, r.meanReward, r.average)) }}
+              </td>
+
+              <!-- Best-Quote -->
+              <td class="num">
+                {{
+                  fmtPct(
+                    pickNum(
+                      r.optimalRate,
+                      r.optimalPct,
+                      r.optimalPercent,
+                      r.optimalShare,
+                    ),
+                  )
+                }}
+              </td>
+
+              <!-- Regret -->
+              <td class="num">
+                {{ fmt(pickNum(r.regret, r.cumRegret, r.totalRegret)) }}
+              </td>
+
+              <!-- Zuletzt -->
+              <td class="num">
+                {{
+                  fmt(
+                    pickNum(r.lastReward, r.recentReward, r.tailReward, r.last),
+                  )
+                }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </transition>
-  </section>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import type { iMetricsRow } from "../domain/iMetrics";
+import { computed } from "vue";
 
-const props = defineProps<{ rows: iMetricsRow[]; open?: boolean }>();
+/** Tolerantes Interface – akzeptiert unterschiedliche Feldnamen. */
+export interface AnyRow {
+  seriesId?: string; // stabile ID (z.B. "manual", "greedy", "epsgreedy#1")
+  label?: string;
+  color?: string;
+
+  // Zähler
+  n?: number;
+  count?: number;
+  steps?: number;
+
+  // Rewards: Σ / Ø
+  cumReward?: number;
+  totalReward?: number;
+  sum?: number;
+  avgReward?: number;
+  meanReward?: number;
+  average?: number;
+
+  // Optimal-Rate
+  optimalRate?: number;
+  optimalPct?: number;
+  optimalPercent?: number;
+  optimalShare?: number;
+
+  // Regret
+  regret?: number;
+  cumRegret?: number;
+  totalRegret?: number;
+
+  // Zuletzt
+  lastReward?: number;
+  recentReward?: number;
+  tailReward?: number;
+  last?: number;
+
+  // Typ-Hinweise
+  type?: string;
+  kind?: string;
+}
+
+const props = defineProps<{
+  rows: AnyRow[];
+  open?: boolean;
+  /** Sichtbarkeits-Map je seriesId (true = sichtbar). Wenn nicht vorhanden ⇒ sichtbar. */
+  visibleMap?: Record<string, boolean>;
+}>();
+
 const emit = defineEmits<{
   (e: "update:open", v: boolean): void;
   (e: "toggleSeries", payload: { seriesId: string; visible: boolean }): void;
 }>();
 
-const inner = ref<boolean>(props.open ?? true);
-watch(
-  () => props.open,
-  (v) => {
-    if (typeof v === "boolean") inner.value = v;
-  },
-);
-
-const open = computed(() => inner.value);
+const open = computed({
+  get: () => props.open ?? false,
+  set: (v: boolean) => emit("update:open", v),
+});
 function toggle() {
-  inner.value = !inner.value;
-  emit("update:open", inner.value);
+  open.value = !open.value;
 }
 
-function onRowClick(r: iMetricsRow) {
-  emit("toggleSeries", { seriesId: r.seriesId, visible: !r.visible });
+const seriesBadge = computed(() => `${props.rows?.length ?? 0} Serien`);
+
+/* ---------- Helpers ---------- */
+function pickNum(...vals: Array<number | undefined>) {
+  for (const v of vals)
+    if (typeof v === "number" && Number.isFinite(v)) return v;
+  return undefined;
+}
+function pickInt(...vals: Array<number | undefined>) {
+  const v = pickNum(...vals);
+  return v == null ? "—" : Math.round(v);
+}
+function fmt(v?: number) {
+  if (v == null || !Number.isFinite(v)) return "—";
+  return v.toFixed(2);
+}
+function fmtPct(v?: number) {
+  if (v == null || !Number.isFinite(v)) return "—";
+  const pct = v <= 1 ? v * 100 : v; // akzeptiert 0..1 oder 0..100
+  return `${pct.toFixed(1)}%`;
+}
+function deriveType(r: AnyRow): string {
+  const t = (r.type || r.kind || "").toString().toLowerCase();
+  if (t.includes("manual")) return "Manuell";
+  if (t.includes("custom")) return "Custom";
+  if (t.includes("eps") || t.includes("epsilon") || t.includes("ε"))
+    return "ε-Greedy";
+  if (t.includes("greedy")) return "Greedy";
+
+  const lbl = (r.label || "").toLowerCase();
+  if (/manuell/.test(lbl)) return "Manuell";
+  if (/custom/.test(lbl)) return "Custom";
+  if (/greedy/.test(lbl) && /ε|eps/.test(lbl)) return "ε-Greedy";
+  if (/greedy/.test(lbl)) return "Greedy";
+  return "—";
 }
 
-function dotStyle(r: iMetricsRow) {
-  return { background: r.color || "#888", opacity: r.visible ? 1 : 0.4 };
+/* ---------- Sichtbarkeit + Toggle ---------- */
+function seriesIdOf(r: AnyRow, i: number) {
+  return (r.seriesId || r.label || String(i)).toString();
 }
-
-function fmtNum(n: number) {
-  if (!Number.isFinite(n)) return "0";
-  return Math.round(n * 10) / 10;
+function isVisible(r: AnyRow, i: number) {
+  const id = seriesIdOf(r, i);
+  return props.visibleMap?.[id] ?? true;
+}
+function onRowToggle(r: AnyRow, i: number) {
+  const id = seriesIdOf(r, i);
+  const next = !(props.visibleMap?.[id] ?? true);
+  emit("toggleSeries", { seriesId: id, visible: next });
 }
 </script>
 
 <style scoped>
-.head {
+/* Inset-Header – konsistent mit AdvancedSettings */
+.accordion-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 8px 10px;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  background: #171717;
+  margin-bottom: 8px;
   cursor: pointer;
 }
 .meta {
@@ -157,109 +243,99 @@ function fmtNum(n: number) {
   gap: 8px;
 }
 .badge {
-  font-size: 12px;
-  padding: 2px 8px;
+  display: inline-block;
+  border: 1px solid #2a2a2a;
   border-radius: 999px;
-  background: #1e1e1e;
-  border: 1px solid #333;
+  padding: 2px 8px;
+  font-size: 12px;
+  color: var(--muted);
 }
-.ghost {
-  background: #1a1a1a;
-  color: #ddd;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 6px 10px;
+.btn {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #2d2d2d;
+  background: #171717;
+  color: #eaeaea;
+  border-radius: 999px;
   cursor: pointer;
 }
-
-.body {
-  margin-top: 8px;
-}
-
-.table {
-  width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  overflow: hidden;
-}
-.tr {
-  display: grid;
-  grid-template-columns: 1.2fr 0.9fr 0.5fr 0.8fr 0.8fr 0.9fr 0.8fr 1.2fr;
-  cursor: pointer;
-  transition:
-    background 160ms var(--ease-quick),
-    box-shadow 160ms var(--ease-quick),
-    filter 160ms var(--ease-quick);
-}
-.head {
-  cursor: default;
-}
-.thead .tr {
-  background: #151515;
-  border-bottom: 1px solid var(--line);
-}
-.th,
-.td {
-  padding: 10px 12px;
-}
-.td {
-  border-top: 1px solid #202020;
-}
-.tbody .tr:hover {
+.btn-ghost {
   background: #161616;
 }
-.tr.active {
-  background: #191919;
-  box-shadow: inset 4px 0 0 var(--row-accent, #ff0000);
-  filter: saturate(1.05);
-}
-
-.col-series {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.col-type {
-  white-space: nowrap;
-}
-
-.dot {
-  width: 10px;
-  height: 10px;
+.btn-pill {
   border-radius: 999px;
-  background: #999;
-  display: inline-block;
 }
 
-.pill {
-  font-size: 12px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-}
-.pill.manual {
-  background: #1c2a1c;
-  border-color: #2f5b2f;
-  color: #bfe9bf;
-}
-.pill.algo {
-  background: #1f1f2b;
-  border-color: #494970;
-  color: #cfd1ff;
-}
-
-.footnote {
+.table-wrap {
   margin-top: 8px;
 }
 
-/* weich ein-/ausblenden */
+/* Tabelle */
+.metrics-table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #222;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #131313;
+}
+thead tr {
+  background: #171717;
+}
+th,
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #222;
+  vertical-align: middle;
+}
+th.num,
+td.num {
+  text-align: right;
+}
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Klickbare Zeilen + linke Farbleiste */
+.metrics-table tbody tr {
+  outline: none;
+}
+.metrics-table tbody tr td:first-child {
+  /* Farbleiste per Inline-Style gesetzt */
+}
+.series-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Sichtbarkeit: gedimmt, wenn ausgeblendet */
+.metrics-table tbody tr.off {
+  opacity: 0.55;
+}
+.metrics-table tbody tr.off .series-chip {
+  filter: grayscale(0.3);
+  opacity: 0.8;
+}
+
+/* Serien-Pille */
+.series-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #2a2a2a;
+  background: #1f1f2b;
+  font-size: 12px;
+}
+
+/* Animation */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
   transition:
-    opacity var(--dur-soft, 0.22s)
-      var(--ease-soft, cubic-bezier(0.22, 0.61, 0.36, 1)),
-    transform var(--dur-soft, 0.22s)
-      var(--ease-soft, cubic-bezier(0.22, 0.61, 0.36, 1));
+    opacity 0.2s,
+    transform 0.2s;
 }
 .fade-slide-enter-from,
 .fade-slide-leave-to {
