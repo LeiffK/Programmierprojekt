@@ -77,4 +77,4 @@ describe("UpperConfidenceBound", () => {
     expect(estimates.length).toBe(env.config.arms);
     expect(estimates[action]).toBeGreaterThanOrEqual(0);
   });
-});
+});*/

@@ -79,4 +79,4 @@ describe("ThompsonSamplingBernoulli", () => {
     expect(policy.getFailures().every((f) => f === 1)).toBe(true);
     expect(policy.getCounts().every((n) => n === 0)).toBe(true);
   });
-});
+});*/

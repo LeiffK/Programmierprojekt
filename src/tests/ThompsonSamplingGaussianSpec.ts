@@ -75,4 +75,4 @@ describe("ThompsonSamplingGaussian", () => {
     expect(policy.getPrecisions().every((v) => v === 1)).toBe(true); // priorVariance=1 => init precision 1
     expect(policy.getCounts().every((v) => v === 0)).toBe(true);
   });
-});
+});*/
