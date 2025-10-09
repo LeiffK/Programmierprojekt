@@ -1,14 +1,14 @@
-/*import { describe, it, expect, beforeEach } from "vitest";
-import type { iEnvConfig } from "../../env/Domain/iEnvConfig.ts";
-import type { iBanditEnv } from "../../env/Domain/iBanditEnv.ts";
-import type { iPullResult } from "../../env/Domain/iPullResult.ts";
-import { UpperConfidenceBound } from "../UpperConfidenceBound.ts";
+import { describe, it, expect, beforeEach } from "vitest";
+import type { iEnvConfig } from "../env/Domain/iEnvConfig.ts";
+import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
+import type { iPullResult } from "../env/Domain/iPullResult.ts";
+import { UpperConfidenceBound } from "../algorithms/UpperConfidenceBound.ts";
 
 /**
  * Mock-Bernoulli-Umgebung:
  * - Jeder Arm hat feste Erfolgswahrscheinlichkeit p.
  * - pull liefert Reward 1 mit Wahrscheinlichkeit p, sonst 0.
- *
+ */
 class MockBernoulliEnv implements iBanditEnv {
   config: iEnvConfig;
   optimalAction: number;
@@ -77,4 +77,4 @@ describe("UpperConfidenceBound", () => {
     expect(estimates.length).toBe(env.config.arms);
     expect(estimates[action]).toBeGreaterThanOrEqual(0);
   });
-});*/
+});

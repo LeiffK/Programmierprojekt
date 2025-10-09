@@ -1,6 +1,6 @@
-/*import { describe, it, expect } from "vitest";
-import { BernoulliBanditEnv } from "../BernoulliBanditEnv.ts";
-import type { iEnvConfig } from "../Domain/iEnvConfig.ts";
+import { describe, it, expect } from "vitest";
+import { BernoulliBanditEnv } from "../env/BernoulliBanditEnv.ts";
+import type { iEnvConfig } from "../env/Domain/iEnvConfig.ts";
 
 describe("BernoulliBanditEnv", () => {
   // Basiskonfig: 2 Arme, p=0.8 für Arm 0, p=0.2 für Arm 1
@@ -37,4 +37,4 @@ describe("BernoulliBanditEnv", () => {
         } as iEnvConfig),
     ).toThrow();
   });
-});*/
+});
