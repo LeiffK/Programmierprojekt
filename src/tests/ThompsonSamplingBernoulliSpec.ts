@@ -1,14 +1,14 @@
-/*import { describe, it, expect, beforeEach } from "vitest";
-import type { iEnvConfig } from "../../env/Domain/iEnvConfig.ts";
-import type { iBanditEnv } from "../../env/Domain/iBanditEnv.ts";
-import type { iPullResult } from "../../env/Domain/iPullResult.ts";
-import { ThompsonSamplingBernoulli } from "../ThompsonSamplingBernoulli.ts";
+import { describe, it, expect, beforeEach } from "vitest";
+import type { iEnvConfig } from "../env/Domain/iEnvConfig";
+import type { iBanditEnv } from "../env/Domain/iBanditEnv";
+import type { iPullResult } from "../env/Domain/iPullResult";
+import { ThompsonSamplingBernoulli } from "../algorithms/ThompsonSamplingBernoulli.ts";
 
 /**
  * Mock-Umgebung (Bernoulli) für Tests der ThompsonSampling Policy.
  * - Rewards basieren auf festen Erfolgswahrscheinlichkeiten.
  * - RNG ist einfache Math.random(), Seed wird ignoriert.
- *
+ */
 class MockBernoulliEnv implements iBanditEnv {
   config: iEnvConfig;
   optimalAction: number;
@@ -79,4 +79,4 @@ describe("ThompsonSamplingBernoulli", () => {
     expect(policy.getFailures().every((f) => f === 1)).toBe(true);
     expect(policy.getCounts().every((n) => n === 0)).toBe(true);
   });
-});*/
+});

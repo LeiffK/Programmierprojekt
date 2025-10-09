@@ -1,14 +1,14 @@
-/*import { describe, it, expect, beforeEach } from "vitest";
-import type { iEnvConfig } from "../../env/Domain/iEnvConfig.ts";
-import type { iBanditEnv } from "../../env/Domain/iBanditEnv.ts";
-import type { iPullResult } from "../../env/Domain/iPullResult.ts";
-import { ThompsonSamplingGaussian } from "../ThompsonSamplingGaussian.ts";
+import { describe, it, expect, beforeEach } from "vitest";
+import type { iEnvConfig } from "../env/Domain/iEnvConfig.ts";
+import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
+import type { iPullResult } from "../env/Domain/iPullResult.ts";
+import { ThompsonSamplingGaussian } from "../algorithms/ThompsonSamplingGaussian.ts";
 
 /**
  * Mock Gaussian Env:
  * - Rewards ~ Normal(mean[action], 1)
  * - rng nutzt Math.random() zur Vereinfachung (nicht deterministisch)
- *
+ */
 class MockGaussianEnv implements iBanditEnv {
   config: iEnvConfig;
   optimalAction: number;
@@ -75,4 +75,4 @@ describe("ThompsonSamplingGaussian", () => {
     expect(policy.getPrecisions().every((v) => v === 1)).toBe(true); // priorVariance=1 => init precision 1
     expect(policy.getCounts().every((v) => v === 0)).toBe(true);
   });
-});*/
+});
