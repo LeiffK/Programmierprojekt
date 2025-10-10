@@ -247,9 +247,6 @@ function getCustomPolicies(): CustomPolicyRegistration[] {
   const list = policyConfigs.value?.customPolicies;
   return Array.isArray(list) ? (list as CustomPolicyRegistration[]) : [];
 }
-function isCustomSeries(id: string): boolean {
-  return typeof id === "string" && id.startsWith("custom:");
-}
 function expectedAlgoIds(): string[] {
   const eg: any = policyConfigs.value?.epsgreedy ?? {};
   const list =
@@ -455,7 +452,6 @@ const metricRows = computed<MetricsRowX[]>(() => {
       ...(r as iMetricsRow),
       seriesId: "manual",
       optimalRate: calcOptimalRateFrom(manualHistory.value),
-      type: "manual",
     });
   }
   for (const s of activeAlgoSeries.value) {
@@ -469,7 +465,6 @@ const metricRows = computed<MetricsRowX[]>(() => {
       ...(r as iMetricsRow),
       seriesId: s.id,
       optimalRate: calcOptimalRateFrom(hist),
-      type: isCustomSeries(s.id) ? "custom" : (r.kind ?? "algo"),
     });
   }
   if (mode.value === "algo") return rows.filter((r) => r.seriesId !== "manual");
