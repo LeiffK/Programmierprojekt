@@ -5,4 +5,3 @@ export type CustomPolicyRegistration = {
   name: string;
   factory: () => iBanditPolicy;
 };
-

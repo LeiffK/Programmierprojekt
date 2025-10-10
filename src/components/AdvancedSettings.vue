@@ -202,16 +202,16 @@
             </div>
           </div>
         </div>
-          <!-- Eigener Algorithmus -->
-          <details class="custom" :open="customOpen" @toggle="onCustomToggle">
-            <summary>Eigener Algorithmus</summary>
-            <div class="custom-body">
-              <AlgorithmEditor
-                @policyLoaded="onCustomPolicyLoaded"
-                @policyRemoved="onCustomPolicyRemoved"
-              />
-            </div>
-          </details>
+        <!-- Eigener Algorithmus -->
+        <details class="custom" :open="customOpen" @toggle="onCustomToggle">
+          <summary>Eigener Algorithmus</summary>
+          <div class="custom-body">
+            <AlgorithmEditor
+              @policyLoaded="onCustomPolicyLoaded"
+              @policyRemoved="onCustomPolicyRemoved"
+            />
+          </div>
+        </details>
       </div>
     </div>
   </section>
@@ -709,4 +709,3 @@ function onCustomToggle(e: Event) {
   }
 }
 </style>
-

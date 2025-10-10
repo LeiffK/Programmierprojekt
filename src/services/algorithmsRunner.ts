@@ -411,7 +411,3 @@ class AlgorithmsRunner {
 }
 
 export const algorithmsRunner = new AlgorithmsRunner();
-
-
-
-

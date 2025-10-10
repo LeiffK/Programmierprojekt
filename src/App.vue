@@ -469,7 +469,7 @@ const metricRows = computed<MetricsRowX[]>(() => {
       ...(r as iMetricsRow),
       seriesId: s.id,
       optimalRate: calcOptimalRateFrom(hist),
-      type: isCustomSeries(s.id) ? "custom" : r.kind ?? "algo",
+      type: isCustomSeries(s.id) ? "custom" : (r.kind ?? "algo"),
     });
   }
   if (mode.value === "algo") return rows.filter((r) => r.seriesId !== "manual");
@@ -800,5 +800,3 @@ h2 {
   }
 }
 </style>
-
-

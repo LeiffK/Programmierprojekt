@@ -22,7 +22,9 @@
     </div>
 
     <!-- Status -->
-    <div v-if="status" :class="statusClass" class="status-msg">{{ status }}</div>
+    <div v-if="status" :class="statusClass" class="status-msg">
+      {{ status }}
+    </div>
 
     <!-- Liste der gespeicherten Algorithmen -->
     <div v-if="savedPolicies.length > 0" class="policy-list" ref="policyList">
@@ -43,7 +45,7 @@
           :key="p.name"
           :class="{
             'is-alt': i % 2 === 1,
-            'row-selected': selectedPolicy === p.name
+            'row-selected': selectedPolicy === p.name,
           }"
           @click="showCode(p)"
         >
@@ -57,7 +59,10 @@
             >
               {{ activePolicies.has(p.name) ? "In Anwendung" : "Anwenden" }}
             </button>
-            <button class="btn btn-ghost btn-sm" @click.stop="removeSaved(p.name)">
+            <button
+              class="btn btn-ghost btn-sm"
+              @click.stop="removeSaved(p.name)"
+            >
               Löschen
             </button>
           </div>
@@ -142,7 +147,7 @@ async function togglePolicy(p: { name: string; code: string; lang: string }) {
     } else {
       const policy = await CustomPolicyLoader.loadPolicy(
         p.code,
-        p.lang as "typescript" | "javascript"
+        p.lang as "typescript" | "javascript",
       );
       const ctor = policy?.constructor as new () => iBanditPolicy;
       if (typeof ctor !== "function") {
@@ -354,5 +359,3 @@ const statusClass = computed(() =>
   padding: 8px;
 }
 </style>
-
-
