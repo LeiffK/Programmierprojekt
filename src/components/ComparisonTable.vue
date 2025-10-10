@@ -197,19 +197,20 @@ function deriveType(r: AnyRow): string {
   const t = (r.type || r.kind || "").toString().toLowerCase();
   if (t.includes("manual")) return "Manuell";
   if (t.includes("custom")) return "Custom";
-  if (t.includes("eps") || t.includes("epsilon") || t.includes("ε"))
-    return "ε-Greedy";
+  if (t.includes("eps") || t.includes("epsilon") || t.includes("e"))
+    return "e-Greedy";
   if (t.includes("greedy")) return "Greedy";
+
+  const id = (r.seriesId || "").toString().toLowerCase();
+  if (id.startsWith("custom:")) return "Custom";
 
   const lbl = (r.label || "").toLowerCase();
   if (/manuell/.test(lbl)) return "Manuell";
   if (/custom/.test(lbl)) return "Custom";
-  if (/greedy/.test(lbl) && /ε|eps/.test(lbl)) return "ε-Greedy";
+  if (/greedy/.test(lbl) && /e|eps/.test(lbl)) return "e-Greedy";
   if (/greedy/.test(lbl)) return "Greedy";
-  return "—";
+  return "-";
 }
-
-/* ---------- Sichtbarkeit + Toggle ---------- */
 function seriesIdOf(r: AnyRow, i: number) {
   return (r.seriesId || r.label || String(i)).toString();
 }

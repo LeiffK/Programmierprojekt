@@ -61,12 +61,13 @@ import NumericStepper from "./ui/NumericStepper.vue";
 import { algorithmsRunner } from "../services/algorithmsRunner";
 import type { iEnvConfig } from "../env/Domain/iEnvConfig";
 import type { iBanditPolicyConfig } from "../algorithms/Domain/iBanditPolicyConfig";
+import type { CustomPolicyRegistration } from "../algorithms/Domain/iCustomPolicyRegistration";
 
 const props = defineProps<{
   envConfig: iEnvConfig | null;
   policyConfigs?: Partial<
     Record<"greedy" | "epsgreedy", iBanditPolicyConfig>
-  > & { variants?: any };
+  > & { variants?: any; customPolicies?: CustomPolicyRegistration[] };
 }>();
 
 const emit = defineEmits<{ (e: "reset"): void }>();
