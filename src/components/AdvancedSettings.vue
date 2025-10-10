@@ -202,16 +202,13 @@
             </div>
           </div>
         </div>
-
-        <!-- Eigener Algorithmus -->
-        <details class="custom" :open="customOpen" @toggle="onCustomToggle">
-          <summary>Eigener Algorithmus</summary>
-          <div class="custom-body">
-            <p class="muted">
-              Hier kann der AlgorithmEditor eingeblendet werden.
-            </p>
-          </div>
-        </details>
+          <!-- Eigener Algorithmus -->
+          <details class="custom" :open="customOpen" @toggle="onCustomToggle">
+            <summary>Eigener Algorithmus</summary>
+            <div class="custom-body">
+              <AlgorithmEditor @policyLoaded="onCustomPolicyLoaded" />
+            </div>
+          </details>
       </div>
     </div>
   </section>
@@ -227,6 +224,8 @@ import {
   defineEmits,
   nextTick,
 } from "vue";
+import AlgorithmEditor from "./AlgorithmEditor.vue";
+
 
 type Mode = "manual" | "algo";
 

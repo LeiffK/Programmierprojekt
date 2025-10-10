@@ -1,16 +1,6 @@
 <template>
-  <div class="editor-wrapper">
+  <div class="editor-wrapper" ref="editorRoot">
     <h3 class="editor-title">Eigenen Algorithmus schreiben</h3>
-    <!-- Dropdown zum Laden gespeicherter Policies -->
-    <div v-if="savedPolicies.length > 0" class="saved-select">
-      <label for="saved">Gespeicherte Policies:</label>
-      <select id="saved" v-model="selectedPolicy" @change="onSelectPolicy">
-        <option disabled value="">Bitte auswählen...</option>
-        <option v-for="p in savedPolicies" :key="p.name" :value="p.name">
-          {{ p.name }}
-        </option>
-      </select>
-    </div>
 
     <!-- Codefeld -->
     <textarea
@@ -27,14 +17,52 @@
         <option value="javascript">JavaScript</option>
       </select>
 
-      <button @click="loadCustomPolicy" class="apply-btn">
-        Laden & Verwenden
-      </button>
+      <button @click="saveCustomPolicy" class="save-btn">Speichern</button>
+      <button @click="newCustomPolicy" class="neutral-btn">Neu</button>
     </div>
 
     <!-- Status -->
-    <div v-if="status" :class="statusClass" class="status-msg">
-      {{ status }}
+    <div v-if="status" :class="statusClass" class="status-msg">{{ status }}</div>
+
+    <!-- Liste der gespeicherten Algorithmen -->
+    <div v-if="savedPolicies.length > 0" class="policy-list" ref="policyList">
+      <div class="variants-head">
+        <div class="title">Gespeicherte eigene Algorithmen</div>
+      </div>
+
+      <div class="variants-table">
+        <div class="variants-row variants-row--head">
+          <div class="cell">Bezeichnung</div>
+          <div class="cell">Sprache</div>
+          <div class="cell cell--end"></div>
+        </div>
+
+        <div
+          class="variants-row"
+          v-for="(p, i) in savedPolicies"
+          :key="p.name"
+          :class="{
+            'is-alt': i % 2 === 1,
+            'row-selected': selectedPolicy === p.name
+          }"
+          @click="showCode(p)"
+        >
+          <div class="cell">{{ p.name }}</div>
+          <div class="cell">{{ p.lang }}</div>
+          <div class="cell cell--end">
+            <button
+              class="btn btn-pill btn-sm"
+              :class="{ activeBtn: activePolicies.has(p.name) }"
+              @click.stop="togglePolicy(p)"
+            >
+              {{ activePolicies.has(p.name) ? "In Anwendung" : "Anwenden" }}
+            </button>
+            <button class="btn btn-ghost btn-sm" @click.stop="removeSaved(p.name)">
+              Löschen
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -44,63 +72,108 @@ import { ref, computed, onMounted } from "vue";
 import { CustomPolicyLoader } from "../algorithms/CustomPolicyLoader.ts";
 
 const emit = defineEmits(["policyLoaded"]);
+
 const userCode = ref(`import { BasePolicy } from "./BasePolicy";
 
 export class MyPolicy extends BasePolicy {
   selectAction() {
+    // TODO: Implementiere deinen Algorithmus
     return Math.floor(this.rng() * this.env.arms.length);
-    //Hier muss ich mit den Kommentaren noch erklären wie man einen eigenen Algorithmus implementieren kann
   }
 }`);
 const lang = ref<"typescript" | "javascript">("typescript");
 const status = ref<string | null>(null);
 const savedPolicies = ref<{ name: string; code: string; lang: string }[]>([]);
-const selectedPolicy = ref<string>("");
+const activePolicies = ref<Set<string>>(new Set());
+const selectedPolicy = ref<string | null>(null);
 
-const loadCustomPolicy = async () => {
+/* --- Speichern --- */
+function saveCustomPolicy() {
   try {
-    const policy = await CustomPolicyLoader.loadPolicy(
-      userCode.value,
-      lang.value,
-    );
-    emit("policyLoaded", policy);
+    const classNameMatch = userCode.value.match(/class\s+([A-Za-z0-9_]+)/);
+    const className = classNameMatch ? classNameMatch[1] : "UnbekanntePolicy";
 
-    const className = policy.constructor?.name ?? "Unbekannte Policy";
-    status.value = `Policy "${className}" erfolgreich geladen!`;
-    if (!savedPolicies.value.some((p) => p.name === className)) {
+    const existing = savedPolicies.value.find((p) => p.name === className);
+    if (existing) {
+      existing.code = userCode.value;
+      existing.lang = lang.value;
+    } else {
       savedPolicies.value.push({
         name: className,
         code: userCode.value,
         lang: lang.value,
       });
-      localStorage.setItem(
-        "savedPolicies",
-        JSON.stringify(savedPolicies.value),
+    }
+
+    localStorage.setItem("savedPolicies", JSON.stringify(savedPolicies.value));
+    status.value = `💾 Policy "${className}" gespeichert.`;
+  } catch (err: any) {
+    status.value = `❌ Fehler beim Speichern: ${err.message}`;
+  }
+}
+
+/* --- Aktivieren/Deaktivieren --- */
+async function togglePolicy(p: { name: string; code: string; lang: string }) {
+  try {
+    if (activePolicies.value.has(p.name)) {
+      activePolicies.value.delete(p.name);
+      status.value = `⚙️ Policy "${p.name}" deaktiviert.`;
+    } else {
+      const policy = await CustomPolicyLoader.loadPolicy(
+        p.code,
+        p.lang as "typescript" | "javascript"
       );
+      // jetzt inklusive Name emittieren
+      emit("policyLoaded", { name: p.name, policy });
+      activePolicies.value.add(p.name);
+      status.value = `✅ Policy "${p.name}" aktiviert.`;
     }
   } catch (err: any) {
-    status.value = `Fehler: ${err.message}`;
+    status.value = `❌ Fehler: ${err.message}`;
   }
-};
+}
 
-const onSelectPolicy = () => {
-  const found = savedPolicies.value.find(
-    (p) => p.name === selectedPolicy.value,
-  );
-  if (found) {
-    userCode.value = found.code;
-    lang.value = found.lang as "typescript" | "javascript";
-    status.value = `Policy "${found.name}" geladen.`;
+/* --- Code anzeigen bei Klick --- */
+function showCode(p: { name: string; code: string; lang: string }) {
+  userCode.value = p.code;
+  lang.value = p.lang as "typescript" | "javascript";
+  selectedPolicy.value = p.name;
+}
+
+/* --- Entfernen --- */
+function removeSaved(name: string) {
+  savedPolicies.value = savedPolicies.value.filter((p) => p.name !== name);
+  activePolicies.value.delete(name);
+  localStorage.setItem("savedPolicies", JSON.stringify(savedPolicies.value));
+  if (selectedPolicy.value === name) selectedPolicy.value = null;
+}
+
+/* --- Neuer Algorithmus --- */
+function newCustomPolicy() {
+  userCode.value = `import { BasePolicy } from "./BasePolicy";
+
+export class NeuePolicy extends BasePolicy {
+  selectAction() {
+    // TODO: Implementiere deinen Algorithmus
+    return Math.floor(this.rng() * this.env.arms.length);
   }
-};
+}`;
+  selectedPolicy.value = null;
+  status.value = "✏️ Neuer Algorithmus vorbereitet.";
+}
 
+/* --- Laden beim Start --- */
 onMounted(() => {
   const stored = localStorage.getItem("savedPolicies");
   if (stored) savedPolicies.value = JSON.parse(stored);
 });
 
 const statusClass = computed(() =>
-  status.value?.startsWith("✅") ? "status-ok" : "status-error",
+  status.value?.startsWith("✅") ||
+  status.value?.startsWith("💾") ||
+  status.value?.startsWith("⚙️")
+    ? "status-ok"
+    : "status-error",
 );
 </script>
 
@@ -114,15 +187,6 @@ const statusClass = computed(() =>
   border-radius: 12px;
   padding: 20px;
   color: #fff;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.editor-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 4px;
 }
 
 /* Codefeld */
@@ -135,65 +199,123 @@ const statusClass = computed(() =>
   border-radius: 10px;
   font-family: "Fira Code", monospace;
   font-size: 14px;
-  line-height: 1.5;
   padding: 14px;
   resize: vertical;
-  box-sizing: border-box;
 }
 
 /* Controls */
 .control-row {
   display: flex;
-  gap: 10px;
-  width: 100%;
+  gap: 8px;
 }
-
-/* Dropdown + Button je 50 % */
 .lang-select,
-.apply-btn {
+.save-btn,
+.neutral-btn {
   flex: 1;
-  height: 44px;
+  height: 42px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   border: 1px solid #333;
-  transition: all 0.2s ease;
+  cursor: pointer;
 }
-
-/* Dropdown */
 .lang-select {
   background: #1a1a1a;
   color: #ddd;
   padding: 0 12px;
 }
-
-/* Button */
-.apply-btn {
+.save-btn {
   background: #ff0000;
   color: #fff;
-  border: 1px solid #ff0000;
-  cursor: pointer;
 }
-.apply-btn:hover {
-  background: #e00000;
+.save-btn:hover {
+  background: #d40000;
+}
+.neutral-btn {
+  background: #1a1a1a;
+  color: #fff;
+}
+.neutral-btn:hover {
+  background: #2a2a2a;
 }
 
-/* Status-Box */
-.status-msg {
-  margin-top: 6px;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 13px;
-  text-align: left;
+/* Tabelle */
+.policy-list {
+  margin-top: 10px;
 }
+.variants-table {
+  border: 1px solid #333;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.variants-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  border-top: 1px solid #2a2a2a;
+  background: #181818;
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+.variants-row.is-alt {
+  background: #101010;
+}
+.variants-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ✨ Dauerhaft sichtbarer Highlight */
+.row-selected {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Zellen */
+.cell {
+  padding: 10px;
+}
+.cell--end {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* Buttons */
+.btn {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #222;
+  color: #eee;
+  transition: all 0.2s ease;
+}
+.btn:hover {
+  background: #333;
+}
+.btn-sm {
+  font-size: 13px;
+  height: 28px;
+}
+
+/* Aktivierte Buttons */
+.activeBtn {
+  background: #ff0000 !important;
+  border-color: #ff0000 !important;
+  color: #fff !important;
+}
+
+/* Status */
 .status-ok {
   background: rgba(16, 185, 129, 0.15);
   border: 1px solid rgba(16, 185, 129, 0.4);
   color: #34d399;
+  border-radius: 8px;
+  padding: 8px;
 }
 .status-error {
   background: rgba(239, 68, 68, 0.15);
   border: 1px solid rgba(239, 68, 68, 0.4);
   color: #f87171;
+  border-radius: 8px;
+  padding: 8px;
 }
 </style>
