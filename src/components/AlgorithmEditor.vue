@@ -70,17 +70,37 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { CustomPolicyLoader } from "../algorithms/CustomPolicyLoader.ts";
+import type { iBanditPolicy } from "../algorithms/Domain/iBanditPolicy";
 
-const emit = defineEmits(["policyLoaded"]);
+const emit = defineEmits<{
+  (
+    e: "policyLoaded",
+    payload: { name: string; policyCtor: new () => iBanditPolicy },
+  ): void;
+  (e: "policyRemoved", payload: { name: string }): void;
+}>();
 
 const userCode = ref(`import { BasePolicy } from "./BasePolicy";
 
+/**
+ * Quickstart:
+ * - Benenne die Klasse (z.B. MyPolicy); der Name erscheint im UI.
+ * - Aus BasePolicy (Die Elternklasse) stehen dir folgende Funktionen bereit:
+ *     this.nArms           // Anzahl der Arme
+ *     this.rng()           // Zufallszahl 0..1
+ *     this.randomArm()     // zufälligen Armindex
+ *     this.getEstimates()  // aktuelle Schätzungen je Arm
+ *     this.getCounts()     // Ziehungen je Arm
+
+Wirft selectAction() einen Fehler, wird die Policy gestoppt und taucht nicht in Tabelle/Graph auf.
+ */
 export class MyPolicy extends BasePolicy {
   selectAction() {
-    // TODO: Implementiere deinen Algorithmus
-    return Math.floor(this.rng() * this.env.arms.length);
+    // TODO: ersetze die Logik durch deinen Algorithmus
+    return this.randomArm();
   }
-}`);
+}
+`);
 const lang = ref<"typescript" | "javascript">("typescript");
 const status = ref<string | null>(null);
 const savedPolicies = ref<{ name: string; code: string; lang: string }[]>([]);
@@ -118,13 +138,17 @@ async function togglePolicy(p: { name: string; code: string; lang: string }) {
     if (activePolicies.value.has(p.name)) {
       activePolicies.value.delete(p.name);
       status.value = `⚙️ Policy "${p.name}" deaktiviert.`;
+      emit("policyRemoved", { name: p.name });
     } else {
       const policy = await CustomPolicyLoader.loadPolicy(
         p.code,
         p.lang as "typescript" | "javascript"
       );
-      // jetzt inklusive Name emittieren
-      emit("policyLoaded", { name: p.name, policy });
+      const ctor = policy?.constructor as new () => iBanditPolicy;
+      if (typeof ctor !== "function") {
+        throw new Error("Policy besitzt keinen Konstruktor.");
+      }
+      emit("policyLoaded", { name: p.name, policyCtor: ctor });
       activePolicies.value.add(p.name);
       status.value = `✅ Policy "${p.name}" aktiviert.`;
     }
@@ -132,7 +156,6 @@ async function togglePolicy(p: { name: string; code: string; lang: string }) {
     status.value = `❌ Fehler: ${err.message}`;
   }
 }
-
 /* --- Code anzeigen bei Klick --- */
 function showCode(p: { name: string; code: string; lang: string }) {
   userCode.value = p.code;
@@ -152,12 +175,21 @@ function removeSaved(name: string) {
 function newCustomPolicy() {
   userCode.value = `import { BasePolicy } from "./BasePolicy";
 
+/**
+ * Hinweise:
+ * - Passe den Klassennamen an – er erscheint im UI.
+ * - Nutzbare Helfer aus BasePolicy:
+ *     this.nArms, this.rng(), this.randomArm(),
+ *     this.getEstimates(), this.getCounts().
+ * - selectAction() darf keine Fehler werfen, sonst erscheint er nicht unter "Verlauf" und "Vergleich & Kennzahlen"
+ */
 export class NeuePolicy extends BasePolicy {
   selectAction() {
-    // TODO: Implementiere deinen Algorithmus
-    return Math.floor(this.rng() * this.env.arms.length);
+    return this.randomArm();        
   }
-}`;
+}
+
+`;
   selectedPolicy.value = null;
   status.value = "✏️ Neuer Algorithmus vorbereitet.";
 }
@@ -187,6 +219,8 @@ const statusClass = computed(() =>
   border-radius: 12px;
   padding: 20px;
   color: #fff;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Codefeld */
@@ -201,6 +235,7 @@ const statusClass = computed(() =>
   font-size: 14px;
   padding: 14px;
   resize: vertical;
+  box-sizing: border-box;
 }
 
 /* Controls */
@@ -319,3 +354,5 @@ const statusClass = computed(() =>
   padding: 8px;
 }
 </style>
+
+
