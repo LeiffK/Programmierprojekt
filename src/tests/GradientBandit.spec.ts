@@ -69,9 +69,10 @@ describe("GradientBandit", () => {
     const avgAfterFail = policy.getAverageReward();
     const prefAfterFail = policy.getPreferences()[1];
 
-    expect(avgAfterFail).not.toBeCloseTo(avgAfterSuccess, 10); // Genauigkeit auf 10 Nachkommastellen, je nach Bedarf
-    expect(prefAfterSuccess).not.toBeCloseTo(0, 10);
-    expect(prefAfterFail).not.toBeCloseTo(0, 10);
+    expect(avgAfterFail).not.toBeCloseTo(avgAfterSuccess, 8); // oder passende Genauigkeit
+    expect(Math.abs(prefAfterSuccess)).not.toBeCloseTo(0, 8);
+    expect(Math.abs(prefAfterFail)).not.toBeCloseTo(0, 8);
+
 
   });
 
