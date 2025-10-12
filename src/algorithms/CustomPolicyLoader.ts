@@ -6,23 +6,25 @@ import seedrandom from "seedrandom";
 
 export class CustomPolicyLoader {
   /**
-   * Lädt eine benutzerdefinierte Policy aus TypeScript oder JavaScript-Code.
+   * Lädt eine benutzerdefinierte Policy aus TypeScript-Code.
    * Erwartet, dass der Code eine Klasse exportiert, die von BasePolicy erbt.
    */
   static async loadPolicy(
     code: string,
     lang: "typescript" | "javascript" = "typescript",
   ): Promise<iBanditPolicy> {
+    if (lang !== "typescript") {
+      throw new Error(
+        "Benutzerdefinierte Policies unterstützen nur TypeScript.",
+      );
+    }
     //Methode kriegt Code und Sprache übergeben. Bei Default Typescript
     //static--> Gehört rein zu dieser Klasse und kann nicht vererbt werden
 
     // 1. User-Code transpilen
-    const jsUser =
-      lang === "typescript" // Wenn die Sprache Typescript
-        ? ts.transpileModule(code, {
-            compilerOptions: { module: ts.ModuleKind.CommonJS },
-          }).outputText //Dann Kompiliere den Code in JS und gebe ihn aus. Bei Compiler Einstellungen wird sich für CommonJS entschieden (statt ESM).
-        : code; // Ansonsten gib einfach den Eingangs Code zurück
+    const jsUser = ts.transpileModule(code, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS },
+    }).outputText; //Dann Kompiliere den Code in JS und gebe ihn aus. Bei Compiler Einstellungen wird sich für CommonJS entschieden (statt ESM).
 
     // 2. BasePolicy-Quellcode einlesen und auch transpilen
     let baseSrc: string;

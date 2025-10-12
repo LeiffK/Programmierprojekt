@@ -21,13 +21,18 @@ export class BernoulliBanditEnv extends BanditEnv {
       throw new Error(`BernoulliBanditEnv expects type to be "bernoulli".`);
     }
 
-    // Prüfen: probs definiert und Länge korrekt
-    if (!config.probs || config.probs.length !== config.arms) {
-      throw new Error(`Bernoulli config must define 'probs' for each arm.`);
+    let probs = config.probs;
+    if (!Array.isArray(probs) || probs.length !== config.arms) {
+      probs = this.generateProbabilities(config.arms);
+    } else {
+      probs = probs.map((p) =>
+        Number.isFinite(p) ? Math.min(Math.max(p, 0), 1) : 0,
+      );
     }
 
     // Erfolgswahrscheinlichkeiten speichern
-    this.probs = config.probs;
+    this.probs = probs;
+    this.config.probs = [...this.probs];
 
     // Optimalen Arm (höchste p) ermitteln
     const bestP = Math.max(...this.probs);
@@ -49,5 +54,17 @@ export class BernoulliBanditEnv extends BanditEnv {
       reward,
       isOptimal: action === this.optimalAction,
     };
+  }
+
+  private generateProbabilities(k: number): number[] {
+    const min = 0.05;
+    const max = 0.6;
+    const span = max - min;
+    const out = Array.from({ length: k }, () =>
+      Number((min + this.rng() * span).toFixed(4)),
+    );
+    const bestIdx = Math.max(0, Math.min(k - 1, Math.floor(this.rng() * k)));
+    out[bestIdx] = Number(Math.min(0.9, out[bestIdx] + 0.25).toFixed(4));
+    return out.map((p) => Math.min(Math.max(p, 0.01), 0.99));
   }
 }

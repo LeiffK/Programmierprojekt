@@ -12,11 +12,6 @@
 
     <!-- Controls -->
     <div class="control-row">
-      <select v-model="lang" class="lang-select">
-        <option value="typescript">TypeScript</option>
-        <option value="javascript">JavaScript</option>
-      </select>
-
       <button @click="saveCustomPolicy" class="save-btn">Speichern</button>
       <button @click="newCustomPolicy" class="neutral-btn">Neu</button>
     </div>
@@ -106,7 +101,6 @@ export class MyPolicy extends BasePolicy {
   }
 }
 `);
-const lang = ref<"typescript" | "javascript">("typescript");
 const status = ref<string | null>(null);
 const savedPolicies = ref<{ name: string; code: string; lang: string }[]>([]);
 const activePolicies = ref<Set<string>>(new Set());
@@ -121,12 +115,12 @@ function saveCustomPolicy() {
     const existing = savedPolicies.value.find((p) => p.name === className);
     if (existing) {
       existing.code = userCode.value;
-      existing.lang = lang.value;
+      existing.lang = "typescript";
     } else {
       savedPolicies.value.push({
         name: className,
         code: userCode.value,
-        lang: lang.value,
+        lang: "typescript",
       });
     }
 
@@ -145,10 +139,7 @@ async function togglePolicy(p: { name: string; code: string; lang: string }) {
       status.value = `⚙️ Policy "${p.name}" deaktiviert.`;
       emit("policyRemoved", { name: p.name });
     } else {
-      const policy = await CustomPolicyLoader.loadPolicy(
-        p.code,
-        p.lang as "typescript" | "javascript",
-      );
+      const policy = await CustomPolicyLoader.loadPolicy(p.code);
       const ctor = policy?.constructor as new () => iBanditPolicy;
       if (typeof ctor !== "function") {
         throw new Error("Policy besitzt keinen Konstruktor.");
@@ -164,7 +155,6 @@ async function togglePolicy(p: { name: string; code: string; lang: string }) {
 /* --- Code anzeigen bei Klick --- */
 function showCode(p: { name: string; code: string; lang: string }) {
   userCode.value = p.code;
-  lang.value = p.lang as "typescript" | "javascript";
   selectedPolicy.value = p.name;
 }
 
@@ -202,7 +192,25 @@ export class NeuePolicy extends BasePolicy {
 /* --- Laden beim Start --- */
 onMounted(() => {
   const stored = localStorage.getItem("savedPolicies");
-  if (stored) savedPolicies.value = JSON.parse(stored);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored) as Array<{
+        name: string;
+        code: string;
+        lang?: string;
+      }>;
+      savedPolicies.value = parsed.map((p) => ({
+        ...p,
+        lang: "typescript",
+      }));
+      localStorage.setItem(
+        "savedPolicies",
+        JSON.stringify(savedPolicies.value),
+      );
+    } catch {
+      savedPolicies.value = [];
+    }
+  }
 });
 
 const statusClass = computed(() =>
@@ -248,7 +256,6 @@ const statusClass = computed(() =>
   display: flex;
   gap: 8px;
 }
-.lang-select,
 .save-btn,
 .neutral-btn {
   flex: 1;
@@ -258,11 +265,6 @@ const statusClass = computed(() =>
   font-weight: 600;
   border: 1px solid #333;
   cursor: pointer;
-}
-.lang-select {
-  background: #1a1a1a;
-  color: #ddd;
-  padding: 0 12px;
 }
 .save-btn {
   background: #ff0000;

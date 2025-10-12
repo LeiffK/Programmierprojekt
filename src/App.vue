@@ -143,7 +143,9 @@ import type { iMetricsRow } from "./domain/iMetrics";
 import type { iChartSeries } from "./domain/chart/iChartSeries";
 import type { ChartMetric } from "./domain/chart/iChartMetric";
 import type { iEnvConfig } from "./env/Domain/iEnvConfig";
+import type { iBanditEnv } from "./env/Domain/iBanditEnv";
 import { GaussianBanditEnv } from "./env/GaussianBanditEnv";
+import { BernoulliBanditEnv } from "./env/BernoulliBanditEnv";
 import type { CustomPolicyRegistration } from "./algorithms/Domain/iCustomPolicyRegistration";
 import {
   getSeriesState,
@@ -169,11 +171,15 @@ const chartMetric = ref<ChartMetric>("cumReward");
 const chartKey = ref(0);
 
 /* Manuelles Env */
-const manualEnv = ref<GaussianBanditEnv | null>(null);
+const manualEnv = ref<iBanditEnv | null>(null);
 const manualHistory = ref<ManualStep[]>([]);
 const manualCounts = ref<number[]>([]);
 function initManualEnv() {
-  manualEnv.value = new GaussianBanditEnv({ ...form.value });
+  const baseConfig: iEnvConfig = { ...form.value };
+  manualEnv.value =
+    baseConfig.type === "bernoulli"
+      ? new BernoulliBanditEnv({ ...baseConfig })
+      : new GaussianBanditEnv({ ...baseConfig });
   manualHistory.value = [];
   manualCounts.value = Array.from({ length: form.value.arms ?? 0 }, () => 0);
 }
@@ -189,6 +195,68 @@ const policyConfigs = ref<any>({
   customPolicies: [] as CustomPolicyRegistration[],
 });
 
+function adjustPolicyDefaultsForEnv(type: iEnvConfig["type"]) {
+  const current = policyConfigs.value ?? {};
+  const greedy = { ...(current.greedy ?? {}) };
+  const eps = { ...(current.epsgreedy ?? {}) };
+
+  if (type === "bernoulli") {
+    const clamp01 = (val?: number) => {
+      if (val == null) return 1;
+      if (val < 0) return 0;
+      if (val > 1) return 1;
+      return val;
+    };
+    greedy.optimisticInitialValue = clamp01(greedy.optimisticInitialValue);
+    const baseOiv = clamp01(eps.optimisticInitialValue);
+    eps.optimisticInitialValue = baseOiv;
+    const sourceVariants =
+      Array.isArray(eps.variants) && eps.variants.length
+        ? eps.variants
+        : [{ epsilon: eps.epsilon ?? 0.1, optimisticInitialValue: baseOiv }];
+    eps.variants = sourceVariants.map((v: any) => ({
+      ...v,
+      optimisticInitialValue: clamp01(v.optimisticInitialValue),
+    }));
+  } else {
+    const ensureHigh = (val?: number, fallback = 100) => {
+      if (val == null) return fallback;
+      return val > 1 ? val : fallback;
+    };
+    greedy.optimisticInitialValue = ensureHigh(
+      greedy.optimisticInitialValue,
+      100,
+    );
+    const baseOiv = ensureHigh(eps.optimisticInitialValue, 150);
+    eps.optimisticInitialValue = baseOiv;
+    const sourceVariants =
+      Array.isArray(eps.variants) && eps.variants.length
+        ? eps.variants
+        : [{ epsilon: eps.epsilon ?? 0.1, optimisticInitialValue: baseOiv }];
+    eps.variants = sourceVariants.map((v: any) => ({
+      ...v,
+      optimisticInitialValue: ensureHigh(v.optimisticInitialValue, baseOiv),
+    }));
+  }
+
+  policyConfigs.value = {
+    ...current,
+    greedy: { ...current.greedy, ...greedy },
+    epsgreedy: { ...current.epsgreedy, ...eps },
+  };
+}
+
+const lastPolicyEnvType = ref<iEnvConfig["type"] | null>(null);
+watch(
+  () => form.value.type,
+  (type) => {
+    if (!type || lastPolicyEnvType.value === type) return;
+    lastPolicyEnvType.value = type;
+    adjustPolicyDefaultsForEnv(type);
+  },
+  { immediate: true },
+);
+
 /* Schätzungen & „Wahr“-Infos */
 const manualEstimates = computed<number[]>(() => {
   const k = form.value.arms ?? 0,
@@ -202,15 +270,24 @@ const manualEstimates = computed<number[]>(() => {
 });
 function estimateText(idx: number) {
   const c = manualCounts.value[idx] || 0;
-  return c ? `${manualEstimates.value[idx].toFixed(0)}s` : "—";
+  if (!c) return "-";
+  const estimate = manualEstimates.value[idx];
+  return form.value.type === "bernoulli"
+    ? `${(estimate * 100).toFixed(1)}%`
+    : `${estimate.toFixed(0)}s`;
 }
 function truthText(idx: number) {
-  const cfg: any = manualEnv.value?.config;
-  const mu = cfg?.means?.[idx];
-  const sd = cfg?.stdDev?.[idx] ?? cfg?.sigma?.[idx];
+  const cfg = manualEnv.value?.config;
+  if (!cfg) return "-";
+  if (cfg.type === "bernoulli") {
+    const p = cfg.probs?.[idx];
+    return p != null ? `${(p * 100).toFixed(1)}%` : "-";
+  }
+  const mu = cfg.means?.[idx];
+  const sd = cfg.stdDev?.[idx] ?? (cfg as any)?.sigma?.[idx];
   return mu != null && sd != null
-    ? `${(+mu).toFixed(0)}s ± ${(+sd).toFixed(0)}s`
-    : "—";
+    ? `${(+mu).toFixed(0)}s ~ ${Math.max(+sd, 0).toFixed(0)}s`
+    : "-";
 }
 
 /* Serien-Store + Algo-Serien */
@@ -423,7 +500,11 @@ async function onManual(a: number) {
     manualCounts.value[a] = (manualCounts.value[a] || 0) + 1;
     const st = algorithmsRunner.getStatus();
     if (st === "CONFIGURED" || st === "PAUSED") algorithmsRunner.stepOnce();
-    lastEventText.value = `Manuell: Arm ${a + 1} · Reward ${res.reward.toFixed(2)}${res.isOptimal ? " · ✅ optimal" : ""}`;
+    const rewardText =
+      manualEnv.value.config.type === "bernoulli"
+        ? res.reward.toFixed(0)
+        : `${res.reward.toFixed(2)}s`;
+    lastEventText.value = `Manuell: Arm ${a + 1} - Reward ${rewardText}${res.isOptimal ? " - optimal" : ""}`;
   } finally {
     busy.value = false;
   }

@@ -26,15 +26,18 @@ describe("BernoulliBanditEnv", () => {
     expect(env.pull(1).isOptimal).toBe(false);
   });
 
-  it("throws error on invalid config", () => {
-    expect(
-      () =>
-        new BernoulliBanditEnv({
-          type: "bernoulli",
-          arms: 2,
-          probs: [0.8], // Ungültige Konfiguration
-          seed: 42,
-        } as iEnvConfig),
-    ).toThrow();
+  it("auto-generates valid probabilities when missing or malformed", () => {
+    const env = new BernoulliBanditEnv({
+      type: "bernoulli",
+      arms: 3,
+      probs: [0.8],
+      seed: 42,
+    } as iEnvConfig);
+    expect(env.config.probs).toBeDefined();
+    expect(env.config.probs).toHaveLength(3);
+    env.config.probs!.forEach((p) => {
+      expect(p).toBeGreaterThan(0);
+      expect(p).toBeLessThan(1);
+    });
   });
 });

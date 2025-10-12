@@ -12,7 +12,7 @@
         <label class="label">Typ</label>
         <select v-model="local.type" class="control">
           <option value="gaussian">Gaussian · Watchtime</option>
-          <option value="bernoulli" disabled>Bernoulli · CTR (bald)</option>
+          <option value="bernoulli">Bernoulli · CTR</option>
         </select>
       </div>
 
@@ -57,10 +57,21 @@ watch(
 watch(
   local,
   (v) => {
-    if (v.type !== "gaussian") v.type = "gaussian";
     emit("update:modelValue", { ...v });
   },
   { deep: true },
+);
+
+watch(
+  () => local.type,
+  (type) => {
+    if (type === "bernoulli") {
+      local.means = undefined;
+      local.stdDev = undefined;
+    } else {
+      local.probs = undefined;
+    }
+  },
 );
 
 const envId = computed(() => (local as any)._envId as string | undefined);
@@ -74,7 +85,14 @@ function scheduleInit() {
   }, 300) as unknown as number;
 }
 watch(
-  () => [local.type, local.arms, local.seed, local.means, local.stdDev],
+  () => [
+    local.type,
+    local.arms,
+    local.seed,
+    local.means,
+    local.stdDev,
+    local.probs,
+  ],
   () => scheduleInit(),
   { deep: true },
 );
@@ -83,7 +101,11 @@ scheduleInit();
 
 /* Init-Call zum Backend */
 async function init() {
-  const res = await initEnv({ ...local, type: "gaussian" });
+  const payload =
+    local.type === "bernoulli"
+      ? { ...local, means: undefined, stdDev: undefined }
+      : { ...local, probs: undefined };
+  const res = await initEnv(payload);
   (local as any)._envId = res.envId;
   emit("inited", res);
   emit("log", JSON.stringify({ optimalAction: res.optimalAction }, null, 2));
