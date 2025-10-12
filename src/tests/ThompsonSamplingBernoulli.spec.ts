@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import type { iEnvConfig } from "../env/Domain/iEnvConfig";
-import type { iBanditEnv } from "../env/Domain/iBanditEnv";
-import type { iPullResult } from "../env/Domain/iPullResult";
+import type { iEnvConfig } from "../env/Domain/iEnvConfig.ts";
+import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
+import type { iPullResult } from "../env/Domain/iPullResult.ts";
 import { ThompsonSamplingBernoulli } from "../algorithms/ThompsonSamplingBernoulli.ts";
 
 /**
