@@ -53,20 +53,30 @@ describe("GradientBandit", () => {
     };
     const resultFail: iPullResult = { action: 1, reward: 0, isOptimal: false };
 
-    // Erster Treffer
+    // Werte vor Erstem Update erfassen
+    const prefBeforeSuccess = policy.getPreferences()[0];
+    const avgBeforeSuccess = policy.getAverageReward();
+
     policy.update(resultSuccess);
-    const avgAfterSuccess = policy.getAverageReward();
+
     const prefAfterSuccess = policy.getPreferences()[0];
+    const avgAfterSuccess = policy.getAverageReward();
 
-    // Zweiter, schlechterer Treffer
+    // Werte vor Zweitem Update erfassen
+    const prefBeforeFail = policy.getPreferences()[1];
+    const avgBeforeFail = avgAfterSuccess; // aktueller Stand
+
     policy.update(resultFail);
-    const avgAfterFail = policy.getAverageReward();
-    const prefAfterFail = policy.getPreferences()[1];
 
-    // Vergleiche mit Toleranz, um Fehler durch Fließkomma-Äquivalenz zu vermeiden
-    expect(avgAfterFail).not.toBeCloseTo(avgAfterSuccess, 8);
-    expect(Math.abs(prefAfterSuccess)).not.toBeCloseTo(0, 8);
-    expect(Math.abs(prefAfterFail)).not.toBeCloseTo(0, 8);
+    const prefAfterFail = policy.getPreferences()[1];
+    const avgAfterFail = policy.getAverageReward();
+
+    // Prüfen, dass sich die Werte geändert haben (numerisch ungleich)
+    expect(prefAfterSuccess).not.toBeCloseTo(prefBeforeSuccess, 8);
+    expect(avgAfterSuccess).not.toBeCloseTo(avgBeforeSuccess, 8);
+
+    expect(prefAfterFail).not.toBeCloseTo(prefBeforeFail, 8);
+    expect(avgAfterFail).not.toBeCloseTo(avgBeforeFail, 8);
   });
 
   it("resets state correctly", () => {
@@ -75,7 +85,7 @@ describe("GradientBandit", () => {
 
     expect(policy.getPreferences().every((v) => v === 0)).toBe(true);
     expect(policy.getAverageReward()).toBe(0);
-    // Falls getCounts() existiert, auch:
+    // Falls getCounts() implementiert ist, müsste hier ebenfalls geprüft werden
     // expect(policy.getCounts().every((v) => v === 0)).toBe(true);
   });
 });
