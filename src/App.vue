@@ -4,10 +4,26 @@
       <div class="bar-inner">
         <div class="brand">Bandit Lab</div>
         <div class="bar-actions">
+          <!-- Debug-Schalter -->
+          <button
+            class="btn btn-pill"
+            :class="debugEnabled ? 'btn-primary' : 'btn-ghost'"
+            type="button"
+            :aria-pressed="debugEnabled ? 'true' : 'false'"
+            @click="toggleDebug"
+            title="Debug-Modus ein/aus"
+          >
+            {{ debugEnabled ? "Debug: an" : "Debug: aus" }}
+          </button>
+
           <button class="btn btn-ghost btn-pill" @click="showTopic = true">
             Thema verstehen
           </button>
-          <button class="btn btn-primary btn-pill" @click="startTutorial">
+          <button
+            id="btn-tutorial"
+            class="btn btn-primary btn-pill"
+            @click="startTutorial"
+          >
             Anwendung verstehen
           </button>
         </div>
@@ -25,7 +41,11 @@
               @log="onEnvLog"
             >
               <template #actions>
-                <ModeSwitch v-model="mode" @change="onModeChange" />
+                <ModeSwitch
+                  id="mode-switch"
+                  v-model="mode"
+                  @change="onModeChange"
+                />
               </template>
             </EnvSetup>
           </div>
@@ -55,6 +75,7 @@
                 :n="manualCounts[i - 1] || 0"
                 :estimate="estimateText(i - 1)"
                 :truth="truthText(i - 1)"
+                :debug="debugEnabled"
                 @pick="onManual(i - 1)"
               />
             </div>
@@ -86,7 +107,7 @@
           </section>
 
           <div id="debug-panel">
-            <DebugPanel />
+            <DebugPanel v-if="debugEnabled" />
           </div>
 
           <ComparisonTable
@@ -101,7 +122,6 @@
       </div>
     </main>
 
-    <!-- Modale / Overlays -->
     <TopicUnderstanding
       :open="showTopic"
       :html="topicHtml"
@@ -170,6 +190,27 @@ const settingsOpen = ref(false);
 const chartMetric = ref<ChartMetric>("cumReward");
 const chartKey = ref(0);
 
+/* Debug-Modus (persistiert) */
+const debugEnabled = ref<boolean>(false);
+try {
+  const raw = localStorage.getItem("banditlab.debug");
+  debugEnabled.value = raw ? JSON.parse(raw) === true : false;
+} catch {
+  debugEnabled.value = false;
+}
+watch(
+  () => debugEnabled.value,
+  (v) => {
+    try {
+      localStorage.setItem("banditlab.debug", JSON.stringify(!!v));
+    } catch {}
+  },
+  { immediate: true },
+);
+function toggleDebug() {
+  debugEnabled.value = !debugEnabled.value;
+}
+
 /* Manuelles Env */
 const manualEnv = ref<iBanditEnv | null>(null);
 const manualHistory = ref<ManualStep[]>([]);
@@ -184,7 +225,7 @@ function initManualEnv() {
   manualCounts.value = Array.from({ length: form.value.arms ?? 0 }, () => 0);
 }
 
-/* Policies-Konfiguration */
+/* Policies-Konfiguration (UI-Einstellung) — andere Algos kommen aus AdvancedSettings */
 const policyConfigs = ref<any>({
   greedy: { optimisticInitialValue: 100 },
   epsgreedy: {
@@ -192,9 +233,11 @@ const policyConfigs = ref<any>({
     optimisticInitialValue: 150,
     variants: [{ epsilon: 0.1, optimisticInitialValue: 150 }],
   },
+  // UCB / Thompson / Gradient werden in AdvancedSettings befüllt (inkl. variants)
   customPolicies: [] as CustomPolicyRegistration[],
 });
 
+/* Defaults je Env justieren (Greedy/ε-Greedy) */
 function adjustPolicyDefaultsForEnv(type: iEnvConfig["type"]) {
   const current = policyConfigs.value ?? {};
   const greedy = { ...(current.greedy ?? {}) };
@@ -257,7 +300,7 @@ watch(
   { immediate: true },
 );
 
-/* Schätzungen & „Wahr“-Infos */
+/* Schätzungen & „Wahr“-Infos (nur im UI genutzt) */
 const manualEstimates = computed<number[]>(() => {
   const k = form.value.arms ?? 0,
     sum = Array(k).fill(0),
@@ -296,15 +339,6 @@ type ActiveSeries = { id: string; label: string; color: string };
 const activeAlgoSeries = ref<ActiveSeries[]>([]);
 const algoHistory = ref<Record<string, ManualStep[]>>({});
 
-type TutorialStep = {
-  attachTo: { element: string; on: "top" | "right" | "bottom" | "left" };
-  title?: string;
-  text?: string | string[];
-  ensureOpen?: () => void | Promise<void>;
-  afterShow?: () => void | Promise<void>;
-  ghostClick?: boolean;
-};
-
 const PALETTE = [
   "#4fc3f7",
   "#f39c12",
@@ -324,7 +358,16 @@ function getCustomPolicies(): CustomPolicyRegistration[] {
   const list = policyConfigs.value?.customPolicies;
   return Array.isArray(list) ? (list as CustomPolicyRegistration[]) : [];
 }
+
+/* Runner-first: IDs aus dem tatsächlich konfigurierten Runner ableiten */
 function expectedAlgoIds(): string[] {
+  try {
+    const live = algorithmsRunner.getAll?.() ?? [];
+    if (Array.isArray(live) && live.length) {
+      return live.map((it: any) => String(it.id)).filter(Boolean);
+    }
+  } catch {}
+  // Fallback (nur falls Runner noch nicht bereit ist)
   const eg: any = policyConfigs.value?.epsgreedy ?? {};
   const list =
     Array.isArray(eg.variants) && eg.variants.length
@@ -342,7 +385,20 @@ function expectedAlgoIds(): string[] {
   getCustomPolicies().forEach((cp) => ids.push(cp.id));
   return ids.filter((id, idx) => ids.indexOf(id) === idx);
 }
+
+function labelFromRunner(id: string): string | undefined {
+  try {
+    const all = algorithmsRunner.getAll?.() ?? [];
+    const hit = all.find((x: any) => String(x.id) === id);
+    return hit?.label;
+  } catch {}
+  return undefined;
+}
+
 function prettyLabelFromId(id: string) {
+  const live = labelFromRunner(id);
+  if (live) return live;
+
   if (id === "greedy") return "Greedy";
   if (id === "epsgreedy") {
     const eps = Number(
@@ -416,9 +472,22 @@ const offRunner = algorithmsRunner.on((msg: any) => {
   if (msg.type === "PAUSED") lastEventText.value = "Pausiert.";
   if (msg.type === "STOPPED")
     lastEventText.value = `Gestoppt: ${msg.payload?.reason ?? "—"}`;
+
   if (msg.type === "RESULT") {
     const id = String(msg.payload.policyId);
-    if (!expectedAlgoIds().includes(id)) return;
+
+    // Selbstheilung: unbekannte Serien sofort registrieren
+    if (!activeAlgoSeries.value.some((s) => s.id === id)) {
+      const color = (seriesState as any)[id]?.color ?? nextColor();
+      const label = prettyLabelFromId(id);
+      ensureSeries(id, label, color);
+      activeAlgoSeries.value = [
+        ...activeAlgoSeries.value,
+        { id, label, color },
+      ];
+      setSeriesLabelLocal(id, label);
+    }
+
     (algoHistory.value[id] ??= []).push({
       action: msg.payload.action,
       reward: msg.payload.reward,
@@ -481,10 +550,11 @@ function onModeChange() {
   hardResetForMode(m);
 }
 function onInited(payload?: { optimalAction?: number }) {
-  lastEventText.value =
-    payload?.optimalAction != null
-      ? `Init – optimaler Arm: ${payload.optimalAction}`
-      : "Initialisiert";
+  if (debugEnabled.value && payload?.optimalAction != null) {
+    lastEventText.value = `Init – optimaler Arm: ${payload.optimalAction}`;
+  } else {
+    lastEventText.value = "Initialisiert";
+  }
   hardResetForMode(mode.value);
 }
 async function onManual(a: number) {
@@ -504,15 +574,19 @@ async function onManual(a: number) {
       manualEnv.value.config.type === "bernoulli"
         ? res.reward.toFixed(0)
         : `${res.reward.toFixed(2)}s`;
-    lastEventText.value = `Manuell: Arm ${a + 1} - Reward ${rewardText}${res.isOptimal ? " - optimal" : ""}`;
+    const suffix = debugEnabled.value && res.isOptimal ? " - optimal" : "";
+    lastEventText.value = `Manuell: Arm ${a + 1} - Reward ${rewardText}${suffix}`;
   } finally {
     busy.value = false;
   }
 }
 function onEnvLog(msg: string) {
-  lastEventText.value = msg;
+  const looksJson = /^\s*\{[\s\S]*\}\s*$/.test(String(msg));
+  if (looksJson && !debugEnabled.value) return;
+  lastEventText.value = String(msg);
 }
 
+/* KPIs */
 function calcOptimalRateFrom(history: ManualStep[] | undefined) {
   if (!history || !history.length) return undefined;
   let ok = 0;
@@ -606,12 +680,12 @@ watch(
   () => {
     reconcileActiveSeries();
     configureAlgoRunner();
+    chartKey.value++; // Refresh forcieren
   },
   { deep: true },
 );
 
 /* ---------------- Info/Overlays ---------------- */
-/* Thema verstehen (HTML) */
 const showTopic = ref(false);
 const topicHtml = `
   <h2>Multi-Armed-Bandits — Überblick</h2>
@@ -625,7 +699,9 @@ const topicHtml = `
   <ul>
     <li><b>Greedy</b>: wählt stets den höchsten aktuellen Erwartungswert</li>
     <li><b>ε-Greedy</b>: mit Wahrscheinlichkeit ε explorieren, sonst exploiten</li>
-    <li><b>UCB</b> (später): optimistische Schranken für wohldosierte Exploration</li>
+    <li><b>UCB</b>: optimistische Schranken für wohldosierte Exploration</li>
+    <li><b>Thompson</b>: probabilistische Auswahl nach Posterior</li>
+    <li><b>Gradient</b>: Präferenzlernen via Softmax</li>
   </ul>
   <h3>KPIs</h3>
   <ul>
@@ -639,29 +715,22 @@ function startTutorial() {
 }
 
 const tutorialHooks = {
-  // Baseline – VOR und NACH dem Tutorial
   resetBaseline: async () => {
-    // Modus manuell
     if (mode.value !== "manual") {
       mode.value = "manual";
       onModeChange();
       await nextTick();
     }
-    // Runner stoppen
     try {
       algorithmsRunner.stop("tutorial-baseline");
     } catch {}
-    // Stores & Historien leeren
-    onRunnerReset?.(); // falls das hart alles zurücksetzt (SeriesStore, Historien)
-    // exakt 3 Thumbnails
+    onRunnerReset?.();
     form.value.arms = 3;
-    // Advanced/Table zu
     settingsOpen.value = false;
     tableOpen.value = false;
     await nextTick();
   },
   restoreBaseline: async () => {
-    // gleicher Zustand wie resetBaseline – garantiert reproduzierbar
     if (mode.value !== "manual") {
       mode.value = "manual";
       onModeChange();
@@ -676,24 +745,18 @@ const tutorialHooks = {
     tableOpen.value = false;
     await nextTick();
   },
-
-  // Env/Stepper
   incArms: () => {
     form.value.arms = Math.max(1, (form.value.arms ?? 1) + 1);
   },
   decArms: () => {
     form.value.arms = Math.max(1, (form.value.arms ?? 1) - 1);
   },
-
-  // Advanced
   openAdvanced: () => {
     settingsOpen.value = true;
   },
   closeAdvanced: () => {
     settingsOpen.value = false;
   },
-
-  // Mode
   switchToManual: async () => {
     if (mode.value !== "manual") {
       mode.value = "manual";
@@ -708,13 +771,9 @@ const tutorialHooks = {
       await nextTick();
     }
   },
-
-  // Manual actions
   manualClick: async (i: number) => {
     await onManual(i);
   },
-
-  // Runner
   runnerStart: async () => {
     try {
       algorithmsRunner.start();
@@ -725,8 +784,6 @@ const tutorialHooks = {
       algorithmsRunner.pause();
     } catch {}
   },
-
-  // Chart/Metrics/Series
   setMetric: async (m: string) => {
     chartMetric.value = m as any;
     await nextTick();
@@ -735,8 +792,6 @@ const tutorialHooks = {
     setSeriesVisible(id, v);
     await nextTick();
   },
-
-  // Table
   openTable: async () => {
     tableOpen.value = true;
     await nextTick();

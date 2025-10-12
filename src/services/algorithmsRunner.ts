@@ -1,8 +1,13 @@
 import type { iBanditPolicy } from "../algorithms/Domain/iBanditPolicy";
 import type { iBanditPolicyConfig } from "../algorithms/Domain/iBanditPolicyConfig";
 import type { CustomPolicyRegistration } from "../algorithms/Domain/iCustomPolicyRegistration";
+
 import { Greedy } from "../algorithms/greedy";
 import { EpsilonGreedy } from "../algorithms/EpsilonGreedy";
+import { UpperConfidenceBound } from "../algorithms/UpperConfidenceBound";
+import { ThompsonSamplingBernoulli } from "../algorithms/ThompsonSamplingBernoulli";
+import { ThompsonSamplingGaussian } from "../algorithms/ThompsonSamplingGaussian";
+import { GradientBandit } from "../algorithms/GradientBandit";
 
 import type { iEnvConfig } from "../env/Domain/iEnvConfig";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv";
@@ -10,12 +15,8 @@ import type { iPullResult } from "../env/Domain/iPullResult";
 import { GaussianBanditEnv } from "../env/GaussianBanditEnv";
 import { BernoulliBanditEnv } from "../env/BernoulliBanditEnv";
 
-/**
- * Abwärtskompatibel: Wir lassen zusätzliche ε-Varianten zu.
- * - Bei >1 Variante emittieren wir IDs "epsgreedy#1", "epsgreedy#2", …
- * - Bei genau 1 Variante bleibt die ID "epsgreedy" (kompatibel).
- */
-export type PolicyId = string; // "greedy" | "epsgreedy" | `epsgreedy#${n}`
+/** IDs */
+export type PolicyId = string;
 
 export type PolicyMeta = {
   id: PolicyId;
@@ -27,19 +28,54 @@ export type PolicyMeta = {
   visible?: boolean;
 };
 
+/* ==== spezifische Konfigtypen pro Algo ==== */
+type GreedyCfg = iBanditPolicyConfig & {
+  optimisticInitialValue?: number;
+};
+
+type EpsGreedyVariant = { epsilon: number; optimisticInitialValue?: number };
+type EpsGreedyCfg = iBanditPolicyConfig & {
+  epsilon?: number;
+  optimisticInitialValue?: number;
+  variants?: EpsGreedyVariant[];
+};
+
+type UcbCfg = {
+  /** z.B. Konfidenz-Faktor; optional */
+  c?: number;
+  /** Varianten optional */
+  variants?: Array<{ c?: number }>;
+};
+
+/** Thompson ohne alpha (Bernoulli nutzt Defaults) */
+type ThompsonBernV = {}; // keine alpha-Eingabe mehr
+type ThompsonGaussV = { priorVariance?: number };
+type ThompsonCfg = {
+  /** Einzel-Defaults (Fallbacks) */
+  priorVariance?: number; // Gaussian
+  /** Varianten */
+  variants?: Array<ThompsonBernV | ThompsonGaussV>;
+  variantsBernoulli?: ThompsonBernV[];
+  variantsGaussian?: ThompsonGaussV[];
+};
+
+/** Gradient ohne alpha (nutzt Defaults) */
+type GradientCfg = Record<string, never>;
+
 export type RunnerConfig = {
   envConfig: iEnvConfig;
   totalSteps: number;
   rate: number; // steps/second
-  policyConfigs?: Partial<
-    Record<"greedy" | "epsgreedy", iBanditPolicyConfig>
-  > & {
-    epsgreedy?: iBanditPolicyConfig & {
-      variants?: Array<{ epsilon: number; optimisticInitialValue?: number }>;
-    };
+  policyConfigs?: {
+    greedy?: GreedyCfg;
+    epsgreedy?: EpsGreedyCfg;
+    ucb?: UcbCfg;
+    thompson?: ThompsonCfg;
+    gradient?: GradientCfg;
     customPolicies?: CustomPolicyRegistration[];
   };
 };
+
 export type RunnerStatus =
   | "IDLE"
   | "CONFIGURED"
@@ -147,131 +183,281 @@ class AlgorithmsRunner {
           : new GaussianBanditEnv(initCfg);
       };
 
-      // --- Greedy ---
-      const greedy = new Greedy({
-        ...(cfg.policyConfigs?.greedy ?? undefined),
-        arms: cfg.envConfig.arms,
-      } as iBanditPolicyConfig);
-      const greedyEnv = mkEnv(11);
-      greedy.initialize(greedyEnv);
-
-      this.items.set("greedy", {
-        id: "greedy",
-        label: "Greedy",
-        color: "#4fc3f7",
-        policy: greedy,
-        env: greedyEnv,
-        history: [],
-        visible: true,
-      });
-
-      // --- ε-Greedy (Varianten) ---
-      const egInput = cfg.policyConfigs?.epsgreedy as
-        | (iBanditPolicyConfig & {
-            variants?: Array<{
-              epsilon: number;
-              optimisticInitialValue?: number;
-            }>;
-          })
-        | undefined;
-      const variants = (
-        egInput?.variants?.length
-          ? egInput.variants
-          : [
-              {
-                epsilon: (egInput as any)?.epsilon ?? 0.1,
-                optimisticInitialValue:
-                  (egInput as any)?.optimisticInitialValue ?? 150,
-              },
-            ]
-      ) as Array<{ epsilon: number; optimisticInitialValue?: number }>;
-
-      let colorIdx = 0;
-      variants.forEach((v, idx) => {
-        const isSingle = variants.length === 1;
-        const id = isSingle ? "epsgreedy" : `epsgreedy#${idx + 1}`;
-        const label = isSingle
-          ? "e-Greedy"
-          : `e-Greedy v${idx + 1} (e=${Number(v.epsilon ?? 0.1).toFixed(2)})`;
-
-        const eps = new EpsilonGreedy({
-          ...(egInput ?? undefined),
-          epsilon: Number(v.epsilon ?? (egInput as any)?.epsilon ?? 0.1),
-          optimisticInitialValue:
-            v.optimisticInitialValue ??
-            (egInput as any)?.optimisticInitialValue,
+      /* --- Greedy --- */
+      {
+        const greedy = new Greedy({
+          ...(cfg.policyConfigs?.greedy ?? undefined),
           arms: cfg.envConfig.arms,
         } as iBanditPolicyConfig);
+        const greedyEnv = mkEnv(11);
+        greedy.initialize(greedyEnv);
 
-        const env = mkEnv(23 + idx * 7);
-        eps.initialize(env);
-
-        this.items.set(id, {
-          id,
-          label,
-          color:
-            variants.length === 1
-              ? "#f39c12"
-              : PALETTE[colorIdx++ % PALETTE.length],
-          policy: eps,
-          env,
+        this.items.set("greedy", {
+          id: "greedy",
+          label: "Greedy",
+          color: "#4fc3f7",
+          policy: greedy,
+          env: greedyEnv,
           history: [],
           visible: true,
         });
-      });
-      if (variants.length === 1) colorIdx = 1;
+      }
 
-      const customPoliciesRaw = cfg.policyConfigs?.customPolicies;
-      const customRegs = Array.isArray(customPoliciesRaw)
-        ? (customPoliciesRaw as CustomPolicyRegistration[])
-        : [];
-      customRegs.forEach((entry, idx) => {
-        try {
-          if (!entry || typeof entry.factory !== "function") {
-            throw new Error("Ungueltige Custom-Policy-Konfiguration.");
-          }
-          const policy = entry.factory();
-          if (!policy || typeof policy.initialize !== "function") {
-            throw new Error("Custom-Policy ohne initialize().");
-          }
-          const env = mkEnv(101 + idx * 13);
-          policy.initialize(env);
+      /* --- ε-Greedy (Varianten) --- */
+      {
+        const egInput = cfg.policyConfigs?.epsgreedy as
+          | EpsGreedyCfg
+          | undefined;
+        const egVariants: EpsGreedyVariant[] = egInput?.variants?.length
+          ? egInput.variants!
+          : [
+              {
+                epsilon: Number((egInput as any)?.epsilon ?? 0.1),
+                optimisticInitialValue: Number(
+                  (egInput as any)?.optimisticInitialValue ?? 150,
+                ),
+              },
+            ];
 
-          this.items.set(entry.id, {
-            id: entry.id,
-            label: entry.name ?? entry.id,
-            color: PALETTE[colorIdx++ % PALETTE.length],
-            policy,
+        let colorIdx = 0;
+        egVariants.forEach((v, idx) => {
+          const isSingle = egVariants.length === 1;
+          const id = isSingle ? "epsgreedy" : `epsgreedy#${idx + 1}`;
+          const label = isSingle
+            ? "e-Greedy"
+            : `e-Greedy v${idx + 1} (e=${Number(v.epsilon ?? 0.1).toFixed(2)})`;
+
+          const eps = new EpsilonGreedy({
+            ...(egInput ?? undefined),
+            epsilon: Number(v.epsilon ?? (egInput as any)?.epsilon ?? 0.1),
+            optimisticInitialValue:
+              v.optimisticInitialValue ??
+              (egInput as any)?.optimisticInitialValue,
+            arms: cfg.envConfig.arms,
+          } as iBanditPolicyConfig);
+
+          const env = mkEnv(23 + idx * 7);
+          eps.initialize(env);
+
+          this.items.set(id, {
+            id,
+            label,
+            color: isSingle ? "#f39c12" : PALETTE[colorIdx++ % PALETTE.length],
+            policy: eps,
             env,
             history: [],
             visible: true,
           });
-        } catch (err: any) {
+        });
+      }
+
+      /* --- UCB (Varianten optional) --- */
+      {
+        const ucbCfg = (cfg.policyConfigs?.ucb ?? {}) as UcbCfg;
+        const list =
+          Array.isArray(ucbCfg.variants) && ucbCfg.variants.length
+            ? ucbCfg.variants
+            : [{}];
+
+        list.forEach((v, idx) => {
+          const isSingle = list.length === 1;
+          const id = isSingle ? "ucb" : `ucb#${idx + 1}`;
+          const label = isSingle
+            ? "UCB"
+            : `UCB v${idx + 1}${v.c != null ? ` (c=${Number(v.c).toFixed(2)})` : ""}`;
+
+          const inst = new UpperConfidenceBound({
+            ...(v as any),
+            arms: cfg.envConfig.arms,
+          } as any);
+          const env = mkEnv(101 + idx * 3);
+          (inst as any).initialize?.(env);
+
+          this.items.set(id, {
+            id,
+            label,
+            color: isSingle ? "#009688" : PALETTE[idx % PALETTE.length],
+            policy: inst,
+            env,
+            history: [],
+            visible: true,
+          });
+        });
+      }
+
+      /* --- Thompson Sampling (Varianten je Env) --- */
+      {
+        const tsInput = (cfg.policyConfigs?.thompson ?? {}) as
+          | ThompsonCfg
+          | any;
+        const isBernoulli = cfg.envConfig.type === "bernoulli";
+
+        if (isBernoulli) {
+          const listRaw = (
+            Array.isArray(tsInput?.variantsBernoulli) &&
+            tsInput.variantsBernoulli.length
+              ? tsInput.variantsBernoulli
+              : Array.isArray(tsInput?.variants) && tsInput.variants.length
+                ? tsInput.variants
+                : [{}]
+          ) as ThompsonBernV[];
+
+          listRaw.forEach((_v: ThompsonBernV, idx: number) => {
+            const isSingle = listRaw.length === 1;
+            const id = isSingle ? "thompson" : `thompson#${idx + 1}`;
+            const label = isSingle
+              ? "Thompson (Bernoulli)"
+              : `Thompson (Bernoulli) v${idx + 1}`;
+
+            const bernCfg: ConstructorParameters<
+              typeof ThompsonSamplingBernoulli
+            >[0] = {
+              seed:
+                typeof cfg.envConfig.seed === "number"
+                  ? cfg.envConfig.seed
+                  : undefined,
+              // kein alpha mehr – Algorithmus nutzt Defaults
+            };
+            const th = new ThompsonSamplingBernoulli(
+              bernCfg as unknown as ConstructorParameters<
+                typeof ThompsonSamplingBernoulli
+              >[0],
+            );
+            const env = mkEnv(131 + idx * 5);
+            th.initialize(env);
+
+            this.items.set(id, {
+              id,
+              label,
+              color: isSingle ? "#607d8b" : PALETTE[(idx + 2) % PALETTE.length],
+              policy: th,
+              env,
+              history: [],
+              visible: true,
+            });
+          });
+        } else {
+          const listRaw = (
+            Array.isArray(tsInput?.variantsGaussian) &&
+            tsInput.variantsGaussian.length
+              ? tsInput.variantsGaussian
+              : Array.isArray(tsInput?.variants) && tsInput.variants.length
+                ? tsInput.variants
+                : [{ priorVariance: (tsInput as any)?.priorVariance ?? 1 }]
+          ) as ThompsonGaussV[];
+
+          listRaw.forEach((v: ThompsonGaussV, idx: number) => {
+            const isSingle = listRaw.length === 1;
+            const id = isSingle ? "thompson" : `thompson#${idx + 1}`;
+            const priorVariance = Number(
+              v?.priorVariance ?? (tsInput as any)?.priorVariance ?? 1,
+            );
+            const label = isSingle
+              ? "Thompson (Gaussian)"
+              : `Thompson (Gaussian) v${idx + 1} (Var=${priorVariance.toFixed(2)})`;
+
+            const gauCfg: ConstructorParameters<
+              typeof ThompsonSamplingGaussian
+            >[0] = {
+              seed:
+                typeof cfg.envConfig.seed === "number"
+                  ? cfg.envConfig.seed
+                  : undefined,
+              priorVariance,
+            };
+            const th = new ThompsonSamplingGaussian(
+              gauCfg as unknown as ConstructorParameters<
+                typeof ThompsonSamplingGaussian
+              >[0],
+            );
+            const env = mkEnv(141 + idx * 5);
+            th.initialize(env);
+
+            this.items.set(id, {
+              id,
+              label,
+              color: isSingle ? "#607d8b" : PALETTE[(idx + 3) % PALETTE.length],
+              policy: th,
+              env,
+              history: [],
+              visible: true,
+            });
+          });
+        }
+      }
+
+      /* --- Gradient Bandit (ohne alpha, keine Varianten) --- */
+      {
+        const gradCfg: ConstructorParameters<typeof GradientBandit>[0] = {
+          seed:
+            typeof cfg.envConfig.seed === "number"
+              ? cfg.envConfig.seed
+              : undefined,
+          // kein alpha – nutzt Default der Implementierung
+        };
+        const grad = new GradientBandit(
+          gradCfg as unknown as ConstructorParameters<typeof GradientBandit>[0],
+        );
+        const env = mkEnv(151);
+        grad.initialize(env);
+
+        this.items.set("gradient", {
+          id: "gradient",
+          label: "Gradient Bandit",
+          color: "#795548",
+          policy: grad,
+          env,
+          history: [],
+          visible: true,
+        });
+      }
+
+      /* --- Custom Policies --- */
+      {
+        const customPoliciesRaw = cfg.policyConfigs?.customPolicies;
+        const customRegs = Array.isArray(customPoliciesRaw)
+          ? (customPoliciesRaw as CustomPolicyRegistration[])
+          : [];
+        customRegs.forEach((entry, idx) => {
+          try {
+            if (!entry || typeof entry.factory !== "function") {
+              throw new Error("Ungueltige Custom-Policy-Konfiguration.");
+            }
+            const policy = entry.factory();
+            if (!policy || typeof policy.initialize !== "function") {
+              throw new Error("Custom-Policy ohne initialize().");
+            }
+            const env = mkEnv(201 + idx * 13);
+            policy.initialize(env);
+
+            this.items.set(entry.id, {
+              id: entry.id,
+              label: entry.name ?? entry.id,
+              color: PALETTE[(idx + 5) % PALETTE.length],
+              policy,
+              env,
+              history: [],
+              visible: true,
+            });
+          } catch (err: any) {
+            this.emit({
+              type: "ERROR",
+              payload: {
+                message: `Custom-Policy "${entry?.name ?? entry?.id ?? "?"}": ${
+                  err?.message ?? String(err)
+                }`,
+              },
+            });
+          }
+        });
+        if (customRegs.length) {
           this.emit({
-            type: "ERROR",
+            type: "LOG",
             payload: {
-              message: `Custom-Policy "${entry?.name ?? entry?.id ?? "?"}": ${
-                err?.message ?? String(err)
-              }`,
+              message: `Custom Policies: ${customRegs.length} aktiviert.`,
             },
           });
         }
-      });
-      if (customRegs.length) {
-        this.emit({
-          type: "LOG",
-          payload: {
-            message: `Custom Policies: ${customRegs.length} aktiviert.`,
-          },
-        });
-      }
-      if (variants.length > 1) {
-        this.emit({
-          type: "LOG",
-          payload: {
-            message: `ε-Greedy: ${variants.length} Varianten konfiguriert.`,
-          },
-        });
       }
 
       this.totalSteps = Math.max(0, cfg.totalSteps);

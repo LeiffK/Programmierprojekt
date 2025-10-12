@@ -340,10 +340,11 @@ async function start() {
     {
       id: "env-stepper",
       attach: { element: SEL.env, on: "bottom" },
-      title: "1/12 – Environment & Stepper",
+      title: "1/12 – Umgebung & Anzahl",
       text: [
-        "Wir fügen ein Thumbnail hinzu (Arme +1) und entfernen es wieder (Arme −1).",
-        "Nur „Zurück“, „Weiter“ oder das Kreuz sind aktiv.",
+        "Hier legst du fest, wie viele Varianten es gibt. Jede Variante ist eine Kachel („Thumbnail“).",
+        "Mit „+1“ kommt eine Kachel dazu, mit „−1“ nimmst du sie wieder weg.",
+        "Der <b>Seed</b> sorgt dafür, dass sich Ergebnisse später genauso wiederholen lassen.",
       ],
       run: async () => {
         await focusSelector(SEL.env);
@@ -358,8 +359,11 @@ async function start() {
     {
       id: "manual-thumbs",
       attach: { element: SEL.manual, on: "bottom" },
-      title: "2/12 – Thumbnails klicken",
-      text: "Wir klicken drei Thumbnails nacheinander. Policies laufen je 1 Schritt mit.",
+      title: "2/12 – Varianten anklicken",
+      text: [
+        "Im <b>manuellen Modus</b> klickst du eine Kachel an und siehst sofort die Punkte für diesen Klick.",
+        "Zusätzlich führen die <b>Algorithmen</b> im Hintergrund jeweils einen Schritt aus.",
+      ],
       run: async () => {
         await props.hooks.switchToManual();
         await clickModeManual();
@@ -381,8 +385,11 @@ async function start() {
     {
       id: "to-algo",
       attach: { element: SEL.mode, on: "bottom" },
-      title: "3/12 – Algo-Modus",
-      text: "Sichtbarer Wechsel in den Algo-Modus.",
+      title: "3/12 – Algorithmus-Modus",
+      text: [
+        "Wir schalten in den <b>Algorithmus-Modus</b> um.",
+        "Die manuelle Linie wird hier ausgeblendet, damit du die Algorithmen besser vergleichen kannst.",
+      ],
       run: async () => {
         await clickModeAlgo();
         await props.hooks.switchToAlgo();
@@ -392,10 +399,11 @@ async function start() {
     {
       id: "runner-explain",
       attach: { element: SEL.runner, on: "bottom" },
-      title: "4/12 – Automatischer Lauf",
+      title: "4/12 – Lauf der Algorithmen steuern",
       text: [
-        "„Iterationen“: maximale Schrittzahl (0 = ∞).",
-        "„Schritte/s“: Ausführungsgeschwindigkeit.",
+        "<b>Gesamtsteps</b>: Wie viele Schritte sollen die Algorithmen machen? (0 = ohne Ende)",
+        "<b>Schritte/s</b>: Das Tempo. Je höher, desto schneller laufen die Schritte.",
+        "Änderungen wirken sofort – kein Speichern nötig.",
       ],
       run: async () => {
         await focusSelector(SEL.runner);
@@ -405,8 +413,11 @@ async function start() {
     {
       id: "runner-start",
       attach: { element: SEL.runner, on: "bottom" },
-      title: "5/12 – Start",
-      text: "Wir starten den Runner.",
+      title: "5/12 – Start, Pause, Einzelschritt",
+      text: [
+        "Mit <b>Start</b> laufen die Algorithmen los, derselbe Button pausiert wieder.",
+        "<b>+1 Schritt</b> führt genau einen Schritt aus. Ideal, um Effekte in Ruhe zu beobachten.",
+      ],
       run: async () => {
         const start: HTMLElement | null =
           (document.querySelector(
@@ -423,8 +434,11 @@ async function start() {
     {
       id: "chart-show",
       attach: { element: SEL.chart, on: "top" },
-      title: "6/12 – Graph",
-      text: "Serienverläufe; der manuelle Graph ist im Algo-Modus ausgeblendet.",
+      title: "6/12 – Diagramm lesen",
+      text: [
+        "Das Diagramm zeigt die Entwicklung der ausgewählten Varianten als Linien.",
+        "Farben sind je Variante fest. Ein- und Ausblenden geht über die Legende unter dem Diagramm.",
+      ],
       run: async () => {
         await focusSelector(SEL.chart);
         await sleep(900);
@@ -433,8 +447,11 @@ async function start() {
     {
       id: "metrics-switch",
       attach: { element: SEL.chart, on: "top" },
-      title: "7/12 – Metriken wechseln",
-      text: "Wechsel auf Ø-Reward.",
+      title: "7/12 – Ansicht wechseln",
+      text: [
+        "Wir wechseln zur Ansicht <b>Durchschnitt</b> (Ø-Reward).",
+        "So erkennst du schneller, welche Variante sich im Schnitt besser schlägt.",
+      ],
       run: async () => {
         const pill: HTMLElement | null =
           (document.querySelector(
@@ -451,8 +468,11 @@ async function start() {
     {
       id: "series-toggle",
       attach: { element: SEL.chart, on: "top" },
-      title: "8/12 – Serie ein-/ausblenden",
-      text: "Eine Legenden-Pille toggeln (z. B. „Greedy“).",
+      title: "8/12 – Varianten vergleichen",
+      text: [
+        "Klicke in der Legende auf eine Varianten-Marke (z. B. „Greedy“), um die Linie zu zeigen oder zu verstecken.",
+        "So kannst du einzelne Varianten direkt miteinander vergleichen.",
+      ],
       run: async () => {
         const pill: HTMLElement | null =
           (document.querySelector(
@@ -469,8 +489,11 @@ async function start() {
     {
       id: "table-open",
       attach: { element: SEL.table, on: "top" },
-      title: "9/12 – Vergleichstabelle öffnen",
-      text: "Öffnen der Tabelle.",
+      title: "9/12 – Tabelle öffnen",
+      text: [
+        "Die Tabelle fasst die wichtigsten Zahlen je Variante zusammen.",
+        "Die Sichtbarkeit ist wie im Diagramm: ausgeblendete Linien erscheinen auch hier nicht.",
+      ],
       run: async () => {
         const head = document.querySelector(
           SEL.tableHead,
@@ -483,11 +506,13 @@ async function start() {
     {
       id: "table-explain",
       attach: { element: SEL.table, on: "top" },
-      title: "10/12 – Kennzahlen",
+      title: "10/12 – Zahlen verstehen",
       text: [
-        "<b>Σ Reward</b>: Summe der Rewards.",
-        "<b>Ø Reward</b>: Σ Reward / n.",
-        "<b>Best-Quote</b>: Anteil optimaler Züge.",
+        "<b>Gesamtpunkte (Σ Reward)</b>: Alles zusammengezählt.",
+        "<b>Durchschnitt (Ø Reward)</b>: Punkte pro Schritt im Mittel.",
+        "<b>Trefferquote (Best-Quote)</b>: Wie oft die beste Wahl getroffen wurde.",
+        "<b>Verpasste Punkte (Regret)</b>: Was im Vergleich zur bestmöglichen Wahl liegen blieb (kleiner ist besser).",
+        "<b>Letzter Wert</b>: Punkte im letzten Schritt – Momentaufnahme.",
       ],
       run: async () => {
         await sleep(1400);
@@ -497,7 +522,10 @@ async function start() {
       id: "table-close",
       attach: { element: SEL.table, on: "top" },
       title: "11/12 – Tabelle schließen",
-      text: "Zuklappen.",
+      text: [
+        "Wir klappen die Übersicht wieder zu.",
+        "Du kannst sie jederzeit wieder öffnen – deine Einstellungen bleiben bestehen.",
+      ],
       run: async () => {
         const head = document.querySelector(
           SEL.tableHead,
@@ -510,8 +538,11 @@ async function start() {
     {
       id: "finish",
       attach: { element: "#btn-tutorial", on: "bottom" },
-      title: "12/12 – Abschluss",
-      text: "Ausgangszustand wiederherstellen (Manuell, 3 Thumbnails, leere Daten).",
+      title: "12/12 – Fertig",
+      text: [
+        "Wir setzen alles zurück: Modus <b>Manuell</b>, drei Kacheln, leere Daten.",
+        "Tipp: Über den <b>Debug-Schalter</b> oben kannst du echte Zielwerte im Thumbnail sehen und eine zusätzliche Protokoll-Ansicht einblenden.",
+      ],
       run: async () => {
         try {
           await props.hooks.runnerPause();
