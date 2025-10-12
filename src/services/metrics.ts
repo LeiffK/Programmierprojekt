@@ -6,7 +6,11 @@ import type { iEnvConfig } from "../env/Domain/iEnvConfig";
 
 function bestMeanFrom(cfg?: iEnvConfig | null): number {
   if (!cfg) return 0;
-  if (cfg.type === "bernoulli" && Array.isArray(cfg.probs) && cfg.probs.length) {
+  if (
+    cfg.type === "bernoulli" &&
+    Array.isArray(cfg.probs) &&
+    cfg.probs.length
+  ) {
     return Math.max(...cfg.probs);
   }
   if (Array.isArray(cfg.means) && cfg.means.length) {

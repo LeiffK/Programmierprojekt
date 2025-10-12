@@ -25,7 +25,9 @@ export class BernoulliBanditEnv extends BanditEnv {
     if (!Array.isArray(probs) || probs.length !== config.arms) {
       probs = this.generateProbabilities(config.arms);
     } else {
-      probs = probs.map((p) => Number.isFinite(p) ? Math.min(Math.max(p, 0), 1) : 0);
+      probs = probs.map((p) =>
+        Number.isFinite(p) ? Math.min(Math.max(p, 0), 1) : 0,
+      );
     }
 
     // Erfolgswahrscheinlichkeiten speichern

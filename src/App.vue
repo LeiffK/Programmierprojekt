@@ -223,7 +223,10 @@ function adjustPolicyDefaultsForEnv(type: iEnvConfig["type"]) {
       if (val == null) return fallback;
       return val > 1 ? val : fallback;
     };
-    greedy.optimisticInitialValue = ensureHigh(greedy.optimisticInitialValue, 100);
+    greedy.optimisticInitialValue = ensureHigh(
+      greedy.optimisticInitialValue,
+      100,
+    );
     const baseOiv = ensureHigh(eps.optimisticInitialValue, 150);
     eps.optimisticInitialValue = baseOiv;
     const sourceVariants =
@@ -286,7 +289,6 @@ function truthText(idx: number) {
     ? `${(+mu).toFixed(0)}s ~ ${Math.max(+sd, 0).toFixed(0)}s`
     : "-";
 }
-
 
 /* Serien-Store + Algo-Serien */
 const seriesState = getSeriesState();

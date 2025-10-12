@@ -14,7 +14,9 @@ export class CustomPolicyLoader {
     lang: "typescript" | "javascript" = "typescript",
   ): Promise<iBanditPolicy> {
     if (lang !== "typescript") {
-      throw new Error("Benutzerdefinierte Policies unterstützen nur TypeScript.");
+      throw new Error(
+        "Benutzerdefinierte Policies unterstützen nur TypeScript.",
+      );
     }
     //Methode kriegt Code und Sprache übergeben. Bei Default Typescript
     //static--> Gehört rein zu dieser Klasse und kann nicht vererbt werden
