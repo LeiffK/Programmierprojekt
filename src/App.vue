@@ -144,6 +144,7 @@ import type { iChartSeries } from "./domain/chart/iChartSeries";
 import type { ChartMetric } from "./domain/chart/iChartMetric";
 import type { iEnvConfig } from "./env/Domain/iEnvConfig";
 import { GaussianBanditEnv } from "./env/GaussianBanditEnv";
+import type { CustomPolicyRegistration } from "./algorithms/Domain/iCustomPolicyRegistration";
 import {
   getSeriesState,
   setSeriesVisible,
@@ -185,6 +186,7 @@ const policyConfigs = ref<any>({
     optimisticInitialValue: 150,
     variants: [{ epsilon: 0.1, optimisticInitialValue: 150 }],
   },
+  customPolicies: [] as CustomPolicyRegistration[],
 });
 
 /* Schätzungen & „Wahr“-Infos */
@@ -241,6 +243,10 @@ const PALETTE = [
 let paletteIdx = 0;
 const nextColor = () => PALETTE[paletteIdx++ % PALETTE.length];
 
+function getCustomPolicies(): CustomPolicyRegistration[] {
+  const list = policyConfigs.value?.customPolicies;
+  return Array.isArray(list) ? (list as CustomPolicyRegistration[]) : [];
+}
 function expectedAlgoIds(): string[] {
   const eg: any = policyConfigs.value?.epsgreedy ?? {};
   const list =
@@ -252,9 +258,12 @@ function expectedAlgoIds(): string[] {
             optimisticInitialValue: eg.optimisticInitialValue ?? 150,
           },
         ];
-  return list.length === 1
-    ? ["greedy", "epsgreedy"]
-    : ["greedy", ...list.map((_v: any, i: number) => `epsgreedy#${i + 1}`)];
+  const ids: string[] =
+    list.length === 1
+      ? ["greedy", "epsgreedy"]
+      : ["greedy", ...list.map((_v: any, i: number) => `epsgreedy#${i + 1}`)];
+  getCustomPolicies().forEach((cp) => ids.push(cp.id));
+  return ids.filter((id, idx) => ids.indexOf(id) === idx);
 }
 function prettyLabelFromId(id: string) {
   if (id === "greedy") return "Greedy";
@@ -273,6 +282,8 @@ function prettyLabelFromId(id: string) {
     const eps = Number(v?.epsilon ?? 0.1);
     return `ε-Greedy v${m[1]} (ε=${eps.toFixed(2)})`;
   }
+  const custom = getCustomPolicies().find((cp) => cp.id === id);
+  if (custom) return custom.name;
   return id;
 }
 function setSeriesLabelLocal(id: string, label: string) {

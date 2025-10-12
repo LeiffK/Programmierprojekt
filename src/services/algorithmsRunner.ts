@@ -1,5 +1,6 @@
 import type { iBanditPolicy } from "../algorithms/Domain/iBanditPolicy";
 import type { iBanditPolicyConfig } from "../algorithms/Domain/iBanditPolicyConfig";
+import type { CustomPolicyRegistration } from "../algorithms/Domain/iCustomPolicyRegistration";
 import { Greedy } from "../algorithms/greedy";
 import { EpsilonGreedy } from "../algorithms/EpsilonGreedy";
 
@@ -35,12 +36,9 @@ export type RunnerConfig = {
     epsgreedy?: iBanditPolicyConfig & {
       variants?: Array<{ epsilon: number; optimisticInitialValue?: number }>;
     };
-    // toleriert, wird vom Runner ignoriert – nur Info
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    customPolicy?: any;
+    customPolicies?: CustomPolicyRegistration[];
   };
 };
-
 export type RunnerStatus =
   | "IDLE"
   | "CONFIGURED"
@@ -188,8 +186,8 @@ class AlgorithmsRunner {
         const isSingle = variants.length === 1;
         const id = isSingle ? "epsgreedy" : `epsgreedy#${idx + 1}`;
         const label = isSingle
-          ? "ε-Greedy"
-          : `ε-Greedy v${idx + 1} (ε=${Number(v.epsilon ?? 0.1).toFixed(2)})`;
+          ? "e-Greedy"
+          : `e-Greedy v${idx + 1} (e=${Number(v.epsilon ?? 0.1).toFixed(2)})`;
 
         const eps = new EpsilonGreedy({
           ...(egInput ?? undefined),
@@ -216,12 +214,49 @@ class AlgorithmsRunner {
           visible: true,
         });
       });
+      if (variants.length === 1) colorIdx = 1;
 
-      if ((cfg.policyConfigs as any)?.customPolicy) {
+      const customPoliciesRaw = cfg.policyConfigs?.customPolicies;
+      const customRegs = Array.isArray(customPoliciesRaw)
+        ? (customPoliciesRaw as CustomPolicyRegistration[])
+        : [];
+      customRegs.forEach((entry, idx) => {
+        try {
+          if (!entry || typeof entry.factory !== "function") {
+            throw new Error("Ungueltige Custom-Policy-Konfiguration.");
+          }
+          const policy = entry.factory();
+          if (!policy || typeof policy.initialize !== "function") {
+            throw new Error("Custom-Policy ohne initialize().");
+          }
+          const env = mkEnv(101 + idx * 13);
+          policy.initialize(env);
+
+          this.items.set(entry.id, {
+            id: entry.id,
+            label: entry.name ?? entry.id,
+            color: PALETTE[colorIdx++ % PALETTE.length],
+            policy,
+            env,
+            history: [],
+            visible: true,
+          });
+        } catch (err: any) {
+          this.emit({
+            type: "ERROR",
+            payload: {
+              message: `Custom-Policy "${entry?.name ?? entry?.id ?? "?"}": ${
+                err?.message ?? String(err)
+              }`,
+            },
+          });
+        }
+      });
+      if (customRegs.length) {
         this.emit({
           type: "LOG",
           payload: {
-            message: "Hinweis: customPolicy wird vom Runner nicht ausgeführt.",
+            message: `Custom Policies: ${customRegs.length} aktiviert.`,
           },
         });
       }
