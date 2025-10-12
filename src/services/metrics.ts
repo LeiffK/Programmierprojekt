@@ -5,8 +5,14 @@ import type { iSeriesConfig } from "../domain/chart/iSeriesConfig";
 import type { iEnvConfig } from "../env/Domain/iEnvConfig";
 
 function bestMeanFrom(cfg?: iEnvConfig | null): number {
-  if (!cfg?.means?.length) return 0;
-  return Math.max(...cfg.means);
+  if (!cfg) return 0;
+  if (cfg.type === "bernoulli" && Array.isArray(cfg.probs) && cfg.probs.length) {
+    return Math.max(...cfg.probs);
+  }
+  if (Array.isArray(cfg.means) && cfg.means.length) {
+    return Math.max(...cfg.means);
+  }
+  return 0;
 }
 
 export function buildMetricsRowFromManual(

@@ -8,6 +8,7 @@ import type { iEnvConfig } from "../env/Domain/iEnvConfig";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv";
 import type { iPullResult } from "../env/Domain/iPullResult";
 import { GaussianBanditEnv } from "../env/GaussianBanditEnv";
+import { BernoulliBanditEnv } from "../env/BernoulliBanditEnv";
 
 /**
  * Abwärtskompatibel: Wir lassen zusätzliche ε-Varianten zu.
@@ -136,11 +137,15 @@ class AlgorithmsRunner {
       this.step = 0;
 
       // eigener Env je Policy mit Seed-Offset
-      const mkEnv = (seedOffset: number) =>
-        new GaussianBanditEnv({
+      const mkEnv = (seedOffset: number) => {
+        const initCfg = {
           ...cfg.envConfig,
           seed: (cfg.envConfig.seed ?? 0) + seedOffset,
-        });
+        };
+        return initCfg.type === "bernoulli"
+          ? new BernoulliBanditEnv(initCfg)
+          : new GaussianBanditEnv(initCfg);
+      };
 
       // --- Greedy ---
       const greedy = new Greedy({

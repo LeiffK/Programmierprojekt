@@ -2,6 +2,7 @@ import type { iBanditEnv } from "../env/Domain/iBanditEnv.js";
 import type { iEnvConfig } from "../env/Domain/iEnvConfig.js";
 import type { iPullResult } from "../env/Domain/iPullResult.js";
 import { GaussianBanditEnv } from "../env/GaussianBanditEnv.js";
+import { BernoulliBanditEnv } from "../env/BernoulliBanditEnv.js";
 
 type InitEnvResponse = { envId: string; optimalAction: number };
 
@@ -22,13 +23,10 @@ function ensureSeed(cfg: iEnvConfig): iEnvConfig {
 export async function initEnv(cfg: iEnvConfig): Promise<InitEnvResponse> {
   const base = ensureSeed(cfg);
 
-  if (base.type !== "gaussian") {
-    // absichtlich: bernoulli kommt später.
-    throw new Error('Only "gaussian" is supported at the moment.');
-  }
-
-  // GaussianBanditEnv generiert means/stdDev selbst, wenn nix kommt — sehr nett.
-  const env = new GaussianBanditEnv(base);
+  const env =
+    base.type === "bernoulli"
+      ? new BernoulliBanditEnv(base)
+      : new GaussianBanditEnv(base);
 
   const envId = crypto.randomUUID();
   const counts = Array(env.config.arms).fill(0);

@@ -29,7 +29,7 @@ describe("CustomPolicyLoader", () => {
     expect(policy.getInfo().name).toBe("MyTestPolicy");
   });
 
-  it("lädt erfolgreich eine gültige benutzerdefinierte Policy (JS)", async () => {
+  it("weist JavaScript-Code ab", async () => {
     const userCode = `
       const { BasePolicy } = require("./BasePolicy");
       exports.MyJSPolicy = class MyJSPolicy extends BasePolicy {
@@ -39,9 +39,9 @@ describe("CustomPolicyLoader", () => {
       }
     `;
 
-    const policy = await CustomPolicyLoader.loadPolicy(userCode, "javascript");
-    expect(policy).toBeDefined();
-    expect(policy.getInfo().name).toBe("MyJSPolicy");
+    await expect(
+      CustomPolicyLoader.loadPolicy(userCode, "javascript"),
+    ).rejects.toThrowError(/nur TypeScript/i);
   });
 
   it("wirft Fehler, wenn keine gültige Policy exportiert wird", async () => {
@@ -65,18 +65,6 @@ describe("CustomPolicyLoader", () => {
     await expect(
       CustomPolicyLoader.loadPolicy(badImport, "typescript"),
     ).rejects.toThrowError(/Unbekanntes Modul/);
-  });
-
-  it("kompiliert auch fehlerfreien JS-Code ohne TypeScript-Transpilation", async () => {
-    const simpleJS = `
-      const { BasePolicy } = require("./BasePolicy");
-      exports.Simple = class Simple extends BasePolicy {
-        selectAction() { return 0; }
-      }
-    `;
-    const policy = await CustomPolicyLoader.loadPolicy(simpleJS, "javascript");
-    expect(policy).toBeDefined();
-    expect(policy.getInfo().name).toBe("Simple");
   });
 
   it("stellt sicher, dass Policy Methoden von BasePolicy erbt", async () => {
