@@ -1,132 +1,173 @@
 <template>
   <div
-    class="thumb clickable"
+    class="thumb"
     role="button"
     tabindex="0"
-    :aria-label="`Thumbnail ${label}: ${variant}. Klicken, um 1 Zuschauer zu testen`"
-    @click="$emit('pick')"
-    @keydown.enter.prevent="$emit('pick')"
-    @keydown.space.prevent="$emit('pick')"
+    :aria-label="`Thumbnail ${label} auswählen`"
+    @click="emitPick"
+    @keydown.enter.prevent="emitPick"
+    @keydown.space.prevent="emitPick"
   >
-    <div class="art">
-      <div class="tag">{{ label }}</div>
-      <svg viewBox="0 0 80 56" width="56" height="56" aria-hidden="true">
-        <rect
-          x="6"
-          y="8"
-          rx="10"
-          ry="10"
-          width="68"
-          height="40"
-          fill="#ff0000"
-        />
-        <polygon points="35,20 35,36 50,28" fill="#fff" />
-      </svg>
+    <!-- Kopf / Badges -->
+    <header class="thumb-head">
+      <div class="lh">
+        <div class="label">{{ label }}</div>
+        <div class="variant muted">{{ variant }}</div>
+      </div>
+      <div class="n-pill">n={{ n }}</div>
+    </header>
+
+    <!-- Medienbereich (flacher) -->
+    <div class="thumb-media">
+      <slot name="media">
+        <div class="media-placeholder" />
+      </slot>
     </div>
 
-    <div class="meta">
-      <div class="row">
-        <b>{{ variant }}</b>
-        <span class="muted">n={{ n }}</span>
+    <!-- Footer / KPIs -->
+    <footer class="thumb-foot">
+      <div class="foot-line">
+        <span class="cap muted">Schätzung:</span>
+        <span class="val"
+          ><b>{{ estimate }}</b></span
+        >
       </div>
-      <div class="muted">
-        Schätzung: <b>{{ estimate }}</b>
+
+      <!-- Wahr nur im Debug-Modus -->
+      <div v-if="debug && truth && truth !== '-'" class="foot-line truth muted">
+        <span class="cap">Wahr:</span>
+        <span class="val"
+          ><b>{{ truth }}</b></span
+        >
       </div>
-      <div class="muted small" v-if="truth">
-        Wahr: <b>{{ truth }}</b>
-      </div>
-    </div>
+    </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   label: string;
   variant: string;
   n: number;
   estimate: string;
   truth?: string;
+  /** Debug-Modus: steuert Sichtbarkeit der „Wahr“-Zeile */
+  debug?: boolean;
 }>();
 
-defineEmits<{ (e: "pick"): void }>();
+const emit = defineEmits<{
+  (e: "pick"): void;
+}>();
+
+function emitPick() {
+  emit("pick");
+}
 </script>
 
 <style scoped>
+/* Card-Container – interaktiv, flacher, vollflächig klickbar */
 .thumb {
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  --media-h: 130px; /* vorher ~180px → „etwas flacher“ */
+  background: #191919;
+  border: 1px solid #272727;
+  border-radius: 16px;
   overflow: hidden;
-  background: var(--card-2);
-  /* sanfter hover/press schon global in motion.css hinterlegt,
-     hier nur noch der Fokus-Ring */
+  cursor: pointer;
+  user-select: none;
   transition:
-    transform var(--dur-soft) var(--ease-soft),
-    box-shadow var(--dur-soft) var(--ease-soft),
-    border-color var(--dur-soft) var(--ease-soft);
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    transform 40ms ease;
 }
 .thumb:hover {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: var(--shadow-1);
+  border-color: #2f2f2f;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.04) inset;
 }
 .thumb:active {
-  transform: translateY(0) scale(0.995);
+  transform: translateY(1px);
 }
-
-.thumb.clickable {
-  cursor: pointer;
+.thumb:focus {
+  outline: none;
 }
 .thumb:focus-visible {
-  outline: none;
-  box-shadow:
-    0 0 0 2px rgba(255, 255, 255, 0.14),
-    0 0 0 5px rgba(255, 0, 0, 0.35);
+  box-shadow: 0 0 0 2px rgba(120, 160, 255, 0.28);
 }
 
-.art {
-  /* statt fester Höhe jetzt 16:9 – wächst sauber mit Spaltenbreite */
-  aspect-ratio: 16 / 9;
-  height: auto;
-  min-height: 180px;
-  display: grid;
-  place-items: center;
-  background: #242424;
-  position: relative;
+/* Kopf */
+.thumb-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 6px 12px;
 }
-
-.art svg {
-  width: 86px;
-  height: 86px;
-}
-.thumb:hover .art {
-  filter: saturate(1.08);
-}
-
-.tag {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: #00000030;
-  color: #eaeaea;
-  font-size: 12px;
+.lh .label {
+  display: inline-block;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid #00000045;
+  background: #111;
+  border: 1px solid #222;
+  font-size: 12px;
+  font-weight: 600;
+}
+.variant {
+  margin-top: 4px;
+  font-size: 12px;
+}
+.n-pill {
+  font-size: 12px;
+  font-weight: 700;
+  color: #a0a0a0;
 }
 
-.meta {
-  padding: 12px;
-  display: grid;
-  gap: 6px;
-}
-.row {
+/* Medienbereich – flacher */
+.thumb-media {
+  height: var(--media-h);
+  background: #222;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center;
 }
-.muted {
+.media-placeholder {
+  width: 64px;
+  height: 44px;
+  border-radius: 12px;
+  background: #e53935;
+  position: relative;
+}
+.media-placeholder::after {
+  content: "";
+  position: absolute;
+  left: 26px;
+  top: 14px;
+  border-style: solid;
+  border-width: 8px 0 8px 14px;
+  border-color: transparent transparent transparent #fff;
+}
+
+/* Footer */
+.thumb-foot {
+  background: #161616;
+  border-top: 1px solid #222;
+  padding: 10px 12px;
+}
+.foot-line {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  margin-top: 4px;
+}
+.cap {
   color: #9aa0a6;
 }
-.muted.small {
-  font-size: 12px;
+.val {
+  color: #e5e7eb;
+}
+.truth {
+  margin-top: 2px;
+}
+
+/* Muted */
+.muted {
+  color: #9aa0a6;
 }
 </style>

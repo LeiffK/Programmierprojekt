@@ -66,7 +66,10 @@ import type { CustomPolicyRegistration } from "../algorithms/Domain/iCustomPolic
 const props = defineProps<{
   envConfig: iEnvConfig | null;
   policyConfigs?: Partial<
-    Record<"greedy" | "epsgreedy", iBanditPolicyConfig>
+    Record<
+      "greedy" | "epsgreedy" | "ucb" | "thompson" | "gradient",
+      iBanditPolicyConfig & Record<string, any>
+    >
   > & { variants?: any; customPolicies?: CustomPolicyRegistration[] };
 }>();
 
