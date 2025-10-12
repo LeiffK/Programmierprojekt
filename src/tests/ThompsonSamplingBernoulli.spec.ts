@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import type { iEnvConfig } from "../env/Domain/iEnvConfig";
-import type { iBanditEnv } from "../env/Domain/iBanditEnv";
-import type { iPullResult } from "../env/Domain/iPullResult";
-import { GradientBandit } from "../algorithms/GradientBandit.ts";
+import type { iEnvConfig } from "../env/Domain/iEnvConfig.ts";
+import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
+import type { iPullResult } from "../env/Domain/iPullResult.ts";
+import { ThompsonSamplingBernoulli } from "../algorithms/ThompsonSamplingBernoulli.ts";
 
 /**
- * Mock-Umgebung für Bernoulli-Banditen.
- * - Einfaches Environment, das Rewards nach Bernoulli(p) zurückgibt.
- * - Dient als Testobjekt für die Policy (kein Zufallssamen hier fixiert).
+ * Mock-Umgebung (Bernoulli) für Tests der ThompsonSampling Policy.
+ * - Rewards basieren auf festen Erfolgswahrscheinlichkeiten.
+ * - RNG ist einfache Math.random(), Seed wird ignoriert.
  */
 class MockBernoulliEnv implements iBanditEnv {
   config: iEnvConfig;
@@ -20,7 +20,7 @@ class MockBernoulliEnv implements iBanditEnv {
     this.config = { type: "bernoulli", arms: probs.length, probs, seed };
     this.optimalAction = probs.indexOf(Math.max(...probs));
     this.probs = probs;
-    this.rng = () => Math.random(); // einfache RNG, nicht deterministisch (vereinfacht)
+    this.rng = () => Math.random();
   }
 
   pull(action: number): iPullResult {
@@ -30,13 +30,13 @@ class MockBernoulliEnv implements iBanditEnv {
   }
 }
 
-describe("GradientBandit", () => {
+describe("ThompsonSamplingBernoulli", () => {
   let env: MockBernoulliEnv;
-  let policy: GradientBandit;
+  let policy: ThompsonSamplingBernoulli;
 
   beforeEach(() => {
-    env = new MockBernoulliEnv([0.7, 0.4, 0.2], 123);
-    policy = new GradientBandit({ alpha: 0.1, seed: 123 });
+    env = new MockBernoulliEnv([0.9, 0.5, 0.3], 123);
+    policy = new ThompsonSamplingBernoulli({ seed: 123 });
     policy.initialize(env);
   });
 
@@ -51,7 +51,7 @@ describe("GradientBandit", () => {
     }
   });
 
-  it("updates preferences and average reward", () => {
+  it("updates successes and failures correctly", () => {
     const resultSuccess: iPullResult = {
       action: 0,
       reward: 1,
@@ -60,26 +60,23 @@ describe("GradientBandit", () => {
     const resultFail: iPullResult = { action: 1, reward: 0, isOptimal: false };
 
     policy.update(resultSuccess);
-
-    const avgAfterSuccess = policy.getAverageReward();
-    const prefAfterSuccess = policy.getPreferences()[0];
+    const succAfter = policy.getSuccesses()[0];
 
     policy.update(resultFail);
+    const failAfter = policy.getFailures()[1];
 
-    const avgAfterFail = policy.getAverageReward();
-    const prefAfterFail = policy.getPreferences()[1];
-
-    expect(avgAfterFail).not.toBe(avgAfterSuccess);
-    expect(prefAfterSuccess).not.toBe(0);
-    expect(prefAfterFail).not.toBe(0);
+    expect(succAfter).toBeGreaterThan(0);
+    expect(failAfter).toBeGreaterThan(0);
   });
 
   it("resets state correctly", () => {
     policy.update({ action: 0, reward: 1, isOptimal: true });
+    policy.update({ action: 1, reward: 0, isOptimal: false });
+
     policy.reset();
 
-    expect(policy.getPreferences().every((v) => v === 0)).toBe(true);
-    expect(policy.getAverageReward()).toBe(0);
-    expect(policy.getCounts().every((v) => v === 0)).toBe(true);
+    expect(policy.getSuccesses().every((s) => s === 1)).toBe(true);
+    expect(policy.getFailures().every((f) => f === 1)).toBe(true);
+    expect(policy.getCounts().every((n) => n === 0)).toBe(true);
   });
 });
