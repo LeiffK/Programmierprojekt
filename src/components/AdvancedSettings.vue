@@ -202,14 +202,14 @@
             </div>
           </div>
         </div>
-
         <!-- Eigener Algorithmus -->
         <details class="custom" :open="customOpen" @toggle="onCustomToggle">
           <summary>Eigener Algorithmus</summary>
           <div class="custom-body">
-            <p class="muted">
-              Hier kann der AlgorithmEditor eingeblendet werden.
-            </p>
+            <AlgorithmEditor
+              @policyLoaded="onCustomPolicyLoaded"
+              @policyRemoved="onCustomPolicyRemoved"
+            />
           </div>
         </details>
       </div>
@@ -227,13 +227,16 @@ import {
   defineEmits,
   nextTick,
 } from "vue";
+import AlgorithmEditor from "./AlgorithmEditor.vue";
+import type { iBanditPolicy } from "../algorithms/Domain/iBanditPolicy";
+import type { CustomPolicyRegistration } from "../algorithms/Domain/iCustomPolicyRegistration";
 
 type Mode = "manual" | "algo";
 
 interface Props {
   mode: Mode;
-  env: any; // iEnvConfig – bewusst locker gehalten
-  policyConfigs: any; // { greedy, epsgreedy, customPolicy? }
+  env: any; // iEnvConfig - bewusst locker gehalten
+  policyConfigs: any; // { greedy, epsgreedy, customPolicies? }
   open?: boolean;
 }
 
@@ -254,7 +257,15 @@ const localEnv = reactive<any>({
   seed: props.env?.seed ?? 12345,
 });
 
-const localPolicies = reactive<any>({
+const localPolicies = reactive<{
+  greedy: { optimisticInitialValue: number };
+  epsgreedy: {
+    epsilon: number;
+    optimisticInitialValue: number;
+    variants: Array<{ epsilon: number; optimisticInitialValue: number }>;
+  };
+  customPolicies: CustomPolicyRegistration[];
+}>({
   greedy: {
     optimisticInitialValue:
       props.policyConfigs?.greedy?.optimisticInitialValue ?? 100,
@@ -267,7 +278,9 @@ const localPolicies = reactive<any>({
       ? [...props.policyConfigs.epsgreedy.variants]
       : [],
   },
-  customPolicy: props.policyConfigs?.customPolicy ?? null,
+  customPolicies: Array.isArray(props.policyConfigs?.customPolicies)
+    ? [...props.policyConfigs.customPolicies]
+    : [],
 });
 
 const openLocal = ref<boolean>(props.open);
@@ -301,7 +314,9 @@ watch(
     localPolicies.epsgreedy.variants = Array.isArray(p.epsgreedy?.variants)
       ? [...p.epsgreedy.variants]
       : [];
-    localPolicies.customPolicy = p.customPolicy ?? null;
+    localPolicies.customPolicies = Array.isArray(p.customPolicies)
+      ? [...p.customPolicies]
+      : [];
   },
   { deep: true, immediate: true },
 );
@@ -327,7 +342,7 @@ function emitPolicies() {
       optimisticInitialValue: localPolicies.epsgreedy.optimisticInitialValue,
       variants: [...localPolicies.epsgreedy.variants],
     },
-    customPolicy: localPolicies.customPolicy ?? null,
+    customPolicies: [...localPolicies.customPolicies],
   };
   emit("update:policyConfigs", out);
 }
@@ -352,6 +367,49 @@ function addVariant() {
 function removeVariant(i: number) {
   localPolicies.epsgreedy.variants.splice(i, 1);
   emitPolicies();
+}
+function slugifyName(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+function ensureCustomId(name: string) {
+  const base = slugifyName(name);
+  if (!base) return `custom:${Date.now().toString(36)}`;
+  return `custom:${base}`;
+}
+function onCustomPolicyLoaded(payload: {
+  name: string;
+  policyCtor: new () => iBanditPolicy;
+}) {
+  if (!payload?.policyCtor) return;
+  const idCandidate = ensureCustomId(payload.name);
+  const currentIdx = localPolicies.customPolicies.findIndex(
+    (entry) => entry.name === payload.name || entry.id === idCandidate,
+  );
+  const registration: CustomPolicyRegistration = {
+    id:
+      currentIdx >= 0
+        ? localPolicies.customPolicies[currentIdx].id
+        : idCandidate,
+    name: payload.name,
+    factory: () => new payload.policyCtor(),
+  };
+  if (currentIdx >= 0)
+    localPolicies.customPolicies.splice(currentIdx, 1, registration);
+  else localPolicies.customPolicies.push(registration);
+  customOpen.value = true;
+  emitPolicies();
+}
+function onCustomPolicyRemoved(payload: { name: string }) {
+  const idx = localPolicies.customPolicies.findIndex(
+    (entry) => entry.name === payload?.name,
+  );
+  if (idx >= 0) {
+    localPolicies.customPolicies.splice(idx, 1);
+    emitPolicies();
+  }
 }
 function onCustomToggle(e: Event) {
   const el = e.target as HTMLDetailsElement;
