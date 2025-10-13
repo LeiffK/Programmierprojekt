@@ -1,4 +1,4 @@
-import { Page, expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 /**
  * Helper functions for E2E tests
@@ -219,23 +219,6 @@ export class BanditStudioPage {
     const row = table.locator("tr").filter({ hasText: seriesName });
     const cell = row.locator(`td:has-text("${metric}")`);
     return await cell.textContent();
-  }
-
-  // Assertions
-  async expectPageTitle(title: string) {
-    await expect(this.page).toHaveTitle(title);
-  }
-
-  async expectVisible(selector: string) {
-    await expect(this.page.locator(selector)).toBeVisible();
-  }
-
-  async expectHidden(selector: string) {
-    await expect(this.page.locator(selector)).toBeHidden();
-  }
-
-  async expectText(selector: string, text: string | RegExp) {
-    await expect(this.page.locator(selector)).toContainText(text);
   }
 }
 
