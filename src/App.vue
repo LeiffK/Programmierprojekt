@@ -11,13 +11,14 @@
           <span>Bandit-Studio</span>
         </div>
         <div class="bar-actions">
-          <!-- Reset-Button: löscht alle lokalen Daten (YouTube Studio Style) -->
+          <!-- Reset-Button: öffnet In-App-Dialog -->
           <button
               class="btn btn-ghost btn-pill"
               type="button"
-              @click="handleFullReset"
+              @click="openResetModal"
               title="Alle Einstellungen & Daten zurücksetzen"
               aria-label="Alle Einstellungen und lokal gespeicherten Daten zurücksetzen"
+              ref="resetBtnRef"
           >
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-4.9 6.1 1 1 0 0 0-1.96.4A7 7 0 1 0 12 5z" fill="currentColor"/>
@@ -38,7 +39,6 @@
           </button>
 
           <button class="btn btn-ghost btn-pill" @click="showTopic = true" title="Thema verstehen">
-            <!-- YouTube-Info-Icon Stil -->
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2zm0 15a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm1-4.75h-2V7h2v5.25z" fill="currentColor"/>
             </svg>
@@ -51,7 +51,6 @@
               @click="startTutorial"
               title="Anwendung verstehen"
           >
-            <!-- Play-Icon für Tutorial -->
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M8 5v14l11-7z" fill="currentColor"/>
             </svg>
@@ -163,6 +162,54 @@
         :hooks="tutorialHooks"
         @close="showTutorial = false"
     />
+
+    <!-- In-App Reset-Dialog -->
+    <div
+        v-if="showReset"
+        class="modal-backdrop"
+        @click.self="closeResetModal"
+        @keydown.esc.prevent.stop="closeResetModal"
+    >
+      <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reset-title"
+          aria-describedby="reset-desc"
+          tabindex="-1"
+          ref="modalRef"
+      >
+        <div class="modal-header">
+          <div class="modal-title" id="reset-title">
+            Zurücksetzen bestätigen
+          </div>
+        </div>
+        <div class="modal-body" id="reset-desc">
+          <p>
+            Alle Daten und Einstellungen gehen verloren. Dieser Schritt kann nicht
+            rückgängig gemacht werden.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button
+              class="btn btn-ghost btn-pill"
+              type="button"
+              @click="closeResetModal"
+              ref="cancelBtnRef"
+          >
+            Abbrechen
+          </button>
+          <button
+              class="btn btn-danger btn-pill"
+              type="button"
+              @click="confirmReset"
+              ref="confirmBtnRef"
+          >
+            Jetzt zurücksetzen
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -244,13 +291,31 @@ function toggleDebug() {
   debugEnabled.value = !debugEnabled.value;
 }
 
-/* Vollständiger Reset (für Action-Bar) */
-async function handleFullReset() {
-  const ack = window.confirm(
-      "Dies setzt Bandit-Studio vollständig zurück: Einstellungen, lokal gespeicherte Daten, Caches. Fortfahren?"
-  );
-  if (!ack) return;
+/* In-App-Reset-Dialog State */
+const showReset = ref(false);
+const resetBtnRef = ref<HTMLButtonElement | null>(null);
+const modalRef = ref<HTMLDivElement | null>(null);
+const cancelBtnRef = ref<HTMLButtonElement | null>(null);
+const confirmBtnRef = ref<HTMLButtonElement | null>(null);
 
+function openResetModal() {
+  showReset.value = true;
+  nextTick(() => {
+    // Fokus in den Dialog legen
+    confirmBtnRef.value?.focus?.();
+  });
+}
+function closeResetModal() {
+  showReset.value = false;
+  // Fokus zurück auf Auslöser
+  nextTick(() => resetBtnRef.value?.focus?.());
+}
+async function confirmReset() {
+  await doFullReset();
+}
+
+/* Vollständiger Reset (ohne native confirm) */
+async function doFullReset() {
   try {
     window.dispatchEvent(new CustomEvent("bandit:reset:before"));
   } catch {}
@@ -749,7 +814,6 @@ function scrollTop() {
 
 /* Lifecycle */
 onMounted(() => {
-  // Branding konsistent halten
   try {
     if (typeof document !== "undefined") document.title = "Bandit-Studio";
   } catch {}
@@ -974,6 +1038,13 @@ const tutorialHooks = {
 .btn-primary:hover {
   background: #243255;
 }
+.btn-danger {
+  background: #7a1f1f;
+  border-color: #9b2b2b;
+}
+.btn-danger:hover {
+  background: #8b2525;
+}
 
 /* Layout */
 .wrap {
@@ -1026,6 +1097,46 @@ h2 {
 }
 .muted {
   color: #9aa0a6;
+}
+
+/* Modal (In-App) */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 15, 0.7);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.modal {
+  width: 100%;
+  max-width: 520px;
+  background: #141414;
+  border: 1px solid #242424;
+  border-radius: 12px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+  outline: none;
+}
+.modal-header {
+  padding: 14px 16px 6px 16px;
+  border-bottom: 1px solid #1f1f1f;
+}
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+.modal-body {
+  padding: 16px;
+  color: #e5e7eb;
+}
+.modal-footer {
+  padding: 12px 16px 16px 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #1f1f1f;
 }
 
 /* Responsive */
