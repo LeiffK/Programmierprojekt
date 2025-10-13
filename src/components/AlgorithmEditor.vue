@@ -323,12 +323,16 @@ const statusClass = computed(() =>
 /* Buttons */
 .btn {
   height: 28px;
-  padding: 0 10px;
+  padding: 0 12px;
   border-radius: 8px;
   border: 1px solid #333;
   background: #222;
   color: #eee;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 .btn:hover {
   background: #333;
@@ -336,6 +340,9 @@ const statusClass = computed(() =>
 .btn-sm {
   font-size: 13px;
   height: 28px;
+}
+.btn-pill {
+  min-width: 116px;
 }
 
 /* Aktivierte Buttons */
