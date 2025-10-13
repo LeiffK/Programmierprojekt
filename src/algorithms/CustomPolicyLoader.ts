@@ -3,6 +3,7 @@ import path from "path";
 import ts from "typescript";
 import type { iBanditPolicy } from "./Domain/iBanditPolicy";
 import seedrandom from "seedrandom";
+import basePolicySource from "./BasePolicy.ts?raw";
 
 export class CustomPolicyLoader {
   /**
@@ -29,18 +30,16 @@ export class CustomPolicyLoader {
     // 2. BasePolicy-Quellcode einlesen und auch transpilen
     let baseSrc: string;
     try {
-      if (typeof window !== "undefined") {
-        // Browser-Variante: per fetch laden
-        baseSrc = await fetch("/src/algorithms/BasePolicy.ts").then((r) =>
-          r.text(),
-        );
-      } else {
+      if (typeof window === "undefined") {
         // Node/Vitest-Variante: per fs laden
         const basePath = path.resolve(
           process.cwd(),
           "src/algorithms/BasePolicy.ts",
         );
         baseSrc = fs.readFileSync(basePath, "utf8");
+      } else {
+        // Browser-Variante: über Vite als Raw-String eingebunden
+        baseSrc = basePolicySource;
       }
     } catch (err) {
       throw new Error("BasePolicy konnte nicht geladen werden");
