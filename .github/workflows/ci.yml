@@ -42,38 +42,17 @@ jobs:
       - name: Build (probe)
         run: npm run build
 
-  e2e-tests:
-    runs-on: ubuntu-latest
-    needs: checks
-    timeout-minutes: 15
-
-    strategy:
-      fail-fast: false
-      matrix:
-        browser: [chromium]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+        run: npx playwright install --with-deps chromium
 
       - name: Run E2E Tests
-        run: npm run test:e2e -- --project=${{ matrix.browser }}
+        run: npm run test:e2e -- --project=chromium
 
       - name: Upload Playwright Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-${{ matrix.browser }}
+          name: playwright-report
           path: playwright-report/
           retention-days: 7
 
@@ -81,14 +60,14 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ matrix.browser }}
+          name: test-results
           path: test-results/
           retention-days: 7
 
   deploy:
-    # Nur auf Push nach main, NACHDEM checks und e2e-tests erfolgreich waren
+    # Nur auf Push nach main, NACHDEM checks erfolgreich waren
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [checks, e2e-tests]
+    needs: checks
     runs-on: ubuntu-latest
     environment:
       name: github-pages
