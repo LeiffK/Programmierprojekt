@@ -2,8 +2,38 @@
   <div class="shell">
     <header class="bar">
       <div class="bar-inner">
-        <div class="brand">Bandit Lab</div>
+        <div class="brand" @click="scrollTop" title="Bandit-Studio">
+          <!-- YouTube-ähnliches Logo -->
+          <svg
+            class="yt-logo"
+            viewBox="0 0 90 64"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <rect x="0" y="0" width="90" height="64" rx="12" ry="12"></rect>
+            <polygon points="36,16 36,48 64,32"></polygon>
+          </svg>
+          <span>Bandit-Studio</span>
+        </div>
         <div class="bar-actions">
+          <!-- Reset-Button: öffnet In-App-Dialog -->
+          <button
+            class="btn btn-ghost btn-pill"
+            type="button"
+            @click="openResetModal"
+            title="Alle Einstellungen & Daten zurücksetzen"
+            aria-label="Alle Einstellungen und lokal gespeicherten Daten zurücksetzen"
+            ref="resetBtnRef"
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 5V2L7 6l5 4V7a5 5 0 1 1-4.9 6.1 1 1 0 0 0-1.96.4A7 7 0 1 0 12 5z"
+                fill="currentColor"
+              />
+            </svg>
+            Zurücksetzen
+          </button>
+
           <!-- Debug-Schalter -->
           <button
             class="btn btn-pill"
@@ -16,14 +46,29 @@
             {{ debugEnabled ? "Debug: an" : "Debug: aus" }}
           </button>
 
-          <button class="btn btn-ghost btn-pill" @click="showTopic = true">
+          <button
+            class="btn btn-ghost btn-pill"
+            @click="showTopic = true"
+            title="Thema verstehen"
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2zm0 15a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm1-4.75h-2V7h2v5.25z"
+                fill="currentColor"
+              />
+            </svg>
             Thema verstehen
           </button>
+
           <button
             id="btn-tutorial"
             class="btn btn-primary btn-pill"
             @click="startTutorial"
+            title="Anwendung verstehen"
           >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14l11-7z" fill="currentColor" />
+            </svg>
             Anwendung verstehen
           </button>
         </div>
@@ -132,6 +177,54 @@
       :hooks="tutorialHooks"
       @close="showTutorial = false"
     />
+
+    <!-- In-App Reset-Dialog -->
+    <div
+      v-if="showReset"
+      class="modal-backdrop"
+      @click.self="closeResetModal"
+      @keydown.esc.prevent.stop="closeResetModal"
+    >
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reset-title"
+        aria-describedby="reset-desc"
+        tabindex="-1"
+        ref="modalRef"
+      >
+        <div class="modal-header">
+          <div class="modal-title" id="reset-title">
+            Zurücksetzen bestätigen
+          </div>
+        </div>
+        <div class="modal-body" id="reset-desc">
+          <p>
+            Alle Daten und Einstellungen gehen verloren. Dieser Schritt kann
+            nicht rückgängig gemacht werden.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-ghost btn-pill"
+            type="button"
+            @click="closeResetModal"
+            ref="cancelBtnRef"
+          >
+            Abbrechen
+          </button>
+          <button
+            class="btn btn-danger btn-pill"
+            type="button"
+            @click="confirmReset"
+            ref="confirmBtnRef"
+          >
+            Jetzt zurücksetzen
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -190,11 +283,13 @@ const settingsOpen = ref(false);
 const chartMetric = ref<ChartMetric>("cumReward");
 const chartKey = ref(0);
 
-/* Debug-Modus (persistiert) */
+/* Debug-Modus (persistiert) – Branding-Migration: banditlab -> banditstudio */
 const debugEnabled = ref<boolean>(false);
 try {
-  const raw = localStorage.getItem("banditlab.debug");
-  debugEnabled.value = raw ? JSON.parse(raw) === true : false;
+  const rawNew = localStorage.getItem("banditstudio.debug");
+  const rawOld = localStorage.getItem("banditlab.debug");
+  const src = rawNew ?? rawOld;
+  debugEnabled.value = src ? JSON.parse(src) === true : false;
 } catch {
   debugEnabled.value = false;
 }
@@ -202,13 +297,74 @@ watch(
   () => debugEnabled.value,
   (v) => {
     try {
-      localStorage.setItem("banditlab.debug", JSON.stringify(!!v));
+      localStorage.setItem("banditstudio.debug", JSON.stringify(!!v));
     } catch {}
   },
   { immediate: true },
 );
 function toggleDebug() {
   debugEnabled.value = !debugEnabled.value;
+}
+
+/* In-App-Reset-Dialog State */
+const showReset = ref(false);
+const resetBtnRef = ref<HTMLButtonElement | null>(null);
+const modalRef = ref<HTMLDivElement | null>(null);
+const cancelBtnRef = ref<HTMLButtonElement | null>(null);
+const confirmBtnRef = ref<HTMLButtonElement | null>(null);
+
+function openResetModal() {
+  showReset.value = true;
+  nextTick(() => {
+    // Fokus in den Dialog legen
+    confirmBtnRef.value?.focus?.();
+  });
+}
+function closeResetModal() {
+  showReset.value = false;
+  // Fokus zurück auf Auslöser
+  nextTick(() => resetBtnRef.value?.focus?.());
+}
+async function confirmReset() {
+  await doFullReset();
+}
+
+/* Vollständiger Reset (ohne native confirm) */
+async function doFullReset() {
+  try {
+    window.dispatchEvent(new CustomEvent("bandit:reset:before"));
+  } catch {}
+
+  try {
+    localStorage.clear();
+  } catch {}
+  try {
+    sessionStorage.clear();
+  } catch {}
+
+  try {
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch {}
+
+  try {
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+  } catch {}
+
+  try {
+    resetSeriesStore();
+  } catch {}
+
+  try {
+    window.dispatchEvent(new CustomEvent("bandit:reset:after"));
+  } catch {}
+
+  window.location.reload();
 }
 
 /* Manuelles Env */
@@ -662,8 +818,21 @@ function onChartToggle(payload: { id: string; visible: boolean }) {
   setSeriesVisible(payload.id, payload.visible);
 }
 
+/* Branding-Helfer */
+function scrollTop() {
+  try {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch {
+    window.scrollTo(0, 0);
+  }
+}
+
 /* Lifecycle */
 onMounted(() => {
+  try {
+    if (typeof document !== "undefined") document.title = "Bandit-Studio";
+  } catch {}
+
   attachRunner(algorithmsRunner);
   hardResetForMode(mode.value);
 });
@@ -829,6 +998,21 @@ const tutorialHooks = {
 .brand {
   font-weight: 700;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.yt-logo {
+  width: 28px;
+  height: 20px;
+  display: inline-block;
+}
+.yt-logo rect {
+  fill: #ff0000; /* YouTube-Primärrot */
+}
+.yt-logo polygon {
+  fill: #ffffff;
 }
 .bar-actions {
   display: flex;
@@ -845,6 +1029,13 @@ const tutorialHooks = {
   color: #eaeaea;
   border-radius: 10px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn .icon {
+  width: 16px;
+  height: 16px;
 }
 .btn:hover {
   background: #1b1b1b;
@@ -861,6 +1052,13 @@ const tutorialHooks = {
 }
 .btn-primary:hover {
   background: #243255;
+}
+.btn-danger {
+  background: #7a1f1f;
+  border-color: #9b2b2b;
+}
+.btn-danger:hover {
+  background: #8b2525;
 }
 
 /* Layout */
@@ -914,6 +1112,46 @@ h2 {
 }
 .muted {
   color: #9aa0a6;
+}
+
+/* Modal (In-App) */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 15, 0.7);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.modal {
+  width: 100%;
+  max-width: 520px;
+  background: #141414;
+  border: 1px solid #242424;
+  border-radius: 12px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+  outline: none;
+}
+.modal-header {
+  padding: 14px 16px 6px 16px;
+  border-bottom: 1px solid #1f1f1f;
+}
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+.modal-body {
+  padding: 16px;
+  color: #e5e7eb;
+}
+.modal-footer {
+  padding: 12px 16px 16px 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #1f1f1f;
 }
 
 /* Responsive */
