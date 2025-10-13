@@ -36,9 +36,6 @@ jobs:
       - name: Type Check
         run: npm run type-check
 
-      - name: Tests
-        run: npm run test
-
       - name: Build (probe)
         run: npm run build
 
@@ -47,6 +44,9 @@ jobs:
 
       - name: Run E2E Tests
         run: npm run test:e2e -- --project=chromium
+
+      - name: Tests
+        run: npm run test
 
       - name: Upload Playwright Report
         if: always()
