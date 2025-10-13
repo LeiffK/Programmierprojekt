@@ -151,9 +151,11 @@ text
 
 3. Starte manuelles Testen oder mehrere parallele Algorithmen-Simulationen.
 
-4. Beobachte das Live-Feedback in Form von Rewards oder Klick-Ergebnissen.
+4. Neben den Standard-Algorithmen kann im Tool über den Button „Eigener Algorithmus“ ein individueller Algorithmus eingegeben werden. Nach Klick auf diesen Button öffnet sich ein Editor, in dem eigener TypeScript-Code direkt eingegeben werden kann. Der Algorithmus kann so direkt im Vergleich mit den Standard-Strategien getestet und live ausgewertet werden.
 
-5. Ergebnisse werden tabellarisch und grafisch mit Standardalgorithmen verglichen.
+5. Beobachte das Live-Feedback in Form von Rewards oder Klick-Ergebnissen.
+
+6. Ergebnisse werden tabellarisch und grafisch mit Standardalgorithmen verglichen.
 
 # Entwicklung & Testing
 
