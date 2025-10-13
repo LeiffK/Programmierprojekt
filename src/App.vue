@@ -2,28 +2,59 @@
   <div class="shell">
     <header class="bar">
       <div class="bar-inner">
-        <div class="brand">Bandit Lab</div>
+        <div class="brand" @click="scrollTop" title="Bandit-Studio">
+          <!-- YouTube-ähnliches Logo -->
+          <svg class="yt-logo" viewBox="0 0 90 64" aria-hidden="true" focusable="false">
+            <rect x="0" y="0" width="90" height="64" rx="12" ry="12"></rect>
+            <polygon points="36,16 36,48 64,32"></polygon>
+          </svg>
+          <span>Bandit-Studio</span>
+        </div>
         <div class="bar-actions">
+          <!-- Reset-Button: löscht alle lokalen Daten (YouTube Studio Style) -->
+          <button
+              class="btn btn-ghost btn-pill"
+              type="button"
+              @click="handleFullReset"
+              title="Alle Einstellungen & Daten zurücksetzen"
+              aria-label="Alle Einstellungen und lokal gespeicherten Daten zurücksetzen"
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-4.9 6.1 1 1 0 0 0-1.96.4A7 7 0 1 0 12 5z" fill="currentColor"/>
+            </svg>
+            Zurücksetzen
+          </button>
+
           <!-- Debug-Schalter -->
           <button
-            class="btn btn-pill"
-            :class="debugEnabled ? 'btn-primary' : 'btn-ghost'"
-            type="button"
-            :aria-pressed="debugEnabled ? 'true' : 'false'"
-            @click="toggleDebug"
-            title="Debug-Modus ein/aus"
+              class="btn btn-pill"
+              :class="debugEnabled ? 'btn-primary' : 'btn-ghost'"
+              type="button"
+              :aria-pressed="debugEnabled ? 'true' : 'false'"
+              @click="toggleDebug"
+              title="Debug-Modus ein/aus"
           >
             {{ debugEnabled ? "Debug: an" : "Debug: aus" }}
           </button>
 
-          <button class="btn btn-ghost btn-pill" @click="showTopic = true">
+          <button class="btn btn-ghost btn-pill" @click="showTopic = true" title="Thema verstehen">
+            <!-- YouTube-Info-Icon Stil -->
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2zm0 15a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm1-4.75h-2V7h2v5.25z" fill="currentColor"/>
+            </svg>
             Thema verstehen
           </button>
+
           <button
-            id="btn-tutorial"
-            class="btn btn-primary btn-pill"
-            @click="startTutorial"
+              id="btn-tutorial"
+              class="btn btn-primary btn-pill"
+              @click="startTutorial"
+              title="Anwendung verstehen"
           >
+            <!-- Play-Icon für Tutorial -->
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14l11-7z" fill="currentColor"/>
+            </svg>
             Anwendung verstehen
           </button>
         </div>
@@ -35,16 +66,16 @@
         <div class="col-left">
           <div id="env-setup">
             <EnvSetup
-              v-model="form"
-              :busy="busy"
-              @inited="onInited"
-              @log="onEnvLog"
+                v-model="form"
+                :busy="busy"
+                @inited="onInited"
+                @log="onEnvLog"
             >
               <template #actions>
                 <ModeSwitch
-                  id="mode-switch"
-                  v-model="mode"
-                  @change="onModeChange"
+                    id="mode-switch"
+                    v-model="mode"
+                    @change="onModeChange"
                 />
               </template>
             </EnvSetup>
@@ -52,10 +83,10 @@
 
           <div id="advanced-settings">
             <AdvancedSettings
-              :mode="mode"
-              v-model:env="form"
-              v-model:policyConfigs="policyConfigs"
-              v-model:open="settingsOpen"
+                :mode="mode"
+                v-model:env="form"
+                v-model:policyConfigs="policyConfigs"
+                v-model:open="settingsOpen"
             />
           </div>
 
@@ -68,15 +99,15 @@
 
             <div class="thumb-grid">
               <ThumbnailCard
-                v-for="i in form.arms"
-                :key="i"
-                :label="`Thumbnail ${String.fromCharCode(64 + i)}`"
-                :variant="`Variante ${String.fromCharCode(64 + i)}`"
-                :n="manualCounts[i - 1] || 0"
-                :estimate="estimateText(i - 1)"
-                :truth="truthText(i - 1)"
-                :debug="debugEnabled"
-                @pick="onManual(i - 1)"
+                  v-for="i in form.arms"
+                  :key="i"
+                  :label="`Thumbnail ${String.fromCharCode(64 + i)}`"
+                  :variant="`Variante ${String.fromCharCode(64 + i)}`"
+                  :n="manualCounts[i - 1] || 0"
+                  :estimate="estimateText(i - 1)"
+                  :truth="truthText(i - 1)"
+                  :debug="debugEnabled"
+                  @pick="onManual(i - 1)"
               />
             </div>
 
@@ -88,9 +119,9 @@
 
           <div id="runner-controls" v-else>
             <RunnerControls
-              :env-config="form"
-              :policy-configs="policyConfigs"
-              @reset="onRunnerReset"
+                :env-config="form"
+                :policy-configs="policyConfigs"
+                @reset="onRunnerReset"
             />
           </div>
         </div>
@@ -99,10 +130,10 @@
           <section id="chart-area" class="card">
             <h2>Verläufe</h2>
             <ChartArea
-              :key="chartKey"
-              :series="chartSeries"
-              v-model="chartMetric"
-              @toggle="onChartToggle"
+                :key="chartKey"
+                :series="chartSeries"
+                v-model="chartMetric"
+                @toggle="onChartToggle"
             />
           </section>
 
@@ -111,26 +142,26 @@
           </div>
 
           <ComparisonTable
-            id="comparison-table"
-            class="card"
-            :rows="metricRows"
-            :visibleMap="visibleMap"
-            v-model:open="tableOpen"
-            @toggleSeries="onToggleSeries"
+              id="comparison-table"
+              class="card"
+              :rows="metricRows"
+              :visibleMap="visibleMap"
+              v-model:open="tableOpen"
+              @toggleSeries="onToggleSeries"
           />
         </div>
       </div>
     </main>
 
     <TopicUnderstanding
-      :open="showTopic"
-      :html="topicHtml"
-      @close="showTopic = false"
+        :open="showTopic"
+        :html="topicHtml"
+        @close="showTopic = false"
     />
     <AppTutorial
-      :open="showTutorial"
-      :hooks="tutorialHooks"
-      @close="showTutorial = false"
+        :open="showTutorial"
+        :hooks="tutorialHooks"
+        @close="showTutorial = false"
     />
   </div>
 </template>
@@ -190,25 +221,70 @@ const settingsOpen = ref(false);
 const chartMetric = ref<ChartMetric>("cumReward");
 const chartKey = ref(0);
 
-/* Debug-Modus (persistiert) */
+/* Debug-Modus (persistiert) – Branding-Migration: banditlab -> banditstudio */
 const debugEnabled = ref<boolean>(false);
 try {
-  const raw = localStorage.getItem("banditlab.debug");
-  debugEnabled.value = raw ? JSON.parse(raw) === true : false;
+  const rawNew = localStorage.getItem("banditstudio.debug");
+  const rawOld = localStorage.getItem("banditlab.debug");
+  const src = rawNew ?? rawOld;
+  debugEnabled.value = src ? JSON.parse(src) === true : false;
 } catch {
   debugEnabled.value = false;
 }
 watch(
-  () => debugEnabled.value,
-  (v) => {
-    try {
-      localStorage.setItem("banditlab.debug", JSON.stringify(!!v));
-    } catch {}
-  },
-  { immediate: true },
+    () => debugEnabled.value,
+    (v) => {
+      try {
+        localStorage.setItem("banditstudio.debug", JSON.stringify(!!v));
+      } catch {}
+    },
+    { immediate: true },
 );
 function toggleDebug() {
   debugEnabled.value = !debugEnabled.value;
+}
+
+/* Vollständiger Reset (für Action-Bar) */
+async function handleFullReset() {
+  const ack = window.confirm(
+      "Dies setzt Bandit-Studio vollständig zurück: Einstellungen, lokal gespeicherte Daten, Caches. Fortfahren?"
+  );
+  if (!ack) return;
+
+  try {
+    window.dispatchEvent(new CustomEvent("bandit:reset:before"));
+  } catch {}
+
+  try {
+    localStorage.clear();
+  } catch {}
+  try {
+    sessionStorage.clear();
+  } catch {}
+
+  try {
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch {}
+
+  try {
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+  } catch {}
+
+  try {
+    resetSeriesStore();
+  } catch {}
+
+  try {
+    window.dispatchEvent(new CustomEvent("bandit:reset:after"));
+  } catch {}
+
+  window.location.reload();
 }
 
 /* Manuelles Env */
@@ -218,9 +294,9 @@ const manualCounts = ref<number[]>([]);
 function initManualEnv() {
   const baseConfig: iEnvConfig = { ...form.value };
   manualEnv.value =
-    baseConfig.type === "bernoulli"
-      ? new BernoulliBanditEnv({ ...baseConfig })
-      : new GaussianBanditEnv({ ...baseConfig });
+      baseConfig.type === "bernoulli"
+          ? new BernoulliBanditEnv({ ...baseConfig })
+          : new GaussianBanditEnv({ ...baseConfig });
   manualHistory.value = [];
   manualCounts.value = Array.from({ length: form.value.arms ?? 0 }, () => 0);
 }
@@ -254,9 +330,9 @@ function adjustPolicyDefaultsForEnv(type: iEnvConfig["type"]) {
     const baseOiv = clamp01(eps.optimisticInitialValue);
     eps.optimisticInitialValue = baseOiv;
     const sourceVariants =
-      Array.isArray(eps.variants) && eps.variants.length
-        ? eps.variants
-        : [{ epsilon: eps.epsilon ?? 0.1, optimisticInitialValue: baseOiv }];
+        Array.isArray(eps.variants) && eps.variants.length
+            ? eps.variants
+            : [{ epsilon: eps.epsilon ?? 0.1, optimisticInitialValue: baseOiv }];
     eps.variants = sourceVariants.map((v: any) => ({
       ...v,
       optimisticInitialValue: clamp01(v.optimisticInitialValue),
@@ -267,15 +343,15 @@ function adjustPolicyDefaultsForEnv(type: iEnvConfig["type"]) {
       return val > 1 ? val : fallback;
     };
     greedy.optimisticInitialValue = ensureHigh(
-      greedy.optimisticInitialValue,
-      100,
+        greedy.optimisticInitialValue,
+        100,
     );
     const baseOiv = ensureHigh(eps.optimisticInitialValue, 150);
     eps.optimisticInitialValue = baseOiv;
     const sourceVariants =
-      Array.isArray(eps.variants) && eps.variants.length
-        ? eps.variants
-        : [{ epsilon: eps.epsilon ?? 0.1, optimisticInitialValue: baseOiv }];
+        Array.isArray(eps.variants) && eps.variants.length
+            ? eps.variants
+            : [{ epsilon: eps.epsilon ?? 0.1, optimisticInitialValue: baseOiv }];
     eps.variants = sourceVariants.map((v: any) => ({
       ...v,
       optimisticInitialValue: ensureHigh(v.optimisticInitialValue, baseOiv),
@@ -291,20 +367,20 @@ function adjustPolicyDefaultsForEnv(type: iEnvConfig["type"]) {
 
 const lastPolicyEnvType = ref<iEnvConfig["type"] | null>(null);
 watch(
-  () => form.value.type,
-  (type) => {
-    if (!type || lastPolicyEnvType.value === type) return;
-    lastPolicyEnvType.value = type;
-    adjustPolicyDefaultsForEnv(type);
-  },
-  { immediate: true },
+    () => form.value.type,
+    (type) => {
+      if (!type || lastPolicyEnvType.value === type) return;
+      lastPolicyEnvType.value = type;
+      adjustPolicyDefaultsForEnv(type);
+    },
+    { immediate: true },
 );
 
 /* Schätzungen & „Wahr“-Infos (nur im UI genutzt) */
 const manualEstimates = computed<number[]>(() => {
   const k = form.value.arms ?? 0,
-    sum = Array(k).fill(0),
-    cnt = Array(k).fill(0);
+      sum = Array(k).fill(0),
+      cnt = Array(k).fill(0);
   for (const h of manualHistory.value) {
     sum[h.action] += h.reward;
     cnt[h.action] += 1;
@@ -316,8 +392,8 @@ function estimateText(idx: number) {
   if (!c) return "-";
   const estimate = manualEstimates.value[idx];
   return form.value.type === "bernoulli"
-    ? `${(estimate * 100).toFixed(1)}%`
-    : `${estimate.toFixed(0)}s`;
+      ? `${(estimate * 100).toFixed(1)}%`
+      : `${estimate.toFixed(0)}s`;
 }
 function truthText(idx: number) {
   const cfg = manualEnv.value?.config;
@@ -329,8 +405,8 @@ function truthText(idx: number) {
   const mu = cfg.means?.[idx];
   const sd = cfg.stdDev?.[idx] ?? (cfg as any)?.sigma?.[idx];
   return mu != null && sd != null
-    ? `${(+mu).toFixed(0)}s ~ ${Math.max(+sd, 0).toFixed(0)}s`
-    : "-";
+      ? `${(+mu).toFixed(0)}s ~ ${Math.max(+sd, 0).toFixed(0)}s`
+      : "-";
 }
 
 /* Serien-Store + Algo-Serien */
@@ -370,18 +446,18 @@ function expectedAlgoIds(): string[] {
   // Fallback (nur falls Runner noch nicht bereit ist)
   const eg: any = policyConfigs.value?.epsgreedy ?? {};
   const list =
-    Array.isArray(eg.variants) && eg.variants.length
-      ? eg.variants
-      : [
-          {
-            epsilon: eg.epsilon ?? 0.1,
-            optimisticInitialValue: eg.optimisticInitialValue ?? 150,
-          },
-        ];
+      Array.isArray(eg.variants) && eg.variants.length
+          ? eg.variants
+          : [
+            {
+              epsilon: eg.epsilon ?? 0.1,
+              optimisticInitialValue: eg.optimisticInitialValue ?? 150,
+            },
+          ];
   const ids: string[] =
-    list.length === 1
-      ? ["greedy", "epsgreedy"]
-      : ["greedy", ...list.map((_v: any, i: number) => `epsgreedy#${i + 1}`)];
+      list.length === 1
+          ? ["greedy", "epsgreedy"]
+          : ["greedy", ...list.map((_v: any, i: number) => `epsgreedy#${i + 1}`)];
   getCustomPolicies().forEach((cp) => ids.push(cp.id));
   return ids.filter((id, idx) => ids.indexOf(id) === idx);
 }
@@ -402,7 +478,7 @@ function prettyLabelFromId(id: string) {
   if (id === "greedy") return "Greedy";
   if (id === "epsgreedy") {
     const eps = Number(
-      policyConfigs.value?.epsgreedy?.epsilon ??
+        policyConfigs.value?.epsgreedy?.epsilon ??
         policyConfigs.value?.epsgreedy?.variants?.[0]?.epsilon ??
         0.1,
     );
@@ -445,9 +521,9 @@ function isManualSeriesLike(obj: any) {
   const label = String(obj.label ?? "");
   const color = String(obj.color ?? "");
   return (
-    id === "manual" ||
-    /manuell/i.test(label) ||
-    color.toLowerCase() === "#4caf50"
+      id === "manual" ||
+      /manuell/i.test(label) ||
+      color.toLowerCase() === "#4caf50"
   );
 }
 function purgeManualSeriesHard() {
@@ -571,9 +647,9 @@ async function onManual(a: number) {
     const st = algorithmsRunner.getStatus();
     if (st === "CONFIGURED" || st === "PAUSED") algorithmsRunner.stepOnce();
     const rewardText =
-      manualEnv.value.config.type === "bernoulli"
-        ? res.reward.toFixed(0)
-        : `${res.reward.toFixed(2)}s`;
+        manualEnv.value.config.type === "bernoulli"
+            ? res.reward.toFixed(0)
+            : `${res.reward.toFixed(2)}s`;
     const suffix = debugEnabled.value && res.isOptimal ? " - optimal" : "";
     lastEventText.value = `Manuell: Arm ${a + 1} - Reward ${rewardText}${suffix}`;
   } finally {
@@ -599,9 +675,9 @@ const metricRows = computed<MetricsRowX[]>(() => {
   const rows: MetricsRowX[] = [];
   if (mode.value === "manual" && (seriesState as any).manual) {
     const r = buildMetricsRowFromManual(
-      manualHistory.value,
-      form.value,
-      (seriesState as any).manual,
+        manualHistory.value,
+        form.value,
+        (seriesState as any).manual,
     );
     rows.push({
       ...(r as iMetricsRow),
@@ -612,9 +688,9 @@ const metricRows = computed<MetricsRowX[]>(() => {
   for (const s of activeAlgoSeries.value) {
     const hist = algoHistory.value[s.id] ?? [];
     const r = buildMetricsRowFromManual(
-      hist,
-      form.value,
-      (seriesState as any)[s.id],
+        hist,
+        form.value,
+        (seriesState as any)[s.id],
     );
     rows.push({
       ...(r as iMetricsRow),
@@ -630,17 +706,17 @@ const chartSeries = computed<iChartSeries[]>(() => {
   const out: iChartSeries[] = [];
   if (mode.value === "manual" && (seriesState as any).manual) {
     const s = buildSeriesFromManual(
-      manualHistory.value,
-      form.value,
-      (seriesState as any).manual,
+        manualHistory.value,
+        form.value,
+        (seriesState as any).manual,
     );
     if (!isManualSeriesLike(s) || mode.value === "manual") out.push(s);
   }
   for (const s of activeAlgoSeries.value) {
     const built = buildSeriesFromManual(
-      algoHistory.value[s.id] ?? [],
-      form.value,
-      (seriesState as any)[s.id],
+        algoHistory.value[s.id] ?? [],
+        form.value,
+        (seriesState as any)[s.id],
     );
     if (mode.value === "algo" && isManualSeriesLike(built)) continue;
     out.push(built);
@@ -650,9 +726,9 @@ const chartSeries = computed<iChartSeries[]>(() => {
 });
 
 function onToggleSeries({
-  seriesId,
-  visible,
-}: {
+                          seriesId,
+                          visible,
+                        }: {
   seriesId: string;
   visible: boolean;
 }) {
@@ -662,27 +738,41 @@ function onChartToggle(payload: { id: string; visible: boolean }) {
   setSeriesVisible(payload.id, payload.visible);
 }
 
+/* Branding-Helfer */
+function scrollTop() {
+  try {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch {
+    window.scrollTo(0, 0);
+  }
+}
+
 /* Lifecycle */
 onMounted(() => {
+  // Branding konsistent halten
+  try {
+    if (typeof document !== "undefined") document.title = "Bandit-Studio";
+  } catch {}
+
   attachRunner(algorithmsRunner);
   hardResetForMode(mode.value);
 });
 onBeforeUnmount(() => offRunner?.());
 watch(
-  form,
-  () => {
-    if (mode.value === "manual") initManualEnv();
-  },
-  { deep: true },
+    form,
+    () => {
+      if (mode.value === "manual") initManualEnv();
+    },
+    { deep: true },
 );
 watch(
-  policyConfigs,
-  () => {
-    reconcileActiveSeries();
-    configureAlgoRunner();
-    chartKey.value++; // Refresh forcieren
-  },
-  { deep: true },
+    policyConfigs,
+    () => {
+      reconcileActiveSeries();
+      configureAlgoRunner();
+      chartKey.value++; // Refresh forcieren
+    },
+    { deep: true },
 );
 
 /* ---------------- Info/Overlays ---------------- */
@@ -829,6 +919,21 @@ const tutorialHooks = {
 .brand {
   font-weight: 700;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.yt-logo {
+  width: 28px;
+  height: 20px;
+  display: inline-block;
+}
+.yt-logo rect {
+  fill: #ff0000; /* YouTube-Primärrot */
+}
+.yt-logo polygon {
+  fill: #ffffff;
 }
 .bar-actions {
   display: flex;
@@ -845,6 +950,13 @@ const tutorialHooks = {
   color: #eaeaea;
   border-radius: 10px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn .icon {
+  width: 16px;
+  height: 16px;
 }
 .btn:hover {
   background: #1b1b1b;
