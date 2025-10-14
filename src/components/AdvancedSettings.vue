@@ -285,7 +285,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </details>
 
         <!-- UCB (mit Varianten) -->
         <div class="algo-card">
@@ -297,6 +297,7 @@
           >
             <div class="algo-head">
               <div class="pill pill-ucb">UCB</div>
+
             </div>
             <span class="algo-chevron" :class="{ open: algoOpen.ucb }">▾</span>
           </button>
@@ -407,7 +408,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </details>
 
         <!-- Thompson Sampling (nur Gaussian; mit Varianten) -->
         <div class="algo-card">
@@ -518,7 +519,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </details>
 
         <!-- Eigener Algorithmus -->
         <details class="custom" :open="customOpen" @toggle="onCustomToggle">
@@ -553,6 +554,7 @@ import {
   nextTick,
 } from "vue";
 import AlgorithmEditor from "./AlgorithmEditor.vue";
+import AppTooltip from "./AppTooltip.vue";
 import type { iBanditPolicy } from "../algorithms/Domain/iBanditPolicy";
 import type { CustomPolicyRegistration } from "../algorithms/Domain/iCustomPolicyRegistration";
 import { algorithmsRunner } from "../services/algorithmsRunner";
@@ -1116,8 +1118,21 @@ function onCustomToggle(e: Event) {
   transform: rotate(180deg);
 }
 .algo-head {
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  list-style: none;
+  margin-bottom: 0;
+}
+
+.algo-head::-webkit-details-marker {
+  display: none;
+}
+
+.algo-head-content {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   margin-bottom: 0;
 }

@@ -63,11 +63,11 @@ export function buildSeriesFromManual(
   cfg: iEnvConfig | null | undefined,
   sCfg: iSeriesConfig,
 ): iChartSeries {
-  const bestMean = bestMeanFrom(cfg);
-
+  // Berechne optimalen Reward aus tatsächlichen Beobachtungen
+  const optimalRewards: number[] = [];
   let cum = 0;
   let bestCount = 0;
-  let regret = 0;
+  let optimalRewardSum = 0;
 
   const points = {
     cumReward: [] as { step: number; y: number }[],
@@ -75,6 +75,12 @@ export function buildSeriesFromManual(
     regret: [] as { step: number; y: number }[],
     bestRate: [] as { step: number; y: number }[],
   };
+
+  // Füge immer einen Startpunkt bei 0 hinzu
+  points.cumReward.push({ step: 0, y: 0 });
+  points.avgReward.push({ step: 0, y: 0 });
+  points.regret.push({ step: 0, y: 0 });
+  points.bestRate.push({ step: 0, y: 0 });
 
   history.forEach((r, i) => {
     const step = i + 1;

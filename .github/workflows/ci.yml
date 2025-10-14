@@ -36,14 +36,14 @@ jobs:
       - name: Type Check
         run: npm run type-check
 
-      - name: Tests
-        run: npm run test
-
       - name: Build (probe)
         run: npm run build
 
+      - name: Tests
+        run: npm run test
+
   deploy:
-    # Nur auf Push nach main, NACHDEM checks erfolgreich war
+    # Nur auf Push nach main, NACHDEM checks erfolgreich waren
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: checks
     runs-on: ubuntu-latest
