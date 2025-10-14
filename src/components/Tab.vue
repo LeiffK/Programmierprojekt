@@ -94,12 +94,6 @@ function selectTab(index: number) {
 }
 
 /* Beispiel-Icon Klassen, je nach verwendetem Icon-Set ersetzen */
-.icon-compare::before {
-  content: "🔍";
-}
-.icon-code::before {
-  content: "💻";
-}
 .icon-chart::before {
   content: "📊";
 }
