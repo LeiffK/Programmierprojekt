@@ -122,16 +122,17 @@ const TWEEN_MS = 850;
 const INIT_MS = 300;
 
 const option = computed<EChartsOption>(() => {
+  // Finde den maximalen Schritt-Wert aus allen Serien
   const maxStep = Math.max(
     1,
-    ...props.series.map((s) => s.points.cumReward.length),
+    ...props.series.flatMap((s) => s.points.cumReward.map((p) => p.step)),
   );
 
   // Achsen als 'any' typisiert, um TS-Inkompatibilitäten zwischen ECharts-Versionen zu vermeiden
   const xAxis: any = {
     type: "value",
-    min: 1,
-    max: maxStep,
+    min: 0,
+    max: Math.max(1, maxStep),
     boundaryGap: [0, 0] as [number, number],
     axisLine: { lineStyle: { color: "#333" } },
     axisLabel: { color: "#9aa0a6" },
@@ -142,6 +143,8 @@ const option = computed<EChartsOption>(() => {
     axisLine: { lineStyle: { color: "#333" } },
     axisLabel: { color: "#9aa0a6" },
     splitLine: { show: true, lineStyle: { color: "#202020" } },
+    // Fixiere Y-Achse für Best-Quote auf [0, 1]
+    ...(localMetric.value === "bestRate" ? { min: 0, max: 1 } : {}),
   };
 
   // Tooltip ebenfalls locker typisiert (Formatter-Signaturen variieren je nach Version)

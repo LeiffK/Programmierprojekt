@@ -63,15 +63,24 @@
         </div>
 
         <!-- Greedy (OHNE Varianten) -->
-        <div class="algo-card">
-          <div class="algo-head">
-            <div class="pill pill-greedy">Greedy</div>
-          </div>
+        <details class="algo-card">
+          <summary class="algo-head">
+            <span class="algo-head-content">
+              <div class="pill pill-greedy">Greedy</div>
+              <span class="chevron">▾</span>
+            </span>
+          </summary>
           <div class="algo-grid">
             <div class="row">
-              <label class="lab" for="greedy-oiv"
-                >Optimistic&nbsp;Initial&nbsp;Value</label
-              >
+              <label class="lab" for="greedy-oiv">
+                Optimistic&nbsp;Initial&nbsp;Value
+                <AppTooltip
+                  text="Startwert für geschätzte Belohnungen. Höhere Werte fördern Exploration."
+                  position="right"
+                >
+                  <span class="info-icon">ℹ</span>
+                </AppTooltip>
+              </label>
               <div class="ctrl">
                 <input
                   id="greedy-oiv"
@@ -84,17 +93,28 @@
               </div>
             </div>
           </div>
-        </div>
+        </details>
 
         <!-- ε-Greedy (mit Varianten) -->
-        <div class="algo-card">
-          <div class="algo-head">
-            <div class="pill pill-eps">ε-Greedy</div>
-          </div>
+        <details class="algo-card">
+          <summary class="algo-head">
+            <span class="algo-head-content">
+              <div class="pill pill-eps">ε-Greedy</div>
+              <span class="chevron">▾</span>
+            </span>
+          </summary>
 
           <div class="algo-grid">
             <div class="row">
-              <label class="lab" for="eps-eps">ε (Basis)</label>
+              <label class="lab" for="eps-eps">
+                ε (Basis)
+                <AppTooltip
+                  text="Wahrscheinlichkeit für zufällige Exploration (0-1). Bei 0.1 wird in 10% der Fälle zufällig exploriert."
+                  position="right"
+                >
+                  <span class="info-icon">ℹ</span>
+                </AppTooltip>
+              </label>
               <div class="ctrl">
                 <input
                   id="eps-eps"
@@ -111,9 +131,15 @@
             </div>
 
             <div class="row">
-              <label class="lab" for="eps-oiv"
-                >Optimistic&nbsp;Initial&nbsp;Value</label
-              >
+              <label class="lab" for="eps-oiv">
+                Optimistic&nbsp;Initial&nbsp;Value
+                <AppTooltip
+                  text="Startwert für geschätzte Belohnungen. Höhere Werte fördern Exploration."
+                  position="right"
+                >
+                  <span class="info-icon">ℹ</span>
+                </AppTooltip>
+              </label>
               <div class="ctrl">
                 <input
                   id="eps-oiv"
@@ -198,16 +224,27 @@
               </div>
             </div>
           </div>
-        </div>
+        </details>
 
         <!-- UCB (mit Varianten) -->
-        <div class="algo-card">
-          <div class="algo-head">
-            <div class="pill pill-ucb">UCB</div>
-          </div>
+        <details class="algo-card">
+          <summary class="algo-head">
+            <span class="algo-head-content">
+              <div class="pill pill-ucb">UCB</div>
+              <span class="chevron">▾</span>
+            </span>
+          </summary>
           <div class="algo-grid">
             <div class="row">
-              <label class="lab" for="ucb-c">c (Konfidenz)</label>
+              <label class="lab" for="ucb-c">
+                c (Konfidenz)
+                <AppTooltip
+                  text="Steuert die Balance zwischen Exploration und Exploitation. Höhere Werte fördern Exploration."
+                  position="right"
+                >
+                  <span class="info-icon">ℹ</span>
+                </AppTooltip>
+              </label>
               <div class="ctrl">
                 <input
                   id="ucb-c"
@@ -222,9 +259,15 @@
               </div>
             </div>
             <div class="row">
-              <label class="lab" for="ucb-oiv"
-                >Optimistic&nbsp;Initial&nbsp;Value</label
-              >
+              <label class="lab" for="ucb-oiv">
+                Optimistic&nbsp;Initial&nbsp;Value
+                <AppTooltip
+                  text="Startwert für geschätzte Belohnungen. Höhere Werte fördern Exploration."
+                  position="right"
+                >
+                  <span class="info-icon">ℹ</span>
+                </AppTooltip>
+              </label>
               <div class="ctrl">
                 <input
                   id="ucb-oiv"
@@ -302,17 +345,28 @@
               </div>
             </div>
           </div>
-        </div>
+        </details>
 
         <!-- Thompson Sampling (nur Gaussian; mit Varianten) -->
-        <div class="algo-card">
-          <div class="algo-head">
-            <div class="pill pill-thompson">Thompson Sampling</div>
-          </div>
+        <details class="algo-card">
+          <summary class="algo-head">
+            <span class="algo-head-content">
+              <div class="pill pill-thompson">Thompson Sampling</div>
+              <span class="chevron">▾</span>
+            </span>
+          </summary>
           <div class="algo-grid">
             <template v-if="localEnv.type === 'gaussian'">
               <div class="row">
-                <label class="lab" for="ts-pv">Prior-Varianz</label>
+                <label class="lab" for="ts-pv">
+                  Prior-Varianz
+                  <AppTooltip
+                    text="Varianz der Prior-Verteilung. Beeinflusst die initiale Unsicherheit über die Belohnungen."
+                    position="right"
+                  >
+                    <span class="info-icon">ℹ</span>
+                  </AppTooltip>
+                </label>
                 <div class="ctrl">
                   <input
                     id="ts-pv"
@@ -401,7 +455,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </details>
 
         <!-- Eigener Algorithmus -->
         <details class="custom" :open="customOpen" @toggle="onCustomToggle">
@@ -429,6 +483,7 @@ import {
   nextTick,
 } from "vue";
 import AlgorithmEditor from "./AlgorithmEditor.vue";
+import AppTooltip from "./AppTooltip.vue";
 import type { iBanditPolicy } from "../algorithms/Domain/iBanditPolicy";
 import type { CustomPolicyRegistration } from "../algorithms/Domain/iCustomPolicyRegistration";
 import { algorithmsRunner } from "../services/algorithmsRunner";
@@ -865,10 +920,55 @@ function onCustomToggle(e: Event) {
   margin-top: 10px;
 }
 .algo-head {
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  list-style: none;
+  margin-bottom: 0;
+}
+
+.algo-head::-webkit-details-marker {
+  display: none;
+}
+
+.algo-head-content {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  margin-bottom: 8px;
+  padding: 8px 0;
+}
+
+.algo-card[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.chevron {
+  transition: transform 0.18s ease;
+  color: #aeb4bd;
+  font-size: 14px;
+  margin-left: auto;
+}
+
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  border: 1px solid #555;
+  border-radius: 50%;
+  font-size: 11px;
+  color: #ccc;
+  cursor: help;
+  transition: all 0.15s ease;
+}
+
+.info-icon:hover {
+  border-color: #888;
+  background: #2a2a2a;
+  color: #fff;
 }
 .pill {
   display: inline-block;
