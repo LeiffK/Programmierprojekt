@@ -55,12 +55,21 @@ export class GradientBandit extends BasePolicy {
    * H_a(t+1) = H_a(t) - α * (R - baseline) * π_a         sonst
    */
   override update(result: iPullResult): void {
-    const alpha = this.cfg.alpha ?? 0.1; // Schrittweite (default: 0.1)
-    super.update(result); // Q und N Updates der Basisklasse
-    this.averageReward += (result.reward - this.averageReward) / this.t; // inkrementelles Mittel
+    const alpha = this.cfg.alpha ?? 0.1; // Schrittweite (default 0.1)
+
+    const oldT = this.t;   // alten Wert vor Update speichern
+    super.update(result);  // t wird hier erhöht
+
+    // inkrementeller Durchschnitt mit altem t
+    if (oldT > 0) {
+      this.averageReward += (result.reward - this.averageReward) / oldT;
+    } else {
+      // Falls erstes Sample, baseline auf Reward setzen
+      this.averageReward = result.reward;
+    }
 
     const action = result.action;
-    const pi = this.getActionProbabilities(); // Aktuelle Aktionswahrscheinlichkeiten
+    const pi = this.getActionProbabilities();
 
     for (let a = 0; a < this.nArms; a++) {
       const baseline = this.averageReward;
