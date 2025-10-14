@@ -10,7 +10,7 @@
 export function generateProbabilities(
   k: number,
   rng: () => number,
-  options?: { min?: number; max?: number; bestBonus?: number }
+  options?: { min?: number; max?: number; bestBonus?: number },
 ): number[] {
   const min = options?.min ?? 0.05;
   const max = options?.max ?? 0.6;
@@ -22,7 +22,7 @@ export function generateProbabilities(
 
   const span = max - min;
   const out = Array.from({ length: k }, () =>
-    Number((min + rng() * span).toFixed(4))
+    Number((min + rng() * span).toFixed(4)),
   );
 
   const bestIdx = Math.max(0, Math.min(k - 1, Math.floor(rng() * k)));

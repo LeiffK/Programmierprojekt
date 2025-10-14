@@ -83,7 +83,8 @@ export class ThompsonSamplingGaussian extends BasePolicy {
   }
 
   private normalSample(mean: number, stdDev: number): number {
-    let u1 = 0, u2 = 0;
+    let u1 = 0,
+      u2 = 0;
     while (u1 === 0) u1 = this.rng();
     u2 = this.rng();
     const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);

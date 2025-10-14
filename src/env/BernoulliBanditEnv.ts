@@ -2,7 +2,7 @@ import type { iEnvConfig } from "./Domain/iEnvConfig";
 import type { iPullResult } from "./Domain/iPullResult";
 import { BanditEnv } from "./BanditEnv.ts";
 import { randBernoulli } from "../utils/randBernoulli.ts";
-import { generateProbabilities } from "../utils/generateProbabilities.ts";  // importieren
+import { generateProbabilities } from "../utils/generateProbabilities.ts"; // importieren
 
 export class BernoulliBanditEnv extends BanditEnv {
   private readonly probs: number[];
@@ -23,7 +23,7 @@ export class BernoulliBanditEnv extends BanditEnv {
       });
     } else {
       probs = probs.map((p) =>
-        Number.isFinite(p) ? Math.min(Math.max(p, 0), 1) : 0
+        Number.isFinite(p) ? Math.min(Math.max(p, 0), 1) : 0,
       );
     }
 

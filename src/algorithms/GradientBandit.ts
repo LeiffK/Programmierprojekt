@@ -57,8 +57,8 @@ export class GradientBandit extends BasePolicy {
   override update(result: iPullResult): void {
     const alpha = this.cfg.alpha ?? 0.1; // Schrittweite (default 0.1)
 
-    const oldT = this.t;   // alten Wert vor Update speichern
-    super.update(result);  // t wird hier erhöht
+    const oldT = this.t; // alten Wert vor Update speichern
+    super.update(result); // t wird hier erhöht
 
     // inkrementeller Durchschnitt mit altem t
     if (oldT > 0) {
