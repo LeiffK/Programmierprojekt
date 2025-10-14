@@ -26,7 +26,7 @@
             <div class="ctrl seed-line">
               <input
                 id="seed"
-                class="input input--seed"
+                class="input"
                 type="number"
                 v-model.number="localEnv.seed"
                 :min="0"
@@ -64,96 +64,23 @@
 
         <!-- Greedy (OHNE Varianten) -->
         <div class="algo-card">
-          <button
-            class="algo-toggle"
-            type="button"
-            @click="toggleAlgo('greedy')"
-            :aria-expanded="algoOpen.greedy ? 'true' : 'false'"
-          >
-            <div class="algo-head">
-              <div class="pill pill-greedy">Greedy</div>
-            </div>
-            <span class="algo-chevron" :class="{ open: algoOpen.greedy }"
-              >▾</span
-            >
-          </button>
-
-          <div class="algo-body" v-show="algoOpen.greedy">
-            <div class="algo-grid">
-              <div class="row">
-                <label class="lab" for="greedy-oiv"
-                  >Optimistic&nbsp;Initial&nbsp;Value</label
-                >
-                <div class="ctrl">
-                  <input
-                    id="greedy-oiv"
-                    class="input input--xs"
-                    type="number"
-                    v-model.number="localPolicies.greedy.optimisticInitialValue"
-                    @change="emitPolicies"
-                    @blur="emitPolicies"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="variants">
-              <div class="variants-head">
-                <div class="title">Varianten</div>
-                <button
-                  class="btn btn-pill"
-                  type="button"
-                  @click="addGreedyVariant"
-                >
-                  + Variante
-                </button>
-              </div>
-
-              <div
-                class="variants-table variants-table--greedy"
-                role="table"
-                aria-label="Greedy Varianten"
+          <div class="algo-head">
+            <div class="pill pill-greedy">Greedy</div>
+          </div>
+          <div class="algo-grid">
+            <div class="row">
+              <label class="lab" for="greedy-oiv"
+                >Optimistic&nbsp;Initial&nbsp;Value</label
               >
-                <div class="variants-row variants-row--head" role="row">
-                  <div class="cell" role="columnheader">Bezeichnung</div>
-                  <div class="cell" role="columnheader">OIV</div>
-                  <div class="cell cell--end" role="columnheader"></div>
-                </div>
-
-                <div
-                  class="variants-row variants-row--greedy"
-                  v-for="(v, i) in localPolicies.greedy.variants"
-                  :key="`greedy-${i}`"
-                  role="row"
-                  :class="{ 'is-alt': i % 2 === 1 }"
-                >
-                  <div class="cell" role="cell">Greedy v{{ i + 1 }}</div>
-                  <div class="cell" role="cell">
-                    <input
-                      class="input input--xs"
-                      type="number"
-                      v-model.number="v.optimisticInitialValue"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
-                    />
-                  </div>
-                  <div class="cell cell--end" role="cell">
-                    <button
-                      class="btn btn-ghost btn-pill btn-sm"
-                      type="button"
-                      @click="removeGreedyVariant(i)"
-                    >
-                      Entfernen
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  v-if="!localPolicies.greedy.variants.length"
-                  class="variants-empty"
-                >
-                  Keine Varianten angelegt.
-                </div>
+              <div class="ctrl">
+                <input
+                  id="greedy-oiv"
+                  class="input input--xs"
+                  type="number"
+                  v-model.number="localPolicies.greedy.optimisticInitialValue"
+                  @change="emitPolicies"
+                  @blur="emitPolicies"
+                />
               </div>
             </div>
           </div>
@@ -161,376 +88,324 @@
 
         <!-- ε-Greedy (mit Varianten) -->
         <div class="algo-card">
-          <button
-            class="algo-toggle"
-            type="button"
-            @click="toggleAlgo('eps')"
-            :aria-expanded="algoOpen.eps ? 'true' : 'false'"
-          >
-            <div class="algo-head">
-              <div class="pill pill-eps">ε-Greedy</div>
-            </div>
-            <span class="algo-chevron" :class="{ open: algoOpen.eps }">▾</span>
-          </button>
+          <div class="algo-head">
+            <div class="pill pill-eps">ε-Greedy</div>
+          </div>
 
-          <div class="algo-body" v-show="algoOpen.eps">
-            <div class="algo-grid">
-              <div class="row">
-                <label class="lab" for="eps-eps">ε (Basis)</label>
-                <div class="ctrl">
+          <div class="algo-grid">
+            <div class="row">
+              <label class="lab" for="eps-eps">ε (Basis)</label>
+              <div class="ctrl">
+                <input
+                  id="eps-eps"
+                  class="input input--xs"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="1"
+                  v-model.number="localPolicies.epsgreedy.epsilon"
+                  @change="emitPolicies"
+                  @blur="emitPolicies"
+                />
+              </div>
+            </div>
+
+            <div class="row">
+              <label class="lab" for="eps-oiv"
+                >Optimistic&nbsp;Initial&nbsp;Value</label
+              >
+              <div class="ctrl">
+                <input
+                  id="eps-oiv"
+                  class="input input--xs"
+                  type="number"
+                  v-model.number="
+                    localPolicies.epsgreedy.optimisticInitialValue
+                  "
+                  @change="emitPolicies"
+                  @blur="emitPolicies"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Varianten -->
+          <div class="variants">
+            <div class="variants-head">
+              <div class="title">Varianten</div>
+              <button class="btn btn-pill" type="button" @click="addEpsVariant">
+                + Variante
+              </button>
+            </div>
+
+            <div
+              class="variants-table"
+              role="table"
+              aria-label="ε-Greedy Varianten"
+            >
+              <div class="variants-row variants-row--head" role="row">
+                <div class="cell" role="columnheader">Bezeichnung</div>
+                <div class="cell" role="columnheader">ε</div>
+                <div class="cell" role="columnheader">OIV</div>
+                <div class="cell cell--end" role="columnheader"></div>
+              </div>
+
+              <div
+                class="variants-row"
+                v-for="(v, i) in localPolicies.epsgreedy.variants"
+                :key="`eps-${i}`"
+                role="row"
+                :class="{ 'is-alt': i % 2 === 1 }"
+              >
+                <div class="cell" role="cell">ε-Greedy v{{ i + 1 }}</div>
+                <div class="cell" role="cell">
                   <input
-                    id="eps-eps"
                     class="input input--xs"
                     type="number"
                     step="0.01"
                     min="0"
                     max="1"
-                    v-model.number="localPolicies.epsgreedy.epsilon"
+                    v-model.number="v.epsilon"
                     @change="emitPolicies"
                     @blur="emitPolicies"
                   />
                 </div>
-              </div>
-
-              <div class="row">
-                <label class="lab" for="eps-oiv"
-                  >Optimistic&nbsp;Initial&nbsp;Value</label
-                >
-                <div class="ctrl">
+                <div class="cell" role="cell">
                   <input
-                    id="eps-oiv"
                     class="input input--xs"
                     type="number"
-                    v-model.number="
-                      localPolicies.epsgreedy.optimisticInitialValue
-                    "
+                    v-model.number="v.optimisticInitialValue"
                     @change="emitPolicies"
                     @blur="emitPolicies"
                   />
                 </div>
-              </div>
-            </div>
-
-            <!-- Varianten -->
-            <div class="variants">
-              <div class="variants-head">
-                <div class="title">Varianten</div>
-                <button
-                  class="btn btn-pill"
-                  type="button"
-                  @click="addEpsVariant"
-                >
-                  + Variante
-                </button>
+                <div class="cell cell--end" role="cell">
+                  <button
+                    class="btn btn-ghost btn-pill btn-sm"
+                    type="button"
+                    @click="removeEpsVariant(i)"
+                  >
+                    Entfernen
+                  </button>
+                </div>
               </div>
 
               <div
-                class="variants-table"
-                role="table"
-                aria-label="ε-Greedy Varianten"
+                v-if="!localPolicies.epsgreedy.variants.length"
+                class="variants-empty"
               >
-                <div class="variants-row variants-row--head" role="row">
-                  <div class="cell" role="columnheader">Bezeichnung</div>
-                  <div class="cell" role="columnheader">ε</div>
-                  <div class="cell" role="columnheader">OIV</div>
-                  <div class="cell cell--end" role="columnheader"></div>
-                </div>
-
-                <div
-                  class="variants-row"
-                  v-for="(v, i) in localPolicies.epsgreedy.variants"
-                  :key="`eps-${i}`"
-                  role="row"
-                  :class="{ 'is-alt': i % 2 === 1 }"
-                >
-                  <div class="cell" role="cell">ε-Greedy v{{ i + 1 }}</div>
-                  <div class="cell" role="cell">
-                    <input
-                      class="input input--xs"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="1"
-                      v-model.number="v.epsilon"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
-                    />
-                  </div>
-                  <div class="cell" role="cell">
-                    <input
-                      class="input input--xs"
-                      type="number"
-                      v-model.number="v.optimisticInitialValue"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
-                    />
-                  </div>
-                  <div class="cell cell--end" role="cell">
-                    <button
-                      class="btn btn-ghost btn-pill btn-sm"
-                      type="button"
-                      @click="removeEpsVariant(i)"
-                    >
-                      Entfernen
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  v-if="!localPolicies.epsgreedy.variants.length"
-                  class="variants-empty"
-                >
-                  Keine Varianten angelegt.
-                </div>
+                Keine Varianten angelegt.
               </div>
             </div>
           </div>
-        </details>
+        </div>
 
         <!-- UCB (mit Varianten) -->
         <div class="algo-card">
-          <button
-            class="algo-toggle"
-            type="button"
-            @click="toggleAlgo('ucb')"
-            :aria-expanded="algoOpen.ucb ? 'true' : 'false'"
-          >
-            <div class="algo-head">
-              <div class="pill pill-ucb">UCB</div>
-
+          <div class="algo-head">
+            <div class="pill pill-ucb">UCB</div>
+          </div>
+          <div class="algo-grid">
+            <div class="row">
+              <label class="lab" for="ucb-c">c (Konfidenz)</label>
+              <div class="ctrl">
+                <input
+                  id="ucb-c"
+                  class="input input--xs"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  v-model.number="localPolicies.ucb.confidence"
+                  @change="emitPolicies"
+                  @blur="emitPolicies"
+                />
+              </div>
             </div>
-            <span class="algo-chevron" :class="{ open: algoOpen.ucb }">▾</span>
-          </button>
-          <div class="algo-body" v-show="algoOpen.ucb">
-            <div class="algo-grid">
-              <div class="row">
-                <label class="lab" for="ucb-c">c (Konfidenz)</label>
-                <div class="ctrl">
+            <div class="row">
+              <label class="lab" for="ucb-oiv"
+                >Optimistic&nbsp;Initial&nbsp;Value</label
+              >
+              <div class="ctrl">
+                <input
+                  id="ucb-oiv"
+                  class="input input--xs"
+                  type="number"
+                  v-model.number="localPolicies.ucb.optimisticInitialValue"
+                  @change="emitPolicies"
+                  @blur="emitPolicies"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Varianten -->
+          <div class="variants">
+            <div class="variants-head">
+              <div class="title">Varianten</div>
+              <button class="btn btn-pill" type="button" @click="addUcbVariant">
+                + Variante
+              </button>
+            </div>
+
+            <div class="variants-table" role="table" aria-label="UCB Varianten">
+              <div class="variants-row variants-row--head" role="row">
+                <div class="cell" role="columnheader">Bezeichnung</div>
+                <div class="cell" role="columnheader">c</div>
+                <div class="cell" role="columnheader">OIV</div>
+                <div class="cell cell--end" role="columnheader"></div>
+              </div>
+
+              <div
+                class="variants-row"
+                v-for="(v, i) in localPolicies.ucb.variants"
+                :key="`ucb-${i}`"
+                role="row"
+                :class="{ 'is-alt': i % 2 === 1 }"
+              >
+                <div class="cell" role="cell">UCB v{{ i + 1 }}</div>
+                <div class="cell" role="cell">
                   <input
-                    id="ucb-c"
                     class="input input--xs"
                     type="number"
                     step="0.1"
                     min="0"
-                    v-model.number="localPolicies.ucb.confidence"
+                    v-model.number="v.confidence"
                     @change="emitPolicies"
                     @blur="emitPolicies"
                   />
                 </div>
-              </div>
-              <div class="row">
-                <label class="lab" for="ucb-oiv"
-                  >Optimistic&nbsp;Initial&nbsp;Value</label
-                >
-                <div class="ctrl">
+                <div class="cell" role="cell">
                   <input
-                    id="ucb-oiv"
                     class="input input--xs"
                     type="number"
-                    v-model.number="localPolicies.ucb.optimisticInitialValue"
+                    v-model.number="v.optimisticInitialValue"
                     @change="emitPolicies"
                     @blur="emitPolicies"
                   />
                 </div>
-              </div>
-            </div>
-
-            <!-- Varianten -->
-            <div class="variants">
-              <div class="variants-head">
-                <div class="title">Varianten</div>
-                <button
-                  class="btn btn-pill"
-                  type="button"
-                  @click="addUcbVariant"
-                >
-                  + Variante
-                </button>
+                <div class="cell cell--end" role="cell">
+                  <button
+                    class="btn btn-ghost btn-pill btn-sm"
+                    type="button"
+                    @click="removeUcbVariant(i)"
+                  >
+                    Entfernen
+                  </button>
+                </div>
               </div>
 
               <div
-                class="variants-table"
-                role="table"
-                aria-label="UCB Varianten"
+                v-if="!localPolicies.ucb.variants.length"
+                class="variants-empty"
               >
-                <div class="variants-row variants-row--head" role="row">
-                  <div class="cell" role="columnheader">Bezeichnung</div>
-                  <div class="cell" role="columnheader">c</div>
-                  <div class="cell" role="columnheader">OIV</div>
-                  <div class="cell cell--end" role="columnheader"></div>
-                </div>
-
-                <div
-                  class="variants-row"
-                  v-for="(v, i) in localPolicies.ucb.variants"
-                  :key="`ucb-${i}`"
-                  role="row"
-                  :class="{ 'is-alt': i % 2 === 1 }"
-                >
-                  <div class="cell" role="cell">UCB v{{ i + 1 }}</div>
-                  <div class="cell" role="cell">
-                    <input
-                      class="input input--xs"
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      v-model.number="v.confidence"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
-                    />
-                  </div>
-                  <div class="cell" role="cell">
-                    <input
-                      class="input input--xs"
-                      type="number"
-                      v-model.number="v.optimisticInitialValue"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
-                    />
-                  </div>
-                  <div class="cell cell--end" role="cell">
-                    <button
-                      class="btn btn-ghost btn-pill btn-sm"
-                      type="button"
-                      @click="removeUcbVariant(i)"
-                    >
-                      Entfernen
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  v-if="!localPolicies.ucb.variants.length"
-                  class="variants-empty"
-                >
-                  Keine Varianten angelegt.
-                </div>
+                Keine Varianten angelegt.
               </div>
             </div>
           </div>
-        </details>
+        </div>
 
         <!-- Thompson Sampling (nur Gaussian; mit Varianten) -->
         <div class="algo-card">
-          <button
-            class="algo-toggle"
-            type="button"
-            @click="toggleAlgo('thompson')"
-            :aria-expanded="algoOpen.thompson ? 'true' : 'false'"
-          >
-            <div class="algo-head">
-              <div class="pill pill-thompson">Thompson Sampling</div>
-            </div>
-            <span class="algo-chevron" :class="{ open: algoOpen.thompson }"
-              >▾</span
-            >
-          </button>
-          <div class="algo-body" v-show="algoOpen.thompson">
-            <div class="algo-grid">
-              <template v-if="localEnv.type === 'gaussian'">
-                <div class="row">
-                  <label class="lab" for="ts-pv">Prior-Varianz</label>
-                  <div class="ctrl">
-                    <input
-                      id="ts-pv"
-                      class="input input--xs"
-                      type="number"
-                      step="0.1"
-                      min="0.1"
-                      v-model.number="localPolicies.thompson.priorVariance"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
-                    />
-                  </div>
+          <div class="algo-head">
+            <div class="pill pill-thompson">Thompson Sampling</div>
+          </div>
+          <div class="algo-grid">
+            <template v-if="localEnv.type === 'gaussian'">
+              <div class="row">
+                <label class="lab" for="ts-pv">Prior-Varianz</label>
+                <div class="ctrl">
+                  <input
+                    id="ts-pv"
+                    class="input input--xs"
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    v-model.number="localPolicies.thompson.priorVariance"
+                    @change="emitPolicies"
+                    @blur="emitPolicies"
+                  />
                 </div>
-              </template>
-              <template v-else>
-                <div class="row">
-                  <label class="lab">Prior</label>
-                  <div class="ctrl">
-                    <span class="muted"
-                      >Bernoulli: Beta(1,1) als Standard-Prior.</span
-                    >
-                  </div>
+              </div>
+            </template>
+            <template v-else>
+              <div class="row">
+                <label class="lab">Prior</label>
+                <div class="ctrl">
+                  <span class="muted"
+                    >Bernoulli: Beta(1,1) als Standard-Prior.</span
+                  >
                 </div>
-              </template>
+              </div>
+            </template>
+          </div>
+
+          <!-- Varianten nur im Gaussian-Fall -->
+          <div class="variants" v-if="localEnv.type === 'gaussian'">
+            <div class="variants-head">
+              <div class="title">Varianten</div>
+              <button
+                class="btn btn-pill"
+                type="button"
+                @click="addThompsonVariant"
+              >
+                + Variante
+              </button>
             </div>
 
-            <!-- Varianten nur im Gaussian-Fall -->
-            <div class="variants" v-if="localEnv.type === 'gaussian'">
-              <div class="variants-head">
-                <div class="title">Varianten</div>
-                <button
-                  class="btn btn-pill"
-                  type="button"
-                  @click="addThompsonVariant"
-                >
-                  + Variante
-                </button>
+            <div
+              class="variants-table"
+              role="table"
+              aria-label="Thompson Varianten"
+            >
+              <div class="variants-row variants-row--head" role="row">
+                <div class="cell" role="columnheader">Bezeichnung</div>
+                <div class="cell" role="columnheader">Prior-Varianz</div>
+                <div class="cell cell--end" role="columnheader"></div>
               </div>
 
               <div
-                class="variants-table"
-                role="table"
-                aria-label="Thompson Varianten"
+                class="variants-row"
+                v-for="(v, i) in localPolicies.thompson.variants"
+                :key="`ts-${i}`"
+                role="row"
+                :class="{ 'is-alt': i % 2 === 1 }"
               >
-                <div class="variants-row variants-row--head" role="row">
-                  <div class="cell" role="columnheader">Bezeichnung</div>
-                  <div class="cell" role="columnheader">Prior-Varianz</div>
-                  <div class="cell cell--end" role="columnheader"></div>
+                <div class="cell" role="cell">Thompson v{{ i + 1 }}</div>
+                <div class="cell" role="cell">
+                  <input
+                    class="input input--xs"
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    v-model.number="v.priorVariance"
+                    @change="emitPolicies"
+                    @blur="emitPolicies"
+                  />
                 </div>
+                <div class="cell cell--end" role="cell">
+                  <button
+                    class="btn btn-ghost btn-pill btn-sm"
+                    type="button"
+                    @click="removeThompsonVariant(i)"
+                  >
+                    Entfernen
+                  </button>
+                </div>
+              </div>
 
-                <div
-                  class="variants-row"
-                  v-for="(v, i) in localPolicies.thompson.variants"
-                  :key="`ts-${i}`"
-                  role="row"
-                  :class="{ 'is-alt': i % 2 === 1 }"
-                >
-                  <div class="cell" role="cell">Thompson v{{ i + 1 }}</div>
-                  <div class="cell" role="cell">
-                    <input
-                      class="input input--xs"
-                      type="number"
-                      step="0.1"
-                      min="0.1"
-                      v-model.number="v.priorVariance"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
-                    />
-                  </div>
-                  <div class="cell cell--end" role="cell">
-                    <button
-                      class="btn btn-ghost btn-pill btn-sm"
-                      type="button"
-                      @click="removeThompsonVariant(i)"
-                    >
-                      Entfernen
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  v-if="!localPolicies.thompson.variants.length"
-                  class="variants-empty"
-                >
-                  Keine Varianten angelegt.
-                </div>
+              <div
+                v-if="!localPolicies.thompson.variants.length"
+                class="variants-empty"
+              >
+                Keine Varianten angelegt.
               </div>
             </div>
           </div>
-        </details>
+        </div>
 
         <!-- Eigener Algorithmus -->
         <details class="custom" :open="customOpen" @toggle="onCustomToggle">
-          <summary>
-            <div class="custom-head">
-              <span>Eigener Algorithmus</span>
-              <span class="custom-chevron" :class="{ open: customOpen }"
-                >▾</span
-              >
-            </div>
-          </summary>
+          <summary>Eigener Algorithmus</summary>
           <div class="custom-body">
             <AlgorithmEditor
               @policyLoaded="onCustomPolicyLoaded"
@@ -554,9 +429,8 @@ import {
   nextTick,
 } from "vue";
 import AlgorithmEditor from "./AlgorithmEditor.vue";
-import AppTooltip from "./AppTooltip.vue";
 import type { iBanditPolicy } from "../algorithms/Domain/iBanditPolicy";
-import type { CustomPolicyRegistration } from "../algorithms/Domain/iCustomPolicyRegistration";
+import type { iCustomPolicyRegistration } from "../algorithms/Domain/iCustomPolicyRegistration";
 import { algorithmsRunner } from "../services/algorithmsRunner";
 
 type Mode = "manual" | "algo";
@@ -582,10 +456,7 @@ const localEnv = reactive<any>({
 });
 
 const localPolicies = reactive<{
-  greedy: {
-    optimisticInitialValue: number;
-    variants: Array<{ optimisticInitialValue: number }>;
-  };
+  greedy: { optimisticInitialValue: number };
   epsgreedy: {
     epsilon: number;
     optimisticInitialValue: number;
@@ -600,14 +471,11 @@ const localPolicies = reactive<{
     priorVariance?: number;
     variants: Array<{ priorVariance: number }>;
   };
-  customPolicies: CustomPolicyRegistration[];
+  customPolicies: iCustomPolicyRegistration[];
 }>({
   greedy: {
     optimisticInitialValue:
       props.policyConfigs?.greedy?.optimisticInitialValue ?? 100,
-    variants: Array.isArray(props.policyConfigs?.greedy?.variants)
-      ? [...(props.policyConfigs?.greedy?.variants ?? [])]
-      : [],
   },
   epsgreedy: {
     epsilon: props.policyConfigs?.epsgreedy?.epsilon ?? 0.1,
@@ -639,52 +507,6 @@ const localPolicies = reactive<{
 
 const openLocal = ref<boolean>(props.open);
 const customOpen = ref<boolean>(false);
-const algoOpen = reactive({
-  greedy: false,
-  eps: false,
-  ucb: false,
-  thompson: false,
-});
-
-function ensureVariantDefaults(source?: any) {
-  if (
-    !Array.isArray(source?.greedy?.variants) &&
-    !localPolicies.greedy.variants.length
-  ) {
-    localPolicies.greedy.variants.push({
-      optimisticInitialValue: localPolicies.greedy.optimisticInitialValue,
-    });
-  }
-  if (
-    !Array.isArray(source?.epsgreedy?.variants) &&
-    !localPolicies.epsgreedy.variants.length
-  ) {
-    localPolicies.epsgreedy.variants.push({
-      epsilon: localPolicies.epsgreedy.epsilon,
-      optimisticInitialValue: localPolicies.epsgreedy.optimisticInitialValue,
-    });
-  }
-  if (
-    !Array.isArray(source?.ucb?.variants) &&
-    !localPolicies.ucb.variants.length
-  ) {
-    localPolicies.ucb.variants.push({
-      confidence: localPolicies.ucb.confidence,
-      optimisticInitialValue: localPolicies.ucb.optimisticInitialValue,
-    });
-  }
-  if (
-    localEnv.type === "gaussian" &&
-    !Array.isArray(source?.thompson?.variants) &&
-    !localPolicies.thompson.variants.length
-  ) {
-    localPolicies.thompson.variants.push({
-      priorVariance: localPolicies.thompson.priorVariance ?? 1,
-    });
-  }
-}
-
-ensureVariantDefaults(props.policyConfigs);
 
 /* Sync außen → innen */
 watch(
@@ -706,9 +528,6 @@ watch(
     localPolicies.greedy.optimisticInitialValue =
       p.greedy?.optimisticInitialValue ??
       localPolicies.greedy.optimisticInitialValue;
-    localPolicies.greedy.variants = Array.isArray(p.greedy?.variants)
-      ? [...p.greedy.variants]
-      : [];
 
     localPolicies.epsgreedy.epsilon =
       p.epsgreedy?.epsilon ?? localPolicies.epsgreedy.epsilon;
@@ -736,8 +555,6 @@ watch(
     localPolicies.customPolicies = Array.isArray(p.customPolicies)
       ? [...p.customPolicies]
       : [];
-
-    ensureVariantDefaults(p);
   },
   { deep: true, immediate: true },
 );
@@ -746,24 +563,6 @@ watch(
   () => props.open,
   (v) => (openLocal.value = !!v),
   { immediate: true },
-);
-
-watch(
-  () => localEnv.type,
-  (type, prev) => {
-    if (type === prev) return;
-    if (type === "gaussian") {
-      if (!localPolicies.thompson.variants.length) {
-        localPolicies.thompson.variants.push({
-          priorVariance: localPolicies.thompson.priorVariance ?? 1,
-        });
-      }
-    } else if (localPolicies.thompson.variants.length) {
-      localPolicies.thompson.variants = [];
-    }
-    ensureVariantDefaults(props.policyConfigs);
-    emitPolicies();
-  },
 );
 
 /* Runner-Reconfig für sofortige Sichtbarkeit (Chart/Tabelle) */
@@ -794,7 +593,6 @@ function emitPolicies() {
     ...props.policyConfigs,
     greedy: {
       optimisticInitialValue: localPolicies.greedy.optimisticInitialValue,
-      variants: [...localPolicies.greedy.variants],
     },
     epsgreedy: {
       epsilon: localPolicies.epsgreedy.epsilon,
@@ -833,30 +631,12 @@ function rollSeed() {
   emitEnv();
 }
 
-function toggleAlgo(key: keyof typeof algoOpen) {
-  algoOpen[key] = !algoOpen[key];
-}
-
 /* Varianten-Handler – nur für parameterisierte Algos */
-function addGreedyVariant() {
-  localPolicies.greedy.variants.push({
-    optimisticInitialValue: localPolicies.greedy.optimisticInitialValue,
-  });
-  algoOpen.greedy = true;
-  emitPolicies();
-  nextTick();
-}
-function removeGreedyVariant(i: number) {
-  localPolicies.greedy.variants.splice(i, 1);
-  emitPolicies();
-}
-
 function addEpsVariant() {
   localPolicies.epsgreedy.variants.push({
     epsilon: 0.1,
     optimisticInitialValue: localEnv.type === "bernoulli" ? 0.6 : 150,
   });
-  algoOpen.eps = true;
   emitPolicies();
   nextTick();
 }
@@ -870,7 +650,6 @@ function addUcbVariant() {
     confidence: 1.0,
     optimisticInitialValue: localEnv.type === "bernoulli" ? 0.6 : 120,
   });
-  algoOpen.ucb = true;
   emitPolicies();
   nextTick();
 }
@@ -882,7 +661,6 @@ function removeUcbVariant(i: number) {
 function addThompsonVariant() {
   if (localEnv.type !== "gaussian") return;
   localPolicies.thompson.variants.push({ priorVariance: 1 });
-  algoOpen.thompson = true;
   emitPolicies();
   nextTick();
 }
@@ -912,7 +690,7 @@ function onCustomPolicyLoaded(payload: {
   const idx = localPolicies.customPolicies.findIndex(
     (entry) => entry.name === payload.name || entry.id === idCandidate,
   );
-  const registration: CustomPolicyRegistration = {
+  const registration: iCustomPolicyRegistration = {
     id: idx >= 0 ? localPolicies.customPolicies[idx].id : idCandidate,
     name: payload.name,
     factory: () => new payload.policyCtor(),
@@ -1049,16 +827,11 @@ function onCustomToggle(e: Event) {
   border-radius: 9px;
   background: #121212;
   color: #f1f1f1;
-  box-sizing: border-box;
 }
 .input--xs {
   height: 30px;
   max-width: 120px;
   padding: 0 8px;
-}
-.input--seed {
-  min-width: 120px;
-  max-width: 180px;
 }
 
 .btn {
@@ -1091,52 +864,12 @@ function onCustomToggle(e: Event) {
   background: var(--bg-18);
   margin-top: 10px;
 }
-.algo-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: inherit;
-  padding: 6px 4px;
-  cursor: pointer;
-  text-align: left;
-}
-.algo-toggle:focus-visible {
-  outline: 2px solid #3aa9d6;
-  outline-offset: 2px;
-}
-.algo-body {
-  margin-top: 8px;
-}
-.algo-chevron {
-  transition: transform 0.18s ease;
-  font-size: 16px;
-}
-.algo-chevron.open {
-  transform: rotate(180deg);
-}
 .algo-head {
-  display: block;
-  width: 100%;
-  cursor: pointer;
-  list-style: none;
-  margin-bottom: 0;
-}
-
-.algo-head::-webkit-details-marker {
-  display: none;
-}
-
-.algo-head-content {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
-  margin-bottom: 0;
+  margin-bottom: 8px;
 }
-
 .pill {
   display: inline-block;
   background: #1a1a1a;
@@ -1160,10 +893,6 @@ function onCustomToggle(e: Event) {
 .pill-thompson {
   border-color: #607d8b;
   color: #d9e4ea;
-}
-.pill-custom {
-  border-color: #ef5350;
-  color: #ffd7d7;
 }
 
 .algo-grid {
@@ -1190,10 +919,6 @@ function onCustomToggle(e: Event) {
   border-radius: 10px;
   overflow: hidden;
   background: #131313;
-}
-.variants-table--greedy .variants-row,
-.variants-table--greedy .variants-row--head {
-  grid-template-columns: 2fr 1fr 0.6fr;
 }
 .variants-row {
   display: grid;
@@ -1228,6 +953,7 @@ function onCustomToggle(e: Event) {
   padding: 12px;
   color: #aeb4bd;
 }
+
 .custom {
   margin-top: 10px;
   background: var(--bg-15);
@@ -1237,25 +963,9 @@ function onCustomToggle(e: Event) {
 .custom summary {
   cursor: pointer;
   padding: 10px;
-  list-style: none;
-}
-.custom summary::-webkit-details-marker {
-  display: none;
 }
 .custom summary:hover {
   background: #1b1b1b;
-}
-.custom-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-weight: 600;
-}
-.custom-chevron {
-  transition: transform 0.18s ease;
-}
-.custom-chevron.open {
-  transform: rotate(180deg);
 }
 .custom-body {
   padding: 10px;
