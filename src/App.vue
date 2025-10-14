@@ -95,15 +95,6 @@
             </EnvSetup>
           </div>
 
-          <div id="advanced-settings">
-            <AdvancedSettings
-              :mode="mode"
-              v-model:env="form"
-              v-model:policyConfigs="policyConfigs"
-              v-model:open="settingsOpen"
-            />
-          </div>
-
           <section id="manual-section" class="card" v-if="mode === 'manual'">
             <h2>Manuell testen</h2>
             <p class="muted">
@@ -136,6 +127,15 @@
               :env-config="form"
               :policy-configs="policyConfigs"
               @reset="onRunnerReset"
+            />
+          </div>
+
+          <div id="advanced-settings">
+            <AdvancedSettings
+              :mode="mode"
+              v-model:env="form"
+              v-model:policyConfigs="policyConfigs"
+              v-model:open="settingsOpen"
             />
           </div>
         </div>
@@ -743,27 +743,15 @@ function onEnvLog(msg: string) {
 }
 
 /* KPIs */
-function calcOptimalRateFrom(history: ManualStep[] | undefined) {
-  if (!history || !history.length) return undefined;
-  let ok = 0;
-  for (const h of history) if (h.isOptimal) ok++;
-  return ok / history.length;
-}
-type MetricsRowX = iMetricsRow & { seriesId?: string; optimalRate?: number };
-
-const metricRows = computed<MetricsRowX[]>(() => {
-  const rows: MetricsRowX[] = [];
+const metricRows = computed<iMetricsRow[]>(() => {
+  const rows: iMetricsRow[] = [];
   if (mode.value === "manual" && (seriesState as any).manual) {
     const r = buildMetricsRowFromManual(
       manualHistory.value,
       form.value,
       (seriesState as any).manual,
     );
-    rows.push({
-      ...(r as iMetricsRow),
-      seriesId: "manual",
-      optimalRate: calcOptimalRateFrom(manualHistory.value),
-    });
+    rows.push(r);
   }
   for (const s of activeAlgoSeries.value) {
     const hist = algoHistory.value[s.id] ?? [];
@@ -772,11 +760,7 @@ const metricRows = computed<MetricsRowX[]>(() => {
       form.value,
       (seriesState as any)[s.id],
     );
-    rows.push({
-      ...(r as iMetricsRow),
-      seriesId: s.id,
-      optimalRate: calcOptimalRateFrom(hist),
-    });
+    rows.push(r);
   }
   if (mode.value === "algo") return rows.filter((r) => r.seriesId !== "manual");
   return rows;
