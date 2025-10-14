@@ -1,9 +1,9 @@
 <template>
   <div class="tabs-container">
     <ul class="tab-header">
-      <li 
-        v-for="(tab, index) in tabs" 
-        :key="tab.key" 
+      <li
+        v-for="(tab, index) in tabs"
+        :key="tab.key"
         :class="{ active: selectedIndex === index }"
         @click="selectTab(index)"
       >
@@ -27,9 +27,24 @@ import CustomAlgorithmEditor from "./CustomAlgorithmEditor.vue";
 import AnalysisDashboard from "./AnalysisDashboard.vue";
 
 const tabs = [
-  { key: "comparison", label: "Thumbnail Vergleich", iconClass: "icon-compare", component: ThumbnailComparison },
-  { key: "customAlgo", label: "Eigener Algorithmus", iconClass: "icon-code", component: CustomAlgorithmEditor },
-  { key: "analysis", label: "Analyse & Performance", iconClass: "icon-chart", component: AnalysisDashboard },
+  {
+    key: "comparison",
+    label: "Thumbnail Vergleich",
+    iconClass: "icon-compare",
+    component: ThumbnailComparison,
+  },
+  {
+    key: "customAlgo",
+    label: "Eigener Algorithmus",
+    iconClass: "icon-code",
+    component: CustomAlgorithmEditor,
+  },
+  {
+    key: "analysis",
+    label: "Analyse & Performance",
+    iconClass: "icon-chart",
+    component: AnalysisDashboard,
+  },
 ];
 
 const selectedIndex = ref(0);
