@@ -25,7 +25,9 @@ function bestMeanFrom(cfg?: iEnvConfig | null): number {
  */
 function optimalRewardPerStepFrom(history: ManualStep[]): number {
   if (!history.length) return 0;
-  const optimalRewards = history.filter(r => r.isOptimal).map(r => r.reward);
+  const optimalRewards = history
+    .filter((r) => r.isOptimal)
+    .map((r) => r.reward);
   if (!optimalRewards.length) return 0;
   return optimalRewards.reduce((sum, r) => sum + r, 0) / optimalRewards.length;
 }
@@ -43,9 +45,8 @@ export function buildMetricsRowFromManual(
 
   // Berechne Regret basierend auf tatsächlich erhaltenen optimalen Rewards
   const optimalRewardPerStep = optimalRewardPerStepFrom(history);
-  const regret = optimalRewardPerStep > 0
-    ? n * optimalRewardPerStep - cumReward
-    : 0;
+  const regret =
+    optimalRewardPerStep > 0 ? n * optimalRewardPerStep - cumReward : 0;
 
   return {
     seriesId: sCfg.id,
@@ -92,12 +93,9 @@ export function buildSeriesFromManual(
     }
 
     // Berechne Regret basierend auf tatsächlichen optimalen Rewards
-    const avgOptimalReward = optimalRewards.length > 0
-      ? optimalRewardSum / optimalRewards.length
-      : 0;
-    const regret = avgOptimalReward > 0
-      ? step * avgOptimalReward - cum
-      : 0;
+    const avgOptimalReward =
+      optimalRewards.length > 0 ? optimalRewardSum / optimalRewards.length : 0;
+    const regret = avgOptimalReward > 0 ? step * avgOptimalReward - cum : 0;
 
     points.cumReward.push({ step, y: cum });
     points.avgReward.push({ step, y: cum / step });
