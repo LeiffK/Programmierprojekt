@@ -82,6 +82,12 @@ export function buildSeriesFromManual(
     bestRate: [] as { step: number; y: number }[],
   };
 
+  // Füge immer einen Startpunkt bei 0 hinzu
+  points.cumReward.push({ step: 0, y: 0 });
+  points.avgReward.push({ step: 0, y: 0 });
+  points.regret.push({ step: 0, y: 0 });
+  points.bestRate.push({ step: 0, y: 0 });
+
   history.forEach((r, i) => {
     const step = i + 1;
     cum += r.reward;
