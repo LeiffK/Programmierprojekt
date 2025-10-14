@@ -1004,6 +1004,9 @@ const tutorialHooks = {
   gap: 10px;
   white-space: nowrap;
 }
+#btn-tutorial {
+  margin-right: 20px;
+}
 .btn {
   height: 36px;
   line-height: 36px;
