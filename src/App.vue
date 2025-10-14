@@ -95,15 +95,6 @@
             </EnvSetup>
           </div>
 
-          <div id="advanced-settings">
-            <AdvancedSettings
-              :mode="mode"
-              v-model:env="form"
-              v-model:policyConfigs="policyConfigs"
-              v-model:open="settingsOpen"
-            />
-          </div>
-
           <section id="manual-section" class="card" v-if="mode === 'manual'">
             <h2>Manuell testen</h2>
             <p class="muted">
@@ -136,6 +127,15 @@
               :env-config="form"
               :policy-configs="policyConfigs"
               @reset="onRunnerReset"
+            />
+          </div>
+
+          <div id="advanced-settings">
+            <AdvancedSettings
+              :mode="mode"
+              v-model:env="form"
+              v-model:policyConfigs="policyConfigs"
+              v-model:open="settingsOpen"
             />
           </div>
         </div>
