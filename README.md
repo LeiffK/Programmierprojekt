@@ -30,6 +30,8 @@ Für einen Überblick über empfohlene Projekt-Einrichtung und IDE-Unterstützun
 
 - Standard-Algorithmen: Greedy, Epsilon-Greedy, Optimistic Initial Values, Upper-Confidence-Bound (UCB), Thompson Sampling, Gradient Bandit.
 
+- Neben den Standard-Algorithmen kann im Tool über den Button „Eigener Algorithmus“ ein individueller Algorithmus eingegeben werden. Nach Klick auf diesen Button öffnet sich ein Editor, in dem eigener TypeScript-Code direkt eingegeben werden kann. Der Algorithmus kann so direkt im Vergleich mit den Standard-Strategien getestet und live ausgewertet werden.
+
 - Responsive & desktop-first UI, performant dank Web-Worker und Comlink.
 
 - Modernes Frontend mit Vue 3 (Composition API) + TypeScript, Pinia für State Management.
@@ -73,6 +75,8 @@ Die Algorithmen entscheiden, wie man aus mehreren Möglichkeiten (z.B. verschied
 - Thompson Sampling: Nutzt Wahrscheinlichkeiten, um unter Unsicherheit kluge Entscheidungen zu treffen.
 
 - Gradient Bandit: Lernt die Vorlieben über kleine Anpassungen im Laufe der Zeit; besonders geeignet bei kontinuierlichen Belohnungen.
+
+- Neben den Standard-Algorithmen kann im Tool über den Button „Eigener Algorithmus“ ein individueller Algorithmus eingegeben werden. Nach Klick auf diesen Button öffnet sich ein Editor, in dem eigener TypeScript-Code direkt eingegeben werden kann.
 
 ## Exploration vs. Exploitation
 
