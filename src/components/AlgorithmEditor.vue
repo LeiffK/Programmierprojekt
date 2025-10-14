@@ -30,7 +30,6 @@
       <div class="variants-table">
         <div class="variants-row variants-row--head">
           <div class="cell">Bezeichnung</div>
-          <div class="cell">Sprache</div>
           <div class="cell cell--end"></div>
         </div>
 
@@ -45,7 +44,6 @@
           @click="showCode(p)"
         >
           <div class="cell">{{ p.name }}</div>
-          <div class="cell">{{ p.lang }}</div>
           <div class="cell cell--end">
             <button
               class="btn btn-pill btn-sm"
@@ -72,6 +70,11 @@ import { ref, computed, onMounted } from "vue";
 import { CustomPolicyLoader } from "../algorithms/CustomPolicyLoader.ts";
 import type { iBanditPolicy } from "../algorithms/Domain/iBanditPolicy";
 
+interface SavedPolicy {
+  name: string;
+  code: string;
+}
+
 const emit = defineEmits<{
   (
     e: "policyLoaded",
@@ -84,6 +87,7 @@ const userCode = ref(`import { BasePolicy } from "./BasePolicy";
 
 /**
  * Quickstart:
+ * - Sprache: TypeScript (ES2022).
  * - Benenne die Klasse (z.B. MyPolicy); der Name erscheint im UI.
  * - Aus BasePolicy (Die Elternklasse) stehen dir folgende Funktionen bereit:
  *     this.nArms           // Anzahl der Arme
@@ -102,7 +106,7 @@ export class MyPolicy extends BasePolicy {
 }
 `);
 const status = ref<string | null>(null);
-const savedPolicies = ref<{ name: string; code: string; lang: string }[]>([]);
+const savedPolicies = ref<SavedPolicy[]>([]);
 const activePolicies = ref<Set<string>>(new Set());
 const selectedPolicy = ref<string | null>(null);
 
@@ -115,12 +119,10 @@ function saveCustomPolicy() {
     const existing = savedPolicies.value.find((p) => p.name === className);
     if (existing) {
       existing.code = userCode.value;
-      existing.lang = "typescript";
     } else {
       savedPolicies.value.push({
         name: className,
         code: userCode.value,
-        lang: "typescript",
       });
     }
 
@@ -132,7 +134,7 @@ function saveCustomPolicy() {
 }
 
 /* --- Aktivieren/Deaktivieren --- */
-async function togglePolicy(p: { name: string; code: string; lang: string }) {
+async function togglePolicy(p: SavedPolicy) {
   try {
     if (activePolicies.value.has(p.name)) {
       activePolicies.value.delete(p.name);
@@ -153,7 +155,7 @@ async function togglePolicy(p: { name: string; code: string; lang: string }) {
   }
 }
 /* --- Code anzeigen bei Klick --- */
-function showCode(p: { name: string; code: string; lang: string }) {
+function showCode(p: SavedPolicy) {
   userCode.value = p.code;
   selectedPolicy.value = p.name;
 }
@@ -172,7 +174,8 @@ function newCustomPolicy() {
 
 /**
  * Hinweise:
- * - Passe den Klassennamen an – er erscheint im UI.
+ * - Sprache: TypeScript (ES2022).
+ * - Passe den Klassennamen an - er erscheint im UI.
  * - Nutzbare Helfer aus BasePolicy:
  *     this.nArms, this.rng(), this.randomArm(),
  *     this.getEstimates(), this.getCounts().
@@ -180,7 +183,7 @@ function newCustomPolicy() {
  */
 export class NeuePolicy extends BasePolicy {
   selectAction() {
-    return this.randomArm();        
+    return this.randomArm();
   }
 }
 
@@ -200,8 +203,8 @@ onMounted(() => {
         lang?: string;
       }>;
       savedPolicies.value = parsed.map((p) => ({
-        ...p,
-        lang: "typescript",
+        name: p.name,
+        code: p.code,
       }));
       localStorage.setItem(
         "savedPolicies",
@@ -292,7 +295,7 @@ const statusClass = computed(() =>
 }
 .variants-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr;
   border-top: 1px solid #2a2a2a;
   background: #181818;
   cursor: pointer;

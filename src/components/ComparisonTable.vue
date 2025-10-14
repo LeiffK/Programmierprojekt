@@ -194,21 +194,18 @@ function fmtPct(v?: number) {
   return `${pct.toFixed(1)}%`;
 }
 function deriveType(r: AnyRow): string {
-  const t = (r.type || r.kind || "").toString().toLowerCase();
-  if (t.includes("manual")) return "Manuell";
-  if (t.includes("custom")) return "Custom";
-  if (t.includes("eps") || t.includes("epsilon") || t.includes("e"))
-    return "e-Greedy";
-  if (t.includes("greedy")) return "Greedy";
+  const textParts = [r.type, (r as any).kind, r.seriesId, r.label]
+    .filter(Boolean)
+    .map((v) => v.toString().toLowerCase());
 
-  const id = (r.seriesId || "").toString().toLowerCase();
-  if (id.startsWith("custom:")) return "Custom";
-
-  const lbl = (r.label || "").toLowerCase();
-  if (/manuell/.test(lbl)) return "Manuell";
-  if (/custom/.test(lbl)) return "Custom";
-  if (/greedy/.test(lbl) && /e|eps/.test(lbl)) return "e-Greedy";
-  if (/greedy/.test(lbl)) return "Greedy";
+  const hay = textParts.join(" ");
+  if (/manual/.test(hay) || /manuell/.test(hay)) return "Manuell";
+  if (/custom/.test(hay) || /custom:/.test(hay)) return "Custom";
+  if (/(eps|epsilon|\be-?greedy\b)/.test(hay)) return "e-Greedy";
+  if (/\bgreedy\b/.test(hay)) return "Greedy";
+  if (/\bucb\b/.test(hay)) return "UCB";
+  if (/thompson|gaussian|beta/.test(hay)) return "Thompson";
+  if (/gradient/.test(hay)) return "Gradient Bandit";
   return "-";
 }
 function seriesIdOf(r: AnyRow, i: number) {

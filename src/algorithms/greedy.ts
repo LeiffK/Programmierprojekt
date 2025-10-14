@@ -5,7 +5,4 @@ export class Greedy extends BasePolicy {
     // return this.tiebreak(this.getEstimates() as number[]); //Welche Arme gibt es? Wenn alle gleich "gut" nimm einfach zufällig irgendeinen
     return this.tiebreak(this.getEstimates() as number[]);
   }
-  protected override setOptimisticInitialValue(): number {
-    return this.cfg.optimisticInitialValue ?? 350; // Hier geringerer Wert weil Greedy sonst "zu oft" den passenden Arm gefunden hat
-  }
 }
