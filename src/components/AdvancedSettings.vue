@@ -63,13 +63,11 @@
         </div>
 
         <!-- Greedy (OHNE Varianten) -->
-        <details
-          class="algo-card"
-          :open="algoOpen.greedy"
-          @toggle="onAlgoToggle('greedy', $event)"
-        >
-          <summary
+        <div class="algo-card">
+          <button
             class="algo-toggle"
+            type="button"
+            @click="toggleAlgo('greedy')"
             :aria-expanded="algoOpen.greedy ? 'true' : 'false'"
           >
             <div class="algo-head">
@@ -78,7 +76,7 @@
             <span class="algo-chevron" :class="{ open: algoOpen.greedy }"
               >▾</span
             >
-          </summary>
+          </button>
 
           <div class="algo-body" v-show="algoOpen.greedy">
             <div class="algo-grid">
@@ -159,23 +157,21 @@
               </div>
             </div>
           </div>
-        </details>
+        </div>
 
         <!-- ε-Greedy (mit Varianten) -->
-        <details
-          class="algo-card"
-          :open="algoOpen.eps"
-          @toggle="onAlgoToggle('eps', $event)"
-        >
-          <summary
+        <div class="algo-card">
+          <button
             class="algo-toggle"
+            type="button"
+            @click="toggleAlgo('eps')"
             :aria-expanded="algoOpen.eps ? 'true' : 'false'"
           >
             <div class="algo-head">
               <div class="pill pill-eps">ε-Greedy</div>
             </div>
             <span class="algo-chevron" :class="{ open: algoOpen.eps }">▾</span>
-          </summary>
+          </button>
 
           <div class="algo-body" v-show="algoOpen.eps">
             <div class="algo-grid">
@@ -289,25 +285,21 @@
               </div>
             </div>
           </div>
-        </details>
+        </div>
 
         <!-- UCB (mit Varianten) -->
-        <details
-          class="algo-card"
-          :open="algoOpen.ucb"
-          @toggle="onAlgoToggle('ucb', $event)"
-        >
-          <summary
+        <div class="algo-card">
+          <button
             class="algo-toggle"
+            type="button"
+            @click="toggleAlgo('ucb')"
             :aria-expanded="algoOpen.ucb ? 'true' : 'false'"
           >
             <div class="algo-head">
               <div class="pill pill-ucb">UCB</div>
-
             </div>
             <span class="algo-chevron" :class="{ open: algoOpen.ucb }">▾</span>
-          </summary>
-
+          </button>
           <div class="algo-body" v-show="algoOpen.ucb">
             <div class="algo-grid">
               <div class="row">
@@ -415,16 +407,14 @@
               </div>
             </div>
           </div>
-        </details>
+        </div>
 
         <!-- Thompson Sampling (nur Gaussian; mit Varianten) -->
-        <details
-          class="algo-card"
-          :open="algoOpen.thompson"
-          @toggle="onAlgoToggle('thompson', $event)"
-        >
-          <summary
+        <div class="algo-card">
+          <button
             class="algo-toggle"
+            type="button"
+            @click="toggleAlgo('thompson')"
             :aria-expanded="algoOpen.thompson ? 'true' : 'false'"
           >
             <div class="algo-head">
@@ -433,8 +423,7 @@
             <span class="algo-chevron" :class="{ open: algoOpen.thompson }"
               >▾</span
             >
-          </summary>
-
+          </button>
           <div class="algo-body" v-show="algoOpen.thompson">
             <div class="algo-grid">
               <template v-if="localEnv.type === 'gaussian'">
@@ -529,7 +518,7 @@
               </div>
             </div>
           </div>
-        </details>
+        </div>
 
         <!-- Eigener Algorithmus -->
         <details class="custom" :open="customOpen" @toggle="onCustomToggle">
@@ -564,7 +553,6 @@ import {
   nextTick,
 } from "vue";
 import AlgorithmEditor from "./AlgorithmEditor.vue";
-import AppTooltip from "./AppTooltip.vue";
 import type { iBanditPolicy } from "../algorithms/Domain/iBanditPolicy";
 import type { CustomPolicyRegistration } from "../algorithms/Domain/iCustomPolicyRegistration";
 import { algorithmsRunner } from "../services/algorithmsRunner";
@@ -843,13 +831,8 @@ function rollSeed() {
   emitEnv();
 }
 
-function onAlgoToggle(key: keyof typeof algoOpen, event: Event) {
-  const details = event.target as HTMLDetailsElement | null;
-  if (!details) return;
-  const next = !!details.open;
-  if (algoOpen[key] !== next) {
-    algoOpen[key] = next;
-  }
+function toggleAlgo(key: keyof typeof algoOpen) {
+  algoOpen[key] = !algoOpen[key];
 }
 
 /* Varianten-Handler – nur für parameterisierte Algos */
@@ -1117,10 +1100,6 @@ function onCustomToggle(e: Event) {
   padding: 6px 4px;
   cursor: pointer;
   text-align: left;
-  list-style: none;
-}
-.algo-toggle::-webkit-details-marker {
-  display: none;
 }
 .algo-toggle:focus-visible {
   outline: 2px solid #3aa9d6;
@@ -1137,21 +1116,8 @@ function onCustomToggle(e: Event) {
   transform: rotate(180deg);
 }
 .algo-head {
-  display: block;
-  width: 100%;
-  cursor: pointer;
-  list-style: none;
-  margin-bottom: 0;
-}
-
-.algo-head::-webkit-details-marker {
-  display: none;
-}
-
-.algo-head-content {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   margin-bottom: 0;
 }
