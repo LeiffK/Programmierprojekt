@@ -1,5 +1,3 @@
-App.vue
-
 <template>
   <div class="shell">
     <header class="bar">
