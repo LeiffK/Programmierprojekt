@@ -48,11 +48,7 @@ export class ThompsonSamplingGaussian extends BasePolicy {
   override reset(): void {
     super.reset();
     // Zufällige leichte Variation, um Symmetrie zwischen Armen zu brechen
-<<<<<<< HEAD
-    this.means = this.Q.map((m) => m + 1e-6 * (this.rng() - 0.5));
-=======
     this.means = this.Q.map(m => m + 1e-6 * (this.rng() - 0.5));
->>>>>>> 4e145b27cc66f912ed1f40200b581d759290e8ab
     this.precisions.fill(1 / this.priorVariance);
   }
 
