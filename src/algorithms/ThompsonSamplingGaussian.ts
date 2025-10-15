@@ -1,5 +1,6 @@
 import type { iPullResult } from "../env/Domain/iPullResult.ts";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
+import { randNormal } from "../utils/randNormal.ts";
 import { BasePolicy } from "./BasePolicy.ts";
 
 /**
@@ -9,8 +10,8 @@ import { BasePolicy } from "./BasePolicy.ts";
  * - Beobachtungen (Rewards) ~ Normal(true_mean, sigma_obs^2).
  * - Prior für true_mean: Normal(mean0, priorVariance).
  * - Posterior nach Beobachtung bleibt Normal mit:
- *    precision_new = precision_old + 1/sigma_obs^2
- *    mean_new = (precision_old*mean_old + reward / sigma_obs^2) / precision_new
+ *   precision_new = precision_old + 1/sigma_obs^2
+ *   mean_new = (precision_old*mean_old + reward / sigma_obs^2) / precision_new
  *
  * Implementierung:
  * - Posterior wird durch arrays means (posterior means) und precisions (posterior precision = 1/Var) gehalten.
@@ -20,7 +21,7 @@ export class ThompsonSamplingGaussian extends BasePolicy {
   protected means: number[] = [];
   protected precisions: number[] = [];
   protected priorVariance: number;
-  protected obsVariances: number[] = []; // neue Variable!
+  protected obsVariances: number[] = [];
 
   constructor(cfg: { seed?: number; priorVariance?: number } = {}) {
     super(cfg);
@@ -33,8 +34,7 @@ export class ThompsonSamplingGaussian extends BasePolicy {
     const initPrecision = 1 / this.priorVariance;
     this.precisions = new Array(this.nArms).fill(initPrecision);
 
-    // Beobachtungsvarianzen übernehmen
-    // Falls env.config.stdDev existiert: nutze Quadrat davon, sonst 1
+    // Beobachtungsvarianzen aus Env übernehmen
     const stds = (env.config as any).stdDev;
     if (Array.isArray(stds)) {
       this.obsVariances = stds.map((s: number) => s ** 2);
@@ -47,20 +47,19 @@ export class ThompsonSamplingGaussian extends BasePolicy {
 
   override reset(): void {
     super.reset();
-    this.means.fill(0);
+    // Zufällige leichte Variation, um Symmetrie zwischen Armen zu brechen
+    this.means = this.Q.map((m) => m + 1e-6 * (this.rng() - 0.5));
     this.precisions.fill(1 / this.priorVariance);
   }
 
   override update(result: iPullResult): void {
     super.update(result);
-
     const a = result.action;
     const reward = result.reward;
 
     const priorPrecision = this.precisions[a];
     const oldMean = this.means[a];
 
-    // Verwende Beobachtungsvarianz aus env (korrekt!)
     const obsVar = this.obsVariances[a];
     const obsPrecision = 1 / obsVar;
 
@@ -70,25 +69,16 @@ export class ThompsonSamplingGaussian extends BasePolicy {
 
     this.precisions[a] = precisionNew;
     this.means[a] = meanNew;
-    this.Q[a] = meanNew;
+    // Q hier NICHT aktualisieren, damit BasePolicy-Logik nicht überschrieben wird
   }
 
   override selectAction(): number {
     const samples = this.means.map((mean, i) => {
       const variance = 1 / this.precisions[i];
       const stdDev = Math.sqrt(variance);
-      return this.normalSample(mean, stdDev);
+      return randNormal(this.rng, mean, stdDev);
     });
     return this.argmax(samples);
-  }
-
-  private normalSample(mean: number, stdDev: number): number {
-    let u1 = 0,
-      u2 = 0;
-    while (u1 === 0) u1 = this.rng();
-    u2 = this.rng();
-    const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-    return mean + z0 * stdDev;
   }
 
   private argmax(values: number[]): number {

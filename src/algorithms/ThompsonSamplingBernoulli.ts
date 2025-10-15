@@ -1,5 +1,6 @@
 import type { iPullResult } from "../env/Domain/iPullResult.ts";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
+import { randNormal } from "../utils/randNormal.ts";
 import { BasePolicy } from "./BasePolicy.ts";
 
 /**
@@ -48,16 +49,7 @@ export class ThompsonSamplingBernoulli extends BasePolicy {
       const f = this.failures[i];
       return this.sampleBeta(s, f);
     });
-    // Index des Arms mit maximaler Stichprobe
-    let maxIndex = 0;
-    let maxVal = samples[0];
-    for (let i = 1; i < samples.length; i++) {
-      if (samples[i] > maxVal) {
-        maxVal = samples[i];
-        maxIndex = i;
-      }
-    }
-    return maxIndex;
+    return this.tiebreak(samples);
   }
 
   /**
@@ -110,7 +102,7 @@ export class ThompsonSamplingBernoulli extends BasePolicy {
         let x = 0;
         let v = 0;
         do {
-          x = this.standardNormal();
+          x = randNormal(this.rng);
           v = 1 + c * x;
         } while (v <= 0);
         v = v * v * v;
@@ -120,17 +112,6 @@ export class ThompsonSamplingBernoulli extends BasePolicy {
           return d * v * scale;
       }
     }
-  }
-
-  /**
-   * Hilfsfunktion: Standard-normalverteilter Zufallswert (Box-Muller-Transformation).
-   */
-  private standardNormal(): number {
-    let u = 0,
-      v = 0;
-    while (u === 0) u = this.rng();
-    while (v === 0) v = this.rng();
-    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
   }
 
   /** Getter für Tests */

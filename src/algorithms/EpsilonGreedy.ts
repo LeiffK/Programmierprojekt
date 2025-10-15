@@ -34,7 +34,7 @@ export class EpsilonGreedy extends BasePolicy {
     if (raw > 1) return 1; // Größer als 100% ist auch Quatsch
     return raw;
   }
-  protected override setOptimisticInitialValue(): number {
-    return this.cfg.optimisticInitialValue ?? 500; // Hier steht der Default Parameter für E Greedy
-  }
+  // protected override setOptimisticInitialValue(): number {
+  //   return this.cfg.optimisticInitialValue ?? 500; // Hier steht der Default Parameter für E Greedy
+  // }
 }
