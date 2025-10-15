@@ -1,6 +1,6 @@
 /**
  * Utility-Funktion zur kontrollierten Generierung von Bernoulli-Wahrscheinlichkeiten.
- * 
+ *
  * Hintergrund:
  * Ursprünglich generierten die Environments die Arm-Wahrscheinlichkeiten intern
  * zufällig, ohne konfigurierbare Grenzen oder deterministische Seeds.
@@ -19,7 +19,7 @@
 export function generateProbabilities(
   k: number,
   rng: () => number,
-  cfg: { min?: number; max?: number; bestBonus?: number } = {}
+  cfg: { min?: number; max?: number; bestBonus?: number } = {},
 ): number[] {
   // Setze Grenzen (Standardwerte falls nicht übergeben)
   const min = cfg.min ?? 0.05;
@@ -29,7 +29,7 @@ export function generateProbabilities(
 
   // Basiswahrscheinlichkeiten generieren
   const out = Array.from({ length: k }, () =>
-    Number((min + rng() * span).toFixed(4))
+    Number((min + rng() * span).toFixed(4)),
   );
 
   // Einen "besten" Arm auswählen und Bonus darauf anwenden

@@ -12,7 +12,6 @@ import type { iEnvConfig } from "../env/Domain/iEnvConfig.ts";
  * - Validieren, dass die Generierung deterministisch (Seed-basiert) funktioniert.
  */
 describe("BernoulliBanditEnv", () => {
-
   // Basis-Konfiguration mit zwei Armen und festen Wahrscheinlichkeiten
   const baseConfig: iEnvConfig = {
     type: "bernoulli",

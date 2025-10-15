@@ -6,7 +6,7 @@ import { generateProbabilities } from "../utils/generateProbabilities.ts";
 
 /**
  * Bernoulli-Bandit-Umgebung
- * 
+ *
  * Diese Environment-Klasse definiert eine Bernoulli-Multi-Armed-Bandit-Umgebung,
  * bei der jeder Arm eine Gewinnwahrscheinlichkeit p hat.
  *
@@ -40,7 +40,7 @@ export class BernoulliBanditEnv extends BanditEnv {
     } else {
       // Sicherstellung, dass jede Wahrscheinlichkeit im Intervall [0,1] liegt
       probs = probs.map((p) =>
-        Number.isFinite(p) ? Math.min(Math.max(p, 0), 1) : 0
+        Number.isFinite(p) ? Math.min(Math.max(p, 0), 1) : 0,
       );
     }
 
