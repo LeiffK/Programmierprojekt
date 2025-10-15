@@ -11,11 +11,11 @@ import { BasePolicy } from "./BasePolicy.ts";
  * - Prior für true_mean: Normal(mean0, priorVariance).
  * - Posterior nach Beobachtung bleibt Normal mit:
  *   precision_new = precision_old + 1/sigma_obs^2
- *   mean_new = (precision_old*mean_old + reward / sigma_obs^2) / precision_new
+ *   mean_new = (precision_old * mean_old + reward / sigma_obs^2) / precision_new
  *
  * Implementierung:
- * - Posterior wird durch arrays means (posterior means) und precisions (posterior precision = 1/Var) gehalten.
- * - Bei Auswahl wird aus jeder Normal(mean, stdDev) eine Stichprobe gezogen; Arm mit höchstem Stichprobenwert wird gewählt.
+ * - Posterior wird durch Arrays means (posterior means) und precisions (posterior precision = 1/Var) gehalten.
+ * - Bei Auswahl wird aus jeder Normal(mean, stdDev) eine Stichprobe gezogen; der Arm mit dem höchsten Stichprobenwert wird gewählt.
  */
 export class ThompsonSamplingGaussian extends BasePolicy {
   protected means: number[] = [];
@@ -54,6 +54,7 @@ export class ThompsonSamplingGaussian extends BasePolicy {
 
   override update(result: iPullResult): void {
     super.update(result);
+
     const a = result.action;
     const reward = result.reward;
 
@@ -69,6 +70,7 @@ export class ThompsonSamplingGaussian extends BasePolicy {
 
     this.precisions[a] = precisionNew;
     this.means[a] = meanNew;
+
     // Q hier NICHT aktualisieren, damit BasePolicy-Logik nicht überschrieben wird
   }
 
@@ -78,6 +80,7 @@ export class ThompsonSamplingGaussian extends BasePolicy {
       const stdDev = Math.sqrt(variance);
       return randNormal(this.rng, mean, stdDev);
     });
+
     return this.argmax(samples);
   }
 
