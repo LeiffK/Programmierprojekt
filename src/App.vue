@@ -259,7 +259,10 @@ import type { iEnvConfig } from "./env/Domain/iEnvConfig";
 import type { iBanditEnv } from "./env/Domain/iBanditEnv";
 import { GaussianBanditEnv } from "./env/GaussianBanditEnv";
 import { BernoulliBanditEnv } from "./env/BernoulliBanditEnv";
-import type { CustomPolicyRegistration } from "./algorithms/Domain/iCustomPolicyRegistration";
+import type {
+  CustomPolicyRegistration,
+  iCustomPolicyRegistration,
+} from "./algorithms/Domain/iCustomPolicyRegistration";
 import {
   getSeriesState,
   setSeriesVisible,
@@ -371,6 +374,7 @@ async function doFullReset() {
 const manualEnv = ref<iBanditEnv | null>(null);
 const manualHistory = ref<ManualStep[]>([]);
 const manualCounts = ref<number[]>([]);
+const runnerEnvConfigs = ref<Record<string, iEnvConfig>>({});
 function initManualEnv() {
   const baseConfig: iEnvConfig = { ...form.value };
   manualEnv.value =
@@ -381,16 +385,27 @@ function initManualEnv() {
   manualCounts.value = Array.from({ length: form.value.arms ?? 0 }, () => 0);
 }
 
-/* Policies-Konfiguration (UI-Einstellung) — andere Algos kommen aus AdvancedSettings */
+function refreshRunnerEnvConfigs() {
+  const next: Record<string, iEnvConfig> = {};
+  for (const item of algorithmsRunner.getAll()) {
+    next[item.id] = { ...item.env.config };
+  }
+  runnerEnvConfigs.value = next;
+}
+
+/* Policies-Konfiguration (UI-Einstellung) - andere Algos kommen aus AdvancedSettings */
 const policyConfigs = ref<any>({
-  greedy: { optimisticInitialValue: 100 },
+  greedy: {
+    optimisticInitialValue: 100,
+    variants: [{ optimisticInitialValue: 100 }],
+  },
   epsgreedy: {
     epsilon: 0.1,
     optimisticInitialValue: 150,
     variants: [{ epsilon: 0.1, optimisticInitialValue: 150 }],
   },
   // UCB / Thompson / Gradient werden in AdvancedSettings befüllt (inkl. variants)
-  customPolicies: [] as CustomPolicyRegistration[],
+  customPolicies: [] as iCustomPolicyRegistration[],
 });
 
 /* Defaults je Env justieren (Greedy/ε-Greedy) */
@@ -407,6 +422,14 @@ function adjustPolicyDefaultsForEnv(type: iEnvConfig["type"]) {
       return val;
     };
     greedy.optimisticInitialValue = clamp01(greedy.optimisticInitialValue);
+    const greedyVariantsSrc =
+      Array.isArray(greedy.variants) && greedy.variants.length
+        ? greedy.variants
+        : [{ optimisticInitialValue: greedy.optimisticInitialValue }];
+    greedy.variants = greedyVariantsSrc.map((v: any) => ({
+      ...v,
+      optimisticInitialValue: clamp01(v.optimisticInitialValue),
+    }));
     const baseOiv = clamp01(eps.optimisticInitialValue);
     eps.optimisticInitialValue = baseOiv;
     const sourceVariants =
@@ -426,6 +449,17 @@ function adjustPolicyDefaultsForEnv(type: iEnvConfig["type"]) {
       greedy.optimisticInitialValue,
       100,
     );
+    const greedyVariantsSrc =
+      Array.isArray(greedy.variants) && greedy.variants.length
+        ? greedy.variants
+        : [{ optimisticInitialValue: greedy.optimisticInitialValue }];
+    greedy.variants = greedyVariantsSrc.map((v: any) => ({
+      ...v,
+      optimisticInitialValue: ensureHigh(
+        v.optimisticInitialValue,
+        greedy.optimisticInitialValue,
+      ),
+    }));
     const baseOiv = ensureHigh(eps.optimisticInitialValue, 150);
     eps.optimisticInitialValue = baseOiv;
     const sourceVariants =
@@ -620,6 +654,7 @@ function purgeManualSeriesHard() {
 /* Runner-Events */
 const offRunner = algorithmsRunner.on((msg: any) => {
   if (msg.type === "CONFIGURED") {
+    refreshRunnerEnvConfigs();
     reconcileActiveSeries();
     lastEventText.value = "Konfiguriert.";
   }
@@ -659,6 +694,7 @@ function configureAlgoRunner() {
     rate: 1,
     policyConfigs: policyConfigs.value,
   });
+  refreshRunnerEnvConfigs();
 }
 
 /* Sichtbarkeiten (Table/Chart) */
@@ -743,24 +779,40 @@ function onEnvLog(msg: string) {
 }
 
 /* KPIs */
-const metricRows = computed<iMetricsRow[]>(() => {
-  const rows: iMetricsRow[] = [];
+function calcOptimalRateFrom(history: ManualStep[] | undefined) {
+  if (!history || !history.length) return undefined;
+  let ok = 0;
+  for (const h of history) if (h.isOptimal) ok++;
+  return ok / history.length;
+}
+type MetricsRowX = iMetricsRow & { seriesId?: string; optimalRate?: number };
+
+const metricRows = computed<MetricsRowX[]>(() => {
+  const rows: MetricsRowX[] = [];
   if (mode.value === "manual" && (seriesState as any).manual) {
     const r = buildMetricsRowFromManual(
       manualHistory.value,
-      form.value,
+      manualEnv.value?.config ?? form.value,
       (seriesState as any).manual,
     );
-    rows.push(r);
+    rows.push({
+      ...(r as iMetricsRow),
+      seriesId: "manual",
+      optimalRate: calcOptimalRateFrom(manualHistory.value),
+    });
   }
   for (const s of activeAlgoSeries.value) {
     const hist = algoHistory.value[s.id] ?? [];
     const r = buildMetricsRowFromManual(
       hist,
-      form.value,
+      runnerEnvConfigs.value[s.id] ?? form.value,
       (seriesState as any)[s.id],
     );
-    rows.push(r);
+    rows.push({
+      ...(r as iMetricsRow),
+      seriesId: s.id,
+      optimalRate: calcOptimalRateFrom(hist),
+    });
   }
   if (mode.value === "algo") return rows.filter((r) => r.seriesId !== "manual");
   return rows;
@@ -771,7 +823,7 @@ const chartSeries = computed<iChartSeries[]>(() => {
   if (mode.value === "manual" && (seriesState as any).manual) {
     const s = buildSeriesFromManual(
       manualHistory.value,
-      form.value,
+      manualEnv.value?.config ?? form.value,
       (seriesState as any).manual,
     );
     if (!isManualSeriesLike(s) || mode.value === "manual") out.push(s);
@@ -779,7 +831,7 @@ const chartSeries = computed<iChartSeries[]>(() => {
   for (const s of activeAlgoSeries.value) {
     const built = buildSeriesFromManual(
       algoHistory.value[s.id] ?? [],
-      form.value,
+      runnerEnvConfigs.value[s.id] ?? form.value,
       (seriesState as any)[s.id],
     );
     if (mode.value === "algo" && isManualSeriesLike(built)) continue;
@@ -1003,9 +1055,6 @@ const tutorialHooks = {
   align-items: center;
   gap: 10px;
   white-space: nowrap;
-}
-#btn-tutorial {
-  margin-right: 20px;
 }
 .btn {
   height: 36px;

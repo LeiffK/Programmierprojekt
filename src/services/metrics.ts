@@ -19,17 +19,11 @@ function bestMeanFrom(cfg?: iEnvConfig | null): number {
   return 0;
 }
 
-/**
- * Berechnet den optimalen Reward pro Schritt aus der History
- * (nutzt den tatsächlich erhaltenen Reward wenn isOptimal=true)
- */
-function optimalRewardPerStepFrom(history: ManualStep[]): number {
-  if (!history.length) return 0;
-  const optimalRewards = history
-    .filter((r) => r.isOptimal)
-    .map((r) => r.reward);
-  if (!optimalRewards.length) return 0;
-  return optimalRewards.reduce((sum, r) => sum + r, 0) / optimalRewards.length;
+function regretContribution(bestMean: number, step: ManualStep): number {
+  if (!Number.isFinite(bestMean)) return 0;
+  if (step.isOptimal) return 0;
+  const delta = bestMean - step.reward;
+  return delta > 0 ? delta : 0;
 }
 
 export function buildMetricsRowFromManual(
@@ -43,10 +37,10 @@ export function buildMetricsRowFromManual(
   const bestCount = history.filter((r) => r.isOptimal).length;
   const bestChoiceRate = n ? bestCount / n : 0;
 
-  // Berechne Regret basierend auf tatsächlich erhaltenen optimalen Rewards
-  const optimalRewardPerStep = optimalRewardPerStepFrom(history);
-  const regret =
-    optimalRewardPerStep > 0 ? n * optimalRewardPerStep - cumReward : 0;
+  const bestMean = bestMeanFrom(cfg);
+  const regret = n
+    ? history.reduce((sum, step) => sum + regretContribution(bestMean, step), 0)
+    : 0;
 
   return {
     seriesId: sCfg.id,
@@ -69,11 +63,11 @@ export function buildSeriesFromManual(
   cfg: iEnvConfig | null | undefined,
   sCfg: iSeriesConfig,
 ): iChartSeries {
-  // Berechne optimalen Reward aus tatsächlichen Beobachtungen
-  const optimalRewards: number[] = [];
+  const bestMean = bestMeanFrom(cfg);
+
   let cum = 0;
   let bestCount = 0;
-  let optimalRewardSum = 0;
+  let regret = 0;
 
   const points = {
     cumReward: [] as { step: number; y: number }[],
@@ -82,26 +76,11 @@ export function buildSeriesFromManual(
     bestRate: [] as { step: number; y: number }[],
   };
 
-  // Füge immer einen Startpunkt bei 0 hinzu
-  points.cumReward.push({ step: 0, y: 0 });
-  points.avgReward.push({ step: 0, y: 0 });
-  points.regret.push({ step: 0, y: 0 });
-  points.bestRate.push({ step: 0, y: 0 });
-
   history.forEach((r, i) => {
     const step = i + 1;
     cum += r.reward;
     bestCount += r.isOptimal ? 1 : 0;
-
-    if (r.isOptimal) {
-      optimalRewards.push(r.reward);
-      optimalRewardSum += r.reward;
-    }
-
-    // Berechne Regret basierend auf tatsächlichen optimalen Rewards
-    const avgOptimalReward =
-      optimalRewards.length > 0 ? optimalRewardSum / optimalRewards.length : 0;
-    const regret = avgOptimalReward > 0 ? step * avgOptimalReward - cum : 0;
+    regret += regretContribution(bestMean ?? 0, r);
 
     points.cumReward.push({ step, y: cum });
     points.avgReward.push({ step, y: cum / step });
