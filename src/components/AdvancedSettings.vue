@@ -63,11 +63,13 @@
         </div>
 
         <!-- Greedy (OHNE Varianten) -->
-        <div class="algo-card">
-          <button
+        <details
+          class="algo-card"
+          :open="algoOpen.greedy"
+          @toggle="onAlgoToggle('greedy', $event)"
+        >
+          <summary
             class="algo-toggle"
-            type="button"
-            @click="toggleAlgo('greedy')"
             :aria-expanded="algoOpen.greedy ? 'true' : 'false'"
           >
             <div class="algo-head">
@@ -76,7 +78,7 @@
             <span class="algo-chevron" :class="{ open: algoOpen.greedy }"
               >▾</span
             >
-          </button>
+          </summary>
 
           <div class="algo-body" v-show="algoOpen.greedy">
             <div class="algo-grid">
@@ -157,21 +159,23 @@
               </div>
             </div>
           </div>
-        </div>
+        </details>
 
         <!-- ε-Greedy (mit Varianten) -->
-        <div class="algo-card">
-          <button
+        <details
+          class="algo-card"
+          :open="algoOpen.eps"
+          @toggle="onAlgoToggle('eps', $event)"
+        >
+          <summary
             class="algo-toggle"
-            type="button"
-            @click="toggleAlgo('eps')"
             :aria-expanded="algoOpen.eps ? 'true' : 'false'"
           >
             <div class="algo-head">
               <div class="pill pill-eps">ε-Greedy</div>
             </div>
             <span class="algo-chevron" :class="{ open: algoOpen.eps }">▾</span>
-          </button>
+          </summary>
 
           <div class="algo-body" v-show="algoOpen.eps">
             <div class="algo-grid">
@@ -288,11 +292,13 @@
         </details>
 
         <!-- UCB (mit Varianten) -->
-        <div class="algo-card">
-          <button
+        <details
+          class="algo-card"
+          :open="algoOpen.ucb"
+          @toggle="onAlgoToggle('ucb', $event)"
+        >
+          <summary
             class="algo-toggle"
-            type="button"
-            @click="toggleAlgo('ucb')"
             :aria-expanded="algoOpen.ucb ? 'true' : 'false'"
           >
             <div class="algo-head">
@@ -300,7 +306,8 @@
 
             </div>
             <span class="algo-chevron" :class="{ open: algoOpen.ucb }">▾</span>
-          </button>
+          </summary>
+
           <div class="algo-body" v-show="algoOpen.ucb">
             <div class="algo-grid">
               <div class="row">
@@ -411,11 +418,13 @@
         </details>
 
         <!-- Thompson Sampling (nur Gaussian; mit Varianten) -->
-        <div class="algo-card">
-          <button
+        <details
+          class="algo-card"
+          :open="algoOpen.thompson"
+          @toggle="onAlgoToggle('thompson', $event)"
+        >
+          <summary
             class="algo-toggle"
-            type="button"
-            @click="toggleAlgo('thompson')"
             :aria-expanded="algoOpen.thompson ? 'true' : 'false'"
           >
             <div class="algo-head">
@@ -424,7 +433,8 @@
             <span class="algo-chevron" :class="{ open: algoOpen.thompson }"
               >▾</span
             >
-          </button>
+          </summary>
+
           <div class="algo-body" v-show="algoOpen.thompson">
             <div class="algo-grid">
               <template v-if="localEnv.type === 'gaussian'">
@@ -833,8 +843,13 @@ function rollSeed() {
   emitEnv();
 }
 
-function toggleAlgo(key: keyof typeof algoOpen) {
-  algoOpen[key] = !algoOpen[key];
+function onAlgoToggle(key: keyof typeof algoOpen, event: Event) {
+  const details = event.target as HTMLDetailsElement | null;
+  if (!details) return;
+  const next = !!details.open;
+  if (algoOpen[key] !== next) {
+    algoOpen[key] = next;
+  }
 }
 
 /* Varianten-Handler – nur für parameterisierte Algos */
@@ -1102,6 +1117,10 @@ function onCustomToggle(e: Event) {
   padding: 6px 4px;
   cursor: pointer;
   text-align: left;
+  list-style: none;
+}
+.algo-toggle::-webkit-details-marker {
+  display: none;
 }
 .algo-toggle:focus-visible {
   outline: 2px solid #3aa9d6;
