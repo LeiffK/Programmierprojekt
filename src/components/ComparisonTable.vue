@@ -78,7 +78,6 @@
                 {{
                   fmtPct(
                     pickNum(
-                      r.bestChoiceRate,
                       r.optimalRate,
                       r.optimalPct,
                       r.optimalPercent,
@@ -132,7 +131,6 @@ export interface AnyRow {
   average?: number;
 
   // Optimal-Rate
-  bestChoiceRate?: number;
   optimalRate?: number;
   optimalPct?: number;
   optimalPercent?: number;

@@ -1,6 +1,3 @@
-metrics.ts
-
-
 import type { ManualStep } from "../domain/iHistory";
 import type { iMetricsRow } from "../domain/iMetrics";
 import type { iChartSeries } from "../domain/chart/iChartSeries";
