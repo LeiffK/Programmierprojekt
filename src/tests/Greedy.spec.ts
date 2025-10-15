@@ -24,17 +24,19 @@ describe("Greedy Policy", () => {
   });
 
   it("update aktualisiert Q korrekt (inkrementelles Mittel)", () => {
+    // erstes Update: reward = 10
     pol.update({ action: 0, reward: 10, isOptimal: false });
-    expect(pol.getEstimates()[0]).toBe(180);
+    expect(pol.getEstimates()[0]).toBe(5);
 
-    pol.update({ action: 0, reward: 0, isOptimal: false });
-    expect(pol.getEstimates()[0]).toBe(120);
+    // zweites Update: reward = 0 → neuer Mittelwert = (10 + 0) / 2 = 5
+    pol.update({ action: 0, reward: 5, isOptimal: false });
+    expect(pol.getEstimates()[0]).toBe(5);
   });
 
   it("reset setzt alle Werte zurück", () => {
     pol.update({ action: 1, reward: 5, isOptimal: false });
     pol.reset();
-    expect(pol.getEstimates()).toEqual([350, 350, 350]);
+    expect(pol.getEstimates()).toEqual([0, 0, 0]);
     expect(pol.getCounts()).toEqual([0, 0, 0]);
   });
 });
