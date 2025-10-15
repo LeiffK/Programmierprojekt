@@ -1,4 +1,3 @@
-import type { iPullResult } from "../env/Domain/iPullResult.ts";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
 import { BasePolicy } from "./BasePolicy.ts";
 
@@ -49,33 +48,6 @@ export class UpperConfidenceBound extends BasePolicy {
     });
 
     // Wähle den Arm mit dem höchsten UCB-Wert (bei Gleichstand Zufallstiebreak)
-    return this.argmax(ucbValues);
-  }
-
-  /**
-   * Update wie in BasePolicy implementiert (inkrementelles Mittel).
-   * Hier nur überschrieben zur Klarheit.
-   */
-  override update(result: iPullResult): void {
-    super.update(result);
-  }
-
-  /**
-   * Hilfsfunktion: Index der größten Werte mit Zufallstiebreak bei Gleichstand.
-   */
-  private argmax(values: number[]): number {
-    let best = -Infinity;
-    let candidates: number[] = [];
-    for (let i = 0; i < values.length; i++) {
-      const v = values[i];
-      if (v > best) {
-        best = v;
-        candidates = [i];
-      } else if (v === best) {
-        candidates.push(i);
-      }
-    }
-    const idx = Math.floor(this.rng() * candidates.length);
-    return candidates[idx];
+    return this.tiebreak(ucbValues);
   }
 }

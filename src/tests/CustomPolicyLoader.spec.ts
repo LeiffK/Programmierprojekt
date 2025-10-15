@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { CustomPolicyLoader } from "@/algorithms/CustomPolicyLoader";
+import { CustomPolicyLoader } from "@/algorithms/CustomPolicyLoader.ts";
 import fs from "fs";
 
 // Hilfsfunktion: stellt sicher, dass BasePolicy existiert

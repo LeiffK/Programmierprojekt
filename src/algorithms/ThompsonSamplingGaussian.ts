@@ -1,5 +1,6 @@
 import type { iPullResult } from "../env/Domain/iPullResult.ts";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
+import { randNormal } from "../utils/randNormal.ts";
 import { BasePolicy } from "./BasePolicy.ts";
 
 /**
@@ -70,42 +71,10 @@ export class ThompsonSamplingGaussian extends BasePolicy {
     const samples = this.means.map((mean, i) => {
       const variance = 1 / this.precisions[i];
       const stdDev = Math.sqrt(variance);
-      return this.normalSample(mean, stdDev);
+      return randNormal(this.rng, mean, stdDev);
     });
 
-    return this.argmax(samples);
-  }
-
-  /**
-   * Ziehe eine Normalstichprobe N(mean, stdDev^2) über Box-Muller.
-   */
-  private normalSample(mean: number, stdDev: number): number {
-    let u1 = 0,
-      u2 = 0;
-    while (u1 === 0) u1 = this.rng();
-    u2 = this.rng();
-
-    const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-    return mean + z0 * stdDev;
-  }
-
-  /**
-   * Hilfsfunktion: Index des maximalen Elements (Break-Ties via rng aus BasePolicy möglich)
-   */
-  private argmax(values: number[]): number {
-    let best = -Infinity;
-    let candidates: number[] = [];
-    for (let i = 0; i < values.length; i++) {
-      const v = values[i];
-      if (v > best) {
-        best = v;
-        candidates = [i];
-      } else if (v === best) {
-        candidates.push(i);
-      }
-    }
-    const idx = Math.floor(this.rng() * candidates.length);
-    return candidates[idx];
+    return this.tiebreak(samples);
   }
 
   /** Getter für Tests */
