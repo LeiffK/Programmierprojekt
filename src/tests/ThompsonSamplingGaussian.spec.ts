@@ -7,7 +7,7 @@ import { ThompsonSamplingGaussian } from "../algorithms/ThompsonSamplingGaussian
 /**
  * Mock Gaussian Env:
  * - Rewards ~ Normal(mean[action], 1)
- * - rng nutzt Math.random() zur Vereinfachung (nicht deterministisch)
+ * - deterministische RNG zur Reproduzierbarkeit
  */
 class MockGaussianEnv implements iBanditEnv {
   config: iEnvConfig;
@@ -20,12 +20,19 @@ class MockGaussianEnv implements iBanditEnv {
     this.config = { type: "gaussian", arms: means.length, means, seed };
     this.optimalAction = means.indexOf(Math.max(...means));
     this.means = means;
-    this.rng = () => Math.random();
+
+    // einfache deterministische RNG (Linear Congruential Generator)
+    let s = seed % 2147483647;
+    this.rng = () => {
+      s = (s * 16807) % 2147483647;
+      return (s - 1) / 2147483646;
+    };
   }
 
   pull(action: number): iPullResult {
     const mean = this.means[action];
-    const reward = mean + (this.rng() - 0.5); // einfache Noise-Approximation
+    const noise = this.rng() - 0.5; // einfache Normal-Approximation
+    const reward = mean + noise;
     return { action, reward, isOptimal: action === this.optimalAction };
   }
 }
@@ -62,17 +69,24 @@ describe("ThompsonSamplingGaussian", () => {
     const precisions = policy.getPrecisions();
 
     expect(means[0]).not.toBe(0);
-    expect(precisions[0]).toBeGreaterThan(0);
+    expect(precisions[0]).toBeGreaterThan(1);
     expect(means[1]).not.toBe(0);
-    expect(precisions[1]).toBeGreaterThan(0);
+    expect(precisions[1]).toBeGreaterThan(1);
   });
 
-  it("resets state", () => {
+  it("resets state correctly", () => {
     policy.update({ action: 0, reward: 3.0, isOptimal: true });
     policy.reset();
 
-    expect(policy.getMeans().every((v) => v === 0)).toBe(true);
-    expect(policy.getPrecisions().every((v) => v === 1)).toBe(true); // priorVariance=1 => init precision 1
+    // means liegen nach reset nahe 0 (leichter Zufallsrausch)
+    expect(policy.getMeans().every((v) => Math.abs(v) < 1e-3)).toBe(true);
+
+    // precisions entsprechen 1 / priorVariance
+    expect(
+      policy.getPrecisions().every((v) => v === 1 / policy["priorVariance"]),
+    ).toBe(true);
+
+    // counts werden korrekt geleert
     expect(policy.getCounts().every((v) => v === 0)).toBe(true);
   });
 });
