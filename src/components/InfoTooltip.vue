@@ -1,13 +1,13 @@
 <template>
   <div class="tooltip-wrapper">
-    <div class="tooltip-icon" @mouseenter="show = true" @mouseleave="show = false">
+    <div class="tooltip-icon" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
         <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
     </div>
     <transition name="fade">
-      <div v-if="show" class="tooltip-content" :class="position">
+      <div v-if="show" ref="tooltipRef" class="tooltip-content" :class="position" :style="tooltipStyle">
         <slot>{{ text }}</slot>
       </div>
     </transition>
@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 
 interface Props {
   text?: string;
@@ -28,6 +28,59 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const show = ref(false);
+const tooltipRef = ref<HTMLElement | null>(null);
+const tooltipStyle = ref<Record<string, string>>({});
+
+async function onMouseEnter() {
+  show.value = true;
+  await nextTick();
+  adjustTooltipPosition();
+}
+
+function onMouseLeave() {
+  show.value = false;
+  tooltipStyle.value = {};
+}
+
+function adjustTooltipPosition() {
+  if (!tooltipRef.value) return;
+
+  const tooltip = tooltipRef.value;
+  const rect = tooltip.getBoundingClientRect();
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const padding = 16; // Mindestabstand zum Rand
+
+  const adjustments: Record<string, string> = {};
+
+  // Rechter Rand überschritten
+  if (rect.right > viewportWidth - padding) {
+    adjustments.left = 'auto';
+    adjustments.right = '0';
+    adjustments.transform = 'none';
+  }
+
+  // Linker Rand überschritten
+  if (rect.left < padding) {
+    adjustments.left = '0';
+    adjustments.right = 'auto';
+    adjustments.transform = 'none';
+  }
+
+  // Unterer Rand überschritten
+  if (rect.bottom > viewportHeight - padding) {
+    adjustments.top = 'auto';
+    adjustments.bottom = 'calc(100% + 12px)';
+  }
+
+  // Oberer Rand überschritten
+  if (rect.top < padding) {
+    adjustments.bottom = 'auto';
+    adjustments.top = 'calc(100% + 12px)';
+  }
+
+  tooltipStyle.value = adjustments;
+}
 </script>
 
 <style scoped>
@@ -36,11 +89,12 @@ const show = ref(false);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  margin-left: 10px;
 }
 
 .tooltip-icon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -56,49 +110,52 @@ const show = ref(false);
   color: #e0e0e0;
   border-color: #6a6a6a;
   background: #252525;
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 .tooltip-icon svg {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
 }
 
 .tooltip-content {
   position: absolute;
   z-index: 1000;
-  padding: 8px 12px;
-  background: #2a2a2a;
-  border: 1px solid #4a4a4a;
-  border-radius: 8px;
-  color: #e5e5e5;
-  font-size: 13px;
-  line-height: 1.4;
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #2d2d2d 0%, #262626 100%);
+  border: 1px solid #555;
+  border-radius: 10px;
+  color: #f0f0f0;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: normal;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
   pointer-events: none;
+  max-width: 380px;
+  min-width: 240px;
+  font-weight: 500;
 }
 
 .tooltip-content.top {
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: calc(100% + 12px);
+  left: -6px;
+  transform: translateX(0);
 }
 
 .tooltip-content.bottom {
-  top: calc(100% + 8px);
+  top: calc(100% + 12px);
   left: 50%;
   transform: translateX(-50%);
 }
 
 .tooltip-content.left {
-  right: calc(100% + 8px);
+  right: calc(100% + 12px);
   top: 50%;
   transform: translateY(-50%);
 }
 
 .tooltip-content.right {
-  left: calc(100% + 8px);
+  left: calc(100% + 12px);
   top: 50%;
   transform: translateY(-50%);
 }
@@ -114,8 +171,8 @@ const show = ref(false);
 
 .tooltip-content.top::before {
   top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 16px;
+  transform: translateX(0);
   border-top-color: #4a4a4a;
 }
 
