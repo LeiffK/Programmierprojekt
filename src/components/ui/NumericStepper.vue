@@ -7,10 +7,12 @@
         class="group-btn"
         type="button"
         :disabled="disabled || atMin"
-        title="−"
+        title="Verringern"
         @click="onBump(-step)"
       >
-        −
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
       </button>
 
       <input
@@ -28,10 +30,12 @@
         class="group-btn"
         type="button"
         :disabled="disabled || atMax"
-        title="+"
+        title="Erhöhen"
         @click="onBump(step)"
       >
-        +
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
       </button>
     </div>
   </div>
@@ -111,46 +115,78 @@ function normalize() {
   flex-direction: column;
 }
 .control-group {
-  height: 44px;
+  height: 46px;
   width: 100%;
+  max-width: 180px;
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  background: #111;
+  grid-template-columns: 42px 1fr 42px;
+  gap: 1px;
+  background: #2a2a2a;
   border: 1px solid #333;
-  border-radius: var(--radius);
+  border-radius: 10px;
   overflow: hidden;
 }
 .control-group.disabled {
   opacity: 0.6;
 }
 .group-btn {
-  height: 42px;
-  width: 46px;
+  height: 44px;
+  width: 42px;
   background: #1a1a1a;
-  color: #fff;
+  color: #999;
   border: 0;
-  border-right: 1px solid #333;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
 }
-.group-btn:last-child {
-  border-right: 0;
-  border-left: 1px solid #333;
+
+.group-btn svg {
+  width: 18px;
+  height: 18px;
 }
+
+.group-btn:hover:not(:disabled) {
+  background: #252525;
+  color: #fff;
+}
+
+.group-btn:active:not(:disabled) {
+  background: #2a2a2a;
+  transform: scale(0.95);
+}
+
+.group-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .group-btn:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 2px rgba(79, 195, 247, 0.3);
 }
+
 .group-input {
-  height: 42px;
+  height: 44px;
   width: 100%;
   margin: 0;
-  padding: 0 12px;
-  background: transparent;
-  color: #eee;
+  padding: 0;
+  background: #111;
+  color: #f0f0f0;
   border: 0;
   outline: none;
   text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 44px;
+  box-sizing: border-box;
 }
+
+.group-input:focus {
+  background: #151515;
+}
+
 .label {
   margin-bottom: 6px;
   color: var(--muted);
