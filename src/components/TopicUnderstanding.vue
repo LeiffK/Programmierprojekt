@@ -31,7 +31,7 @@ defineEmits<{ (e: "close"): void }>();
   padding: 20px;
 }
 .modal {
-  width: min(980px, 100%);
+  width: min(1400px, 100%);
   max-height: 90vh;
   background: #141414;
   border: 1px solid #262626;
