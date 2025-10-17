@@ -9,7 +9,7 @@
       @keydown.enter.prevent="toggleOpen"
       @keydown.space.prevent="toggleOpen"
     >
-      <h2>Erweiterte Einstellungen</h2>
+      <h2>Erweiterte Einstellungen <InfoTooltip text="Hier kannst du alles feintunen: Den Seed festlegen (gleicher Seed = gleiche Ergebnisse), die Anzahl der Test-Varianten ändern und jeden Algorithmus mit eigenen Parametern konfigurieren. Erstelle mehrere Varianten eines Algorithmus mit verschiedenen Werten, um zu sehen, welche Einstellung am besten performt." /></h2>
       <div class="meta">
         <button class="btn btn-ghost btn-pill" type="button">
           {{ openLocal ? "Einklappen" : "Einblenden" }}
@@ -17,24 +17,24 @@
       </div>
     </header>
 
-    <div v-show="openLocal" class="body">
-      <!-- Umgebung -->
-      <div class="group" aria-labelledby="env-title">
-        <div id="env-title" class="group-head">
-          <span class="chip chip-neutral">Umgebung</span>
-        </div>
+    <transition name="fade-slide">
+      <div v-if="openLocal" class="table-wrap">
+        <!-- Umgebung -->
+        <div class="group" aria-labelledby="env-title">
+          <div id="env-title" class="group-head">
+            <span class="chip chip-neutral">Umgebung</span>
+          </div>
         <div class="grid">
           <div class="row">
             <label class="lab" for="seed">Seed</label>
             <div class="ctrl seed-line">
-              <input
-                id="seed"
-                class="input input--seed"
-                type="number"
-                v-model.number="localEnv.seed"
+              <NumericStepper
+                class="seed-stepper"
+                v-model="localEnv.seed"
                 :min="0"
-                @change="emitEnv"
-                @blur="emitEnv"
+                :max="9999999999"
+                :step="1"
+                @update:modelValue="emitEnv"
               />
               <button class="btn btn-pill" type="button" @click="rollSeed">
                 Würfeln
@@ -45,14 +45,12 @@
           <div class="row">
             <label class="lab" for="arms">Arme</label>
             <div class="ctrl">
-              <input
-                id="arms"
-                class="input"
-                type="number"
-                min="1"
-                v-model.number="localEnv.arms"
-                @change="emitEnv"
-                @blur="emitEnv"
+              <NumericStepper
+                v-model="localEnv.arms"
+                :min="1"
+                :max="64"
+                :step="1"
+                @update:modelValue="emitEnv"
               />
             </div>
           </div>
@@ -88,13 +86,12 @@
                   >Optimistic&nbsp;Initial&nbsp;Value</label
                 >
                 <div class="ctrl">
-                  <input
-                    id="greedy-oiv"
-                    class="input input--xs"
-                    type="number"
-                    v-model.number="localPolicies.greedy.optimisticInitialValue"
-                    @change="emitPolicies"
-                    @blur="emitPolicies"
+                  <NumericStepper
+                    v-model="localPolicies.greedy.optimisticInitialValue"
+                    :min="0"
+                    :max="1000"
+                    :step="1"
+                    @update:modelValue="emitPolicies"
                   />
                 </div>
               </div>
@@ -132,12 +129,12 @@
                 >
                   <div class="cell" role="cell">Greedy v{{ i + 1 }}</div>
                   <div class="cell" role="cell">
-                    <input
-                      class="input input--xs"
-                      type="number"
-                      v-model.number="v.optimisticInitialValue"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
+                    <NumericStepper
+                      v-model="v.optimisticInitialValue"
+                      :min="0"
+                      :max="1000"
+                      :step="1"
+                      @update:modelValue="emitPolicies"
                     />
                   </div>
                   <div class="cell cell--end" role="cell">
@@ -181,16 +178,12 @@
               <div class="row">
                 <label class="lab" for="eps-eps">ε (Basis)</label>
                 <div class="ctrl">
-                  <input
-                    id="eps-eps"
-                    class="input input--xs"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="1"
-                    v-model.number="localPolicies.epsgreedy.epsilon"
-                    @change="emitPolicies"
-                    @blur="emitPolicies"
+                  <NumericStepper
+                    v-model="localPolicies.epsgreedy.epsilon"
+                    :min="0"
+                    :max="1"
+                    :step="0.01"
+                    @update:modelValue="emitPolicies"
                   />
                 </div>
               </div>
@@ -200,15 +193,12 @@
                   >Optimistic&nbsp;Initial&nbsp;Value</label
                 >
                 <div class="ctrl">
-                  <input
-                    id="eps-oiv"
-                    class="input input--xs"
-                    type="number"
-                    v-model.number="
-                      localPolicies.epsgreedy.optimisticInitialValue
-                    "
-                    @change="emitPolicies"
-                    @blur="emitPolicies"
+                  <NumericStepper
+                    v-model="localPolicies.epsgreedy.optimisticInitialValue"
+                    :min="0"
+                    :max="1000"
+                    :step="1"
+                    @update:modelValue="emitPolicies"
                   />
                 </div>
               </div>
@@ -248,24 +238,21 @@
                 >
                   <div class="cell" role="cell">ε-Greedy v{{ i + 1 }}</div>
                   <div class="cell" role="cell">
-                    <input
-                      class="input input--xs"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="1"
-                      v-model.number="v.epsilon"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
+                    <NumericStepper
+                      v-model="v.epsilon"
+                      :min="0"
+                      :max="1"
+                      :step="0.01"
+                      @update:modelValue="emitPolicies"
                     />
                   </div>
                   <div class="cell" role="cell">
-                    <input
-                      class="input input--xs"
-                      type="number"
-                      v-model.number="v.optimisticInitialValue"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
+                    <NumericStepper
+                      v-model="v.optimisticInitialValue"
+                      :min="0"
+                      :max="1000"
+                      :step="1"
+                      @update:modelValue="emitPolicies"
                     />
                   </div>
                   <div class="cell cell--end" role="cell">
@@ -308,15 +295,12 @@
               <div class="row">
                 <label class="lab" for="ucb-c">c (Konfidenz)</label>
                 <div class="ctrl">
-                  <input
-                    id="ucb-c"
-                    class="input input--xs"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    v-model.number="localPolicies.ucb.confidence"
-                    @change="emitPolicies"
-                    @blur="emitPolicies"
+                  <NumericStepper
+                    v-model="localPolicies.ucb.confidence"
+                    :min="0"
+                    :max="10"
+                    :step="0.1"
+                    @update:modelValue="emitPolicies"
                   />
                 </div>
               </div>
@@ -325,13 +309,12 @@
                   >Optimistic&nbsp;Initial&nbsp;Value</label
                 >
                 <div class="ctrl">
-                  <input
-                    id="ucb-oiv"
-                    class="input input--xs"
-                    type="number"
-                    v-model.number="localPolicies.ucb.optimisticInitialValue"
-                    @change="emitPolicies"
-                    @blur="emitPolicies"
+                  <NumericStepper
+                    v-model="localPolicies.ucb.optimisticInitialValue"
+                    :min="0"
+                    :max="1000"
+                    :step="1"
+                    @update:modelValue="emitPolicies"
                   />
                 </div>
               </div>
@@ -371,23 +354,21 @@
                 >
                   <div class="cell" role="cell">UCB v{{ i + 1 }}</div>
                   <div class="cell" role="cell">
-                    <input
-                      class="input input--xs"
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      v-model.number="v.confidence"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
+                    <NumericStepper
+                      v-model="v.confidence"
+                      :min="0"
+                      :max="10"
+                      :step="0.1"
+                      @update:modelValue="emitPolicies"
                     />
                   </div>
                   <div class="cell" role="cell">
-                    <input
-                      class="input input--xs"
-                      type="number"
-                      v-model.number="v.optimisticInitialValue"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
+                    <NumericStepper
+                      v-model="v.optimisticInitialValue"
+                      :min="0"
+                      :max="1000"
+                      :step="1"
+                      @update:modelValue="emitPolicies"
                     />
                   </div>
                   <div class="cell cell--end" role="cell">
@@ -412,7 +393,7 @@
           </div>
         </div>
 
-        <!-- Thompson Sampling (nur Gaussian; mit Varianten) -->
+        <!-- Thompson Sampling -->
         <div class="algo-card">
           <button
             class="algo-toggle"
@@ -421,7 +402,7 @@
             :aria-expanded="algoOpen.thompson ? 'true' : 'false'"
           >
             <div class="algo-head">
-              <div class="pill pill-thompson">Thompson Sampling</div>
+              <div class="pill pill-thompson">Thompson</div>
             </div>
             <span class="algo-chevron" :class="{ open: algoOpen.thompson }"
               >▾</span
@@ -429,37 +410,22 @@
           </button>
           <div class="algo-body" v-show="algoOpen.thompson">
             <div class="algo-grid">
-              <template v-if="localEnv.type === 'gaussian'">
-                <div class="row">
-                  <label class="lab" for="ts-pv">Prior-Varianz</label>
-                  <div class="ctrl">
-                    <input
-                      id="ts-pv"
-                      class="input input--xs"
-                      type="number"
-                      step="0.1"
-                      min="0.1"
-                      v-model.number="localPolicies.thompson.priorVariance"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
-                    />
-                  </div>
+              <div class="row">
+                <label class="lab" for="ts-pv">Prior-Varianz</label>
+                <div class="ctrl">
+                  <NumericStepper
+                    v-model="localPolicies.thompson.priorVariance"
+                    :min="0.1"
+                    :max="100"
+                    :step="0.1"
+                    @update:modelValue="emitPolicies"
+                  />
                 </div>
-              </template>
-              <template v-else>
-                <div class="row">
-                  <label class="lab">Prior</label>
-                  <div class="ctrl">
-                    <span class="muted"
-                      >Bernoulli: Beta(1,1) als Standard-Prior.</span
-                    >
-                  </div>
-                </div>
-              </template>
+              </div>
             </div>
 
-            <!-- Varianten nur im Gaussian-Fall -->
-            <div class="variants" v-if="localEnv.type === 'gaussian'">
+            <!-- Varianten -->
+            <div class="variants">
               <div class="variants-head">
                 <div class="title">Varianten</div>
                 <button
@@ -491,14 +457,12 @@
                 >
                   <div class="cell" role="cell">Thompson v{{ i + 1 }}</div>
                   <div class="cell" role="cell">
-                    <input
-                      class="input input--xs"
-                      type="number"
-                      step="0.1"
-                      min="0.1"
-                      v-model.number="v.priorVariance"
-                      @change="emitPolicies"
-                      @blur="emitPolicies"
+                    <NumericStepper
+                      v-model="v.priorVariance"
+                      :min="0.1"
+                      :max="100"
+                      :step="0.1"
+                      @update:modelValue="emitPolicies"
                     />
                   </div>
                   <div class="cell cell--end" role="cell">
@@ -527,7 +491,7 @@
         <details class="custom" :open="customOpen" @toggle="onCustomToggle">
           <summary>
             <div class="custom-head">
-              <span>Eigener Algorithmus</span>
+              <span>Eigener Algorithmus <InfoTooltip text="Programmiere deinen eigenen Bandit-Algorithmus in TypeScript und teste ihn direkt gegen die Standard-Strategien. Schreibe Code in die selectAction()-Funktion – nutze dabei Hilfsfunktionen wie this.getEstimates() für bisherige Durchschnittswerte oder this.getCounts() für die Anzahl der Tests pro Variante. Speichern, aktivieren, fertig!" /></span>
               <span class="custom-chevron" :class="{ open: customOpen }"
                 >▾</span
               >
@@ -540,8 +504,9 @@
             />
           </div>
         </details>
+        </div>
       </div>
-    </div>
+    </transition>
   </section>
 </template>
 
@@ -556,6 +521,8 @@ import {
   nextTick,
 } from "vue";
 import AlgorithmEditor from "./AlgorithmEditor.vue";
+import InfoTooltip from "./InfoTooltip.vue";
+import NumericStepper from "./ui/NumericStepper.vue";
 import type { iBanditPolicy } from "../algorithms/Domain/iBanditPolicy";
 import type { CustomPolicyRegistration } from "../algorithms/Domain/iCustomPolicyRegistration";
 import { algorithmsRunner } from "../services/algorithmsRunner";
@@ -675,7 +642,6 @@ function ensureVariantDefaults(source?: any) {
     });
   }
   if (
-    localEnv.type === "gaussian" &&
     !Array.isArray(source?.thompson?.variants) &&
     !localPolicies.thompson.variants.length
   ) {
@@ -753,14 +719,10 @@ watch(
   () => localEnv.type,
   (type, prev) => {
     if (type === prev) return;
-    if (type === "gaussian") {
-      if (!localPolicies.thompson.variants.length) {
-        localPolicies.thompson.variants.push({
-          priorVariance: localPolicies.thompson.priorVariance ?? 1,
-        });
-      }
-    } else if (localPolicies.thompson.variants.length) {
-      localPolicies.thompson.variants = [];
+    if (!localPolicies.thompson.variants.length) {
+      localPolicies.thompson.variants.push({
+        priorVariance: localPolicies.thompson.priorVariance ?? 1,
+      });
     }
     ensureVariantDefaults(props.policyConfigs);
     emitPolicies();
@@ -808,14 +770,8 @@ function emitPolicies() {
       variants: [...localPolicies.ucb.variants],
     },
     thompson: {
-      priorVariance:
-        localEnv.type === "gaussian"
-          ? localPolicies.thompson.priorVariance
-          : undefined,
-      variants:
-        localEnv.type === "gaussian"
-          ? [...localPolicies.thompson.variants]
-          : [],
+      priorVariance: localPolicies.thompson.priorVariance,
+      variants: [...localPolicies.thompson.variants],
     },
     /* WICHTIG: KEIN gradient mehr – keine alpha-Felder, keine Varianten */
     customPolicies: [...localPolicies.customPolicies],
@@ -881,8 +837,9 @@ function removeUcbVariant(i: number) {
 }
 
 function addThompsonVariant() {
-  if (localEnv.type !== "gaussian") return;
-  localPolicies.thompson.variants.push({ priorVariance: 1 });
+  localPolicies.thompson.variants.push({
+    priorVariance: localPolicies.thompson.priorVariance ?? 1
+  });
   algoOpen.thompson = true;
   emitPolicies();
   nextTick();
@@ -968,8 +925,11 @@ function onCustomToggle(e: Event) {
 }
 .accordion-head h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .meta {
   display: flex;
@@ -991,9 +951,14 @@ function onCustomToggle(e: Event) {
 .btn-pill {
   border-radius: 999px;
 }
-.body {
-  padding: 12px;
+
+.table-wrap {
+  margin-top: 8px;
+  border: 1px solid #222;
+  border-radius: 10px;
   background: var(--bg-14);
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .group {
@@ -1187,11 +1152,11 @@ function onCustomToggle(e: Event) {
 }
 .variants-table--greedy .variants-row,
 .variants-table--greedy .variants-row--head {
-  grid-template-columns: 2fr 1fr 0.6fr;
+  grid-template-columns: minmax(120px, 2fr) minmax(140px, 1fr) minmax(100px, 0.6fr);
 }
 .variants-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 0.6fr;
+  grid-template-columns: minmax(120px, 2fr) minmax(140px, 1fr) minmax(140px, 1fr) minmax(100px, 0.6fr);
   gap: 0;
   border-top: 1px solid var(--br-22);
   background: #151515;
@@ -1209,6 +1174,8 @@ function onCustomToggle(e: Event) {
 .cell {
   padding: 10px;
   border-right: 1px solid var(--br-22);
+  min-width: 0;
+  overflow: hidden;
 }
 .cell:last-child {
   border-right: none;
@@ -1217,6 +1184,16 @@ function onCustomToggle(e: Event) {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+/* Constrain NumericStepper in table cells */
+.cell :deep(.control-group) {
+  max-width: 100%;
+  width: 100%;
+}
+/* Wider seed stepper for up to 10 digits */
+.seed-stepper :deep(.control-group) {
+  max-width: 100%;
+  min-width: 280px;
 }
 .variants-empty {
   padding: 12px;
@@ -1256,6 +1233,19 @@ function onCustomToggle(e: Event) {
   border-top: 1px solid var(--br-22);
   background: #151515;
   border-radius: 0 0 12px 12px;
+}
+
+/* Animation */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
 }
 
 @media (max-width: 980px) {

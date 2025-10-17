@@ -88,15 +88,17 @@ function domClick(el: HTMLElement) {
   el.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
   el.click?.();
 }
-async function moveAndClick(el: HTMLElement, delay = 980, dur = 1100) {
+async function moveAndClick(el: HTMLElement, delay = 1200, dur = 1100) {
+  await nextTick(); // Sicherstellen dass Element im DOM ist
   const r = el.getBoundingClientRect();
   animateCursorTo(
     r.left + window.scrollX + r.width / 2,
     r.top + window.scrollY + r.height / 2,
     dur,
   );
-  await sleep(delay);
+  await sleep(dur + 100); // Animation komplett abwarten + Buffer
   domClick(el);
+  await sleep(150); // Nach Klick Zeit für Effekte
 }
 
 /* Spotlight */
@@ -127,15 +129,22 @@ function placeRing(el: HTMLElement | null) {
     h: r.height + pad * 2,
   };
 }
-function waitForScrollSettled(timeoutMs = 1100): Promise<void> {
+function waitForScrollSettled(timeoutMs = 1500): Promise<void> {
   const start = performance.now();
   let lx = window.scrollX,
     ly = window.scrollY;
+  let stableFrames = 0;
+  const requiredStableFrames = 3; // Mind. 3 Frames stabil
   return new Promise((resolve) => {
     function tick() {
       const sx = window.scrollX,
         sy = window.scrollY;
-      if (sx === lx && sy === ly) return resolve();
+      if (sx === lx && sy === ly) {
+        stableFrames++;
+        if (stableFrames >= requiredStableFrames) return resolve();
+      } else {
+        stableFrames = 0;
+      }
       lx = sx;
       ly = sy;
       if (performance.now() - start > timeoutMs) return resolve();
@@ -169,6 +178,7 @@ function observeTarget(el: HTMLElement | null) {
 /* Fokus auf Selektor (mit Guard) */
 async function focusSelector(sel: string, click = false, dur = 1300) {
   await nextTick();
+  await sleep(50); // Kurze Pause für DOM-Stabilität
   const el0 = document.querySelector(sel) as HTMLElement | null;
   currentEl = el0;
   highlight(el0);
@@ -183,7 +193,9 @@ async function focusSelector(sel: string, click = false, dur = 1300) {
   el.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
   await waitForScrollSettled();
   await nextTick();
+  await sleep(100); // Extra Zeit für Layout-Stabilisierung
   placeRing(el);
+  await sleep(50); // Ring-Render abwarten
 
   const r = el.getBoundingClientRect();
   animateCursorTo(
@@ -192,7 +204,7 @@ async function focusSelector(sel: string, click = false, dur = 1300) {
     dur,
   );
   if (click) {
-    await sleep(980);
+    await sleep(dur + 200);
     domClick(el);
   }
 }
@@ -340,42 +352,53 @@ async function start() {
     {
       id: "env-stepper",
       attach: { element: SEL.env, on: "bottom" },
-      title: "1/12 – Umgebung & Anzahl",
+      title: "1/12 – Umgebung einrichten",
       text: [
-        "Hier legst du fest, wie viele Varianten es gibt. Jede Variante ist eine Kachel („Thumbnail“).",
-        "Mit „+1“ kommt eine Kachel dazu, mit „−1“ nimmst du sie wieder weg.",
-        "Der <b>Seed</b> sorgt dafür, dass sich Ergebnisse später genauso wiederholen lassen.",
+        "Lege hier fest, wie viele Thumbnail-Varianten getestet werden.",
+        "Mit den Pfeilen kannst du die Anzahl erhöhen oder verringern.",
+        "Der Seed macht Experimente wiederholbar – gleicher Seed bedeutet immer die gleichen Ergebnisse.",
       ],
       run: async () => {
         await focusSelector(SEL.env);
+        await sleep(200);
         await clickArmsPlus();
         await props.hooks.incArms();
-        await sleep(900);
+        await nextTick();
+        await sleep(400); // DOM-Update abwarten
         await clickArmsMinus();
         await props.hooks.decArms();
-        await sleep(900);
+        await nextTick();
+        await sleep(400);
       },
     },
     {
       id: "manual-thumbs",
       attach: { element: SEL.manual, on: "bottom" },
-      title: "2/12 – Varianten anklicken",
+      title: "2/12 – Manueller Modus",
       text: [
-        "Im <b>manuellen Modus</b> klickst du eine Kachel an und siehst sofort die Punkte für diesen Klick.",
-        "Zusätzlich führen die <b>Algorithmen</b> im Hintergrund jeweils einen Schritt aus.",
+        "Klicke auf Thumbnails, um sie zu testen. Du siehst sofort, wie viele Punkte jede Variante bringt.",
+        "Die Algorithmen lernen dabei mit und treffen im Hintergrund ebenfalls Entscheidungen.",
       ],
       run: async () => {
         await props.hooks.switchToManual();
+        await nextTick();
+        await sleep(300); // Mode-Switch-Effekt abwarten
         await clickModeManual();
+        await sleep(200);
         await focusSelector(SEL.manual);
 
         const clickThumb = async (n: number) => {
+          await nextTick();
+          await sleep(100);
           const btn = document.querySelector(
             `${SEL.thumbsGrid} button:nth-of-type(${n + 1})`,
           ) as HTMLElement | null;
-          if (btn) await moveAndClick(btn);
-          await props.hooks.manualClick(n);
-          await sleep(950);
+          if (btn) {
+            await moveAndClick(btn);
+            await props.hooks.manualClick(n);
+            await nextTick();
+            await sleep(300); // Chart-Update abwarten
+          }
         };
         await clickThumb(0);
         await clickThumb(1);
@@ -385,40 +408,42 @@ async function start() {
     {
       id: "to-algo",
       attach: { element: SEL.mode, on: "bottom" },
-      title: "3/12 – Algorithmus-Modus",
+      title: "3/12 – Wechsel zum Algorithmus-Modus",
       text: [
-        "Wir schalten in den <b>Algorithmus-Modus</b> um.",
-        "Die manuelle Linie wird hier ausgeblendet, damit du die Algorithmen besser vergleichen kannst.",
+        "Im Algorithmus-Modus laufen nur die automatischen Strategien.",
+        "Deine manuelle Linie wird ausgeblendet, damit du die Algorithmen direkt miteinander vergleichen kannst.",
       ],
       run: async () => {
         await clickModeAlgo();
         await props.hooks.switchToAlgo();
-        await sleep(1000);
+        await nextTick();
+        await sleep(400); // Mode-Wechsel und Chart-Update abwarten
       },
     },
     {
       id: "runner-explain",
       attach: { element: SEL.runner, on: "bottom" },
-      title: "4/12 – Lauf der Algorithmen steuern",
+      title: "4/12 – Steuerung konfigurieren",
       text: [
-        "<b>Gesamtsteps</b>: Wie viele Schritte sollen die Algorithmen machen? (0 = ohne Ende)",
-        "<b>Schritte/s</b>: Das Tempo. Je höher, desto schneller laufen die Schritte.",
-        "Änderungen wirken sofort – kein Speichern nötig.",
+        "Stelle ein, wie viele Schritte insgesamt laufen sollen (0 = unendlich).",
+        "Die Geschwindigkeit bestimmt, wie schnell die Algorithmen arbeiten (Schritte pro Sekunde).",
+        "Alle Einstellungen wirken sofort – kein Speichern nötig.",
       ],
       run: async () => {
         await focusSelector(SEL.runner);
-        await sleep(900);
+        await sleep(400);
       },
     },
     {
       id: "runner-start",
       attach: { element: SEL.runner, on: "bottom" },
-      title: "5/12 – Start, Pause, Einzelschritt",
+      title: "5/12 – Simulation starten",
       text: [
-        "Mit <b>Start</b> laufen die Algorithmen los, derselbe Button pausiert wieder.",
-        "<b>+1 Schritt</b> führt genau einen Schritt aus. Ideal, um Effekte in Ruhe zu beobachten.",
+        "Klicke auf Start, um die Algorithmen automatisch laufen zu lassen. Der gleiche Button pausiert dann wieder.",
+        "Mit +1 Schritt kannst du einzelne Schritte ausführen – ideal, um genau zu beobachten, was passiert.",
       ],
       run: async () => {
+        await sleep(200);
         const start: HTMLElement | null =
           (document.querySelector(
             '#runner-controls [data-testid="runner-start"]',
@@ -426,33 +451,37 @@ async function start() {
           findButtonByText(SEL.runner, "start") ??
           findButtonByText(SEL.runner, "starten") ??
           findButtonByText(SEL.runner, "play");
-        if (start) await moveAndClick(start);
-        await props.hooks.runnerStart();
-        await sleep(1300);
+        if (start) {
+          await moveAndClick(start);
+          await props.hooks.runnerStart();
+          await nextTick();
+          await sleep(800); // Runner-Animation abwarten
+        }
       },
     },
     {
       id: "chart-show",
       attach: { element: SEL.chart, on: "top" },
-      title: "6/12 – Diagramm lesen",
+      title: "6/12 – Das Diagramm verstehen",
       text: [
-        "Das Diagramm zeigt die Entwicklung der ausgewählten Varianten als Linien.",
-        "Farben sind je Variante fest. Ein- und Ausblenden geht über die Legende unter dem Diagramm.",
+        "Jeder Algorithmus wird als farbige Linie dargestellt. So siehst du auf einen Blick, wie sich die Strategien entwickeln.",
+        "In der Legende unten kannst du einzelne Linien ein- und ausblenden.",
       ],
       run: async () => {
         await focusSelector(SEL.chart);
-        await sleep(900);
+        await sleep(400);
       },
     },
     {
       id: "metrics-switch",
       attach: { element: SEL.chart, on: "top" },
-      title: "7/12 – Ansicht wechseln",
+      title: "7/12 – Metrik wechseln",
       text: [
-        "Wir wechseln zur Ansicht <b>Durchschnitt</b> (Ø-Reward).",
-        "So erkennst du schneller, welche Variante sich im Schnitt besser schlägt.",
+        "Wechsle jetzt zur Metrik Durchschnitt (Ø-Reward).",
+        "Damit siehst du, welcher Algorithmus durchschnittlich pro Schritt die meisten Punkte holt.",
       ],
       run: async () => {
+        await sleep(200);
         const pill: HTMLElement | null =
           (document.querySelector(
             '#chart-area [data-testid^="metric-avg"]',
@@ -460,20 +489,24 @@ async function start() {
           (document.querySelector(
             "#chart-area .metric-pills .pill:nth-child(2)",
           ) as HTMLElement | null);
-        if (pill) await moveAndClick(pill);
-        await props.hooks.setMetric("avgReward");
-        await sleep(1000);
+        if (pill) {
+          await moveAndClick(pill);
+          await props.hooks.setMetric("avgReward");
+          await nextTick();
+          await sleep(400); // Chart-Neuzeichnung abwarten
+        }
       },
     },
     {
       id: "series-toggle",
       attach: { element: SEL.chart, on: "top" },
-      title: "8/12 – Varianten vergleichen",
+      title: "8/12 – Linien ein-/ausblenden",
       text: [
-        "Klicke in der Legende auf eine Varianten-Marke (z. B. „Greedy“), um die Linie zu zeigen oder zu verstecken.",
-        "So kannst du einzelne Varianten direkt miteinander vergleichen.",
+        "Klicke in der Legende auf einen Algorithmus (z.B. Greedy), um seine Linie ein- oder auszublenden.",
+        "So kannst du einzelne Strategien isolieren und besser vergleichen.",
       ],
       run: async () => {
+        await sleep(200);
         const pill: HTMLElement | null =
           (document.querySelector(
             "#chart-area .legend .pill:nth-child(2)",
@@ -481,74 +514,89 @@ async function start() {
           (document.querySelectorAll(
             "#chart-area .pill",
           )[1] as HTMLElement | null);
-        if (pill) await moveAndClick(pill);
-        await props.hooks.toggleSeries("greedy", false);
-        await sleep(900);
+        if (pill) {
+          await moveAndClick(pill);
+          await props.hooks.toggleSeries("greedy", false);
+          await nextTick();
+          await sleep(400); // Chart-Update abwarten
+        }
       },
     },
     {
       id: "table-open",
       attach: { element: SEL.table, on: "top" },
-      title: "9/12 – Tabelle öffnen",
+      title: "9/12 – Detailansicht öffnen",
       text: [
-        "Die Tabelle fasst die wichtigsten Zahlen je Variante zusammen.",
-        "Die Sichtbarkeit ist wie im Diagramm: ausgeblendete Linien erscheinen auch hier nicht.",
+        "Die Vergleichstabelle zeigt alle wichtigen Kennzahlen auf einen Blick.",
+        "Algorithmen, die du im Chart ausgeblendet hast, sind auch hier nicht sichtbar.",
       ],
       run: async () => {
+        await sleep(200);
         const head = document.querySelector(
           SEL.tableHead,
         ) as HTMLElement | null;
-        if (head) await moveAndClick(head);
-        await props.hooks.openTable();
-        await sleep(900);
+        if (head) {
+          await moveAndClick(head);
+          await props.hooks.openTable();
+          await nextTick();
+          await sleep(500); // Tabellen-Animation abwarten
+        }
       },
     },
     {
       id: "table-explain",
       attach: { element: SEL.table, on: "top" },
-      title: "10/12 – Zahlen verstehen",
+      title: "10/12 – Kennzahlen erklärt",
       text: [
-        "<b>Gesamtpunkte (Σ Reward)</b>: Alles zusammengezählt.",
-        "<b>Durchschnitt (Ø Reward)</b>: Punkte pro Schritt im Mittel.",
-        "<b>Trefferquote (Best-Quote)</b>: Wie oft die beste Wahl getroffen wurde.",
-        "<b>Verpasste Punkte (Regret)</b>: Was im Vergleich zur bestmöglichen Wahl liegen blieb (kleiner ist besser).",
-        "<b>Letzter Wert</b>: Punkte im letzten Schritt – Momentaufnahme.",
+        "<b>Σ Reward:</b> Alle gesammelten Punkte zusammengezählt.",
+        "<b>Ø Reward:</b> Durchschnittliche Punkte pro Schritt.",
+        "<b>Best-Quote:</b> Wie oft wurde die beste Variante gewählt? (höher ist besser)",
+        "<b>Regret:</b> Wie viele Punkte wurden im Vergleich zur perfekten Strategie verpasst? (niedriger ist besser)",
+        "<b>Zuletzt:</b> Die Punkte im letzten Schritt.",
       ],
       run: async () => {
-        await sleep(1400);
+        await sleep(600);
       },
     },
     {
       id: "table-close",
       attach: { element: SEL.table, on: "top" },
-      title: "11/12 – Tabelle schließen",
+      title: "11/12 – Tabelle wieder schließen",
       text: [
-        "Wir klappen die Übersicht wieder zu.",
-        "Du kannst sie jederzeit wieder öffnen – deine Einstellungen bleiben bestehen.",
+        "Schließe die Tabelle wieder, um mehr Platz für das Diagramm zu haben.",
+        "Du kannst sie jederzeit wieder öffnen – alle Daten bleiben gespeichert.",
       ],
       run: async () => {
+        await sleep(200);
         const head = document.querySelector(
           SEL.tableHead,
         ) as HTMLElement | null;
-        if (head) await moveAndClick(head);
-        await props.hooks.closeTable();
-        await sleep(800);
+        if (head) {
+          await moveAndClick(head);
+          await props.hooks.closeTable();
+          await nextTick();
+          await sleep(400); // Tabellen-Animation abwarten
+        }
       },
     },
     {
       id: "finish",
       attach: { element: "#btn-tutorial", on: "bottom" },
-      title: "12/12 – Fertig",
+      title: "12/12 – Tutorial abgeschlossen",
       text: [
-        "Wir setzen alles zurück: Modus <b>Manuell</b>, drei Kacheln, leere Daten.",
-        "Tipp: Über den <b>Debug-Schalter</b> oben kannst du echte Zielwerte im Thumbnail sehen und eine zusätzliche Protokoll-Ansicht einblenden.",
+        "Geschafft! Du kennst jetzt alle wichtigen Funktionen.",
+        "Die App wird zurückgesetzt, damit du frisch starten kannst. Viel Erfolg beim Experimentieren!",
+        "<b>Tipp:</b> Schalte den Debug-Modus oben rechts ein, um die echten Werte der Thumbnails zu sehen.",
       ],
       run: async () => {
         try {
           await props.hooks.runnerPause();
+          await nextTick();
+          await sleep(200);
         } catch {}
         await props.hooks.restoreBaseline();
-        await sleep(450);
+        await nextTick();
+        await sleep(300);
       },
     },
   ];

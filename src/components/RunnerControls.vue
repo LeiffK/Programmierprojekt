@@ -1,7 +1,7 @@
 <template>
   <section class="card">
     <div class="row one-line">
-      <h2 class="title">Automatischer Lauf</h2>
+      <h2 class="title">Automatischer Lauf <InfoTooltip text="Lass die Algorithmen automatisch laufen. Stelle ein, wie viele Schritte insgesamt gemacht werden sollen und wie schnell (Schritte pro Sekunde). Mit +1 Schritt kannst du auch einzeln vorwärtsgehen – ideal zum genauen Beobachten." /></h2>
       <div class="status" :class="statusClass">
         <span class="dot" />
         <span class="txt">{{ statusText }}</span>
@@ -56,8 +56,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import NumericStepper from "./ui/NumericStepper.vue";
+import InfoTooltip from "./InfoTooltip.vue";
 import { algorithmsRunner } from "../services/algorithmsRunner";
 import type { iEnvConfig } from "../env/Domain/iEnvConfig";
 import type { iBanditPolicyConfig } from "../algorithms/Domain/iBanditPolicyConfig";
@@ -90,6 +91,32 @@ const statusClass = computed(() => ({
   paused: !running.value && configured.value,
   idle: !configured.value,
 }));
+
+// Event-Listener für Runner-Events
+const offRunner = algorithmsRunner.on((msg: any) => {
+  if (msg.type === "STOPPED") {
+    running.value = false;
+    statusText.value = `Angehalten: ${msg.payload?.reason ?? "—"}`;
+  }
+  if (msg.type === "STARTED") {
+    running.value = true;
+    statusText.value = "Läuft";
+  }
+  if (msg.type === "PAUSED") {
+    running.value = false;
+    statusText.value = "Pausiert";
+  }
+  if (msg.type === "CONFIGURED") {
+    configured.value = true;
+    if (!running.value) {
+      statusText.value = "Konfiguriert";
+    }
+  }
+});
+
+onBeforeUnmount(() => {
+  offRunner?.();
+});
 
 let cfgTimer: number | null = null;
 function ensureConfigured(immediate = false) {

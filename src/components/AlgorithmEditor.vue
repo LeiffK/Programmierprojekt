@@ -2,6 +2,75 @@
   <div class="editor-wrapper" ref="editorRoot">
     <h3 class="editor-title">Eigenen Algorithmus schreiben</h3>
 
+    <!-- Ausklappbare Anleitung -->
+    <details class="help-section" :open="helpOpen">
+      <summary @click="toggleHelp">
+        <div class="help-header">
+          <svg class="help-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 7h8M8 11h8M8 15h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span class="help-title">Anleitung: Wie schreibe ich einen eigenen Algorithmus?</span>
+          <span class="help-chevron" :class="{ open: helpOpen }">▾</span>
+        </div>
+      </summary>
+      <div class="help-content">
+        <h4>Grundlagen</h4>
+        <ul>
+          <li><strong>Sprache:</strong> TypeScript (ES2022)</li>
+          <li><strong>Klassenname:</strong> Benenne deine Klasse eindeutig (z.B. <code>MyPolicy</code>) – dieser Name erscheint im UI</li>
+          <li><strong>Basisklasse:</strong> Deine Klasse muss von <code>BasePolicy</code> erben</li>
+        </ul>
+
+        <h4>Verfügbare Funktionen aus BasePolicy</h4>
+        <table class="help-table">
+          <tr>
+            <td><code>this.nArms</code></td>
+            <td>Anzahl der verfügbaren Arme</td>
+          </tr>
+          <tr>
+            <td><code>this.rng()</code></td>
+            <td>Gibt eine Zufallszahl zwischen 0 und 1 zurück</td>
+          </tr>
+          <tr>
+            <td><code>this.randomArm()</code></td>
+            <td>Gibt einen zufälligen Armindex zurück</td>
+          </tr>
+          <tr>
+            <td><code>this.getEstimates()</code></td>
+            <td>Array mit aktuellen Schätzungen für jeden Arm</td>
+          </tr>
+          <tr>
+            <td><code>this.getCounts()</code></td>
+            <td>Array mit Anzahl der Ziehungen pro Arm</td>
+          </tr>
+        </table>
+
+        <h4>Wichtige Hinweise</h4>
+        <ul>
+          <li>Die Methode <code>selectAction()</code> muss einen gültigen Arm-Index (0 bis nArms-1) zurückgeben</li>
+          <li>Wirft <code>selectAction()</code> einen Fehler, wird die Policy deaktiviert</li>
+          <li>Nach dem Speichern kannst du deine Policy über den "Anwenden"-Button aktivieren</li>
+          <li>Aktivierte Policies erscheinen in den Verläufen und der Vergleichstabelle</li>
+        </ul>
+
+        <h4>Beispiel: Epsilon-Greedy</h4>
+        <pre class="help-code">export class MyEpsilonGreedy extends BasePolicy {
+  epsilon = 0.1;
+
+  selectAction() {
+    if (this.rng() < this.epsilon) {
+      return this.randomArm();  // Exploration
+    }
+    // Exploitation: Wähle besten Arm
+    const estimates = this.getEstimates();
+    return estimates.indexOf(Math.max(...estimates));
+  }
+}</pre>
+      </div>
+    </details>
+
     <!-- Codefeld -->
     <textarea
       v-model="userCode"
@@ -109,6 +178,12 @@ const status = ref<string | null>(null);
 const savedPolicies = ref<SavedPolicy[]>([]);
 const activePolicies = ref<Set<string>>(new Set());
 const selectedPolicy = ref<string | null>(null);
+const helpOpen = ref<boolean>(false);
+
+function toggleHelp(e: Event) {
+  e.preventDefault();
+  helpOpen.value = !helpOpen.value;
+}
 
 /* --- Speichern --- */
 function saveCustomPolicy() {
@@ -237,6 +312,133 @@ const statusClass = computed(() =>
   color: #fff;
   width: 100%;
   box-sizing: border-box;
+}
+
+/* Help Section */
+.help-section {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.help-section summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.help-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.help-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #1f1f1f;
+  transition: background 0.2s ease;
+}
+
+.help-section summary:hover .help-header {
+  background: #252525;
+}
+
+.help-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: #4fc3f7;
+}
+
+.help-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.help-chevron {
+  transition: transform 0.2s ease;
+  font-size: 16px;
+  color: #999;
+}
+
+.help-chevron.open {
+  transform: rotate(180deg);
+}
+
+.help-content {
+  padding: 20px;
+  background: #161616;
+  border-top: 1px solid #2a2a2a;
+  line-height: 1.6;
+}
+
+.help-content h4 {
+  margin: 20px 0 12px 0;
+  color: #e0e0e0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.help-content h4:first-child {
+  margin-top: 0;
+}
+
+.help-content ul {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.help-content li {
+  margin: 6px 0;
+  color: #ccc;
+}
+
+.help-content code {
+  background: #0e0e0e;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: "Fira Code", monospace;
+  font-size: 13px;
+  color: #4fc3f7;
+}
+
+.help-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.help-table tr {
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.help-table td {
+  padding: 10px 12px;
+  color: #ccc;
+}
+
+.help-table td:first-child {
+  font-family: "Fira Code", monospace;
+  color: #4fc3f7;
+  width: 200px;
+}
+
+.help-code {
+  background: #0e0e0e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 14px;
+  font-family: "Fira Code", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #eaeaea;
+  overflow-x: auto;
+  margin: 12px 0;
 }
 
 /* Codefeld */
