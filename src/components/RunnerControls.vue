@@ -218,6 +218,7 @@ function onReset() {
   algorithmsRunner.stop("Reset");
   running.value = false;
   configured.value = false;
+  lastConfigKey = null;  // Config-Cache löschen, damit beim nächsten Start neu konfiguriert wird
   statusText.value = "Zurückgesetzt";
   emit("reset");
 }

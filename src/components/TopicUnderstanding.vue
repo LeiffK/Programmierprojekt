@@ -28,16 +28,18 @@ defineEmits<{ (e: "close"): void }>();
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 10px;
 }
 .modal {
-  width: min(1400px, 100%);
-  max-height: 90vh;
+  width: min(1800px, 98%);
+  max-height: 98vh;
   background: #141414;
   border: 1px solid #262626;
   border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .modal-head {
   display: flex;
@@ -51,7 +53,8 @@ defineEmits<{ (e: "close"): void }>();
 .modal-body {
   padding: 16px;
   overflow: auto;
-  max-height: calc(90vh - 60px);
+  flex: 1;
+  min-height: 0;
 }
 .html-body :is(h1, h2, h3) {
   margin: 16px 0 8px 0;

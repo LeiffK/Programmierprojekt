@@ -3,7 +3,7 @@
     <header class="bar">
       <div class="bar-inner">
         <div class="brand" @click="scrollTop" title="Bandit-Studio">
-          <!-- YouTube-├ñhnliches Logo -->
+          <!-- YouTube-ähnliches Logo -->
           <svg
             class="yt-logo"
             viewBox="0 0 90 64"
@@ -16,13 +16,13 @@
           <span>Bandit-Studio</span>
         </div>
         <div class="bar-actions">
-          <!-- Reset-Button: ├Âffnet In-App-Dialog -->
+          <!-- Reset-Button: öffnet In-App-Dialog -->
           <button
             class="btn btn-ghost btn-pill"
             type="button"
             @click="openResetModal"
-            title="Alle Einstellungen & Daten zur├╝cksetzen"
-            aria-label="Alle Einstellungen und lokal gespeicherten Daten zur├╝cksetzen"
+            title="Alle Einstellungen & Daten zurücksetzen"
+            aria-label="Alle Einstellungen und lokal gespeicherten Daten zurücksetzen"
             ref="resetBtnRef"
           >
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -31,7 +31,7 @@
                 fill="currentColor"
               />
             </svg>
-            Zur├╝cksetzen
+            Zurücksetzen
           </button>
 
           <!-- Debug-Schalter -->
@@ -44,6 +44,20 @@
             title="Debug-Modus ein/aus"
           >
             {{ debugEnabled ? "Debug: an" : "Debug: aus" }}
+          </button>
+
+          <button
+            class="btn btn-ghost btn-pill"
+            @click="showTruthValues = true"
+            title="Wahre Werte anzeigen"
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+                fill="currentColor"
+              />
+            </svg>
+            Wahre Werte
           </button>
 
           <button
@@ -96,14 +110,13 @@
           </div>
 
           <section id="manual-section" class="card" v-if="mode === 'manual'">
-            <h2>W├ñhle, welches Thumbnail am besten performen wird <InfoTooltip text="Hier testest du manuell: Klicke auf ein Thumbnail und sieh sofort, wie viel Reward es bringt. Gleichzeitig lernen die Algorithmen im Hintergrund mit ÔÇô so kannst du deine eigene Intuition direkt mit den automatischen Strategien vergleichen." /></h2>
+            <h2>Wähle, welches Thumbnail am besten performen wird <InfoTooltip text="Hier testest du manuell: Klicke auf ein Thumbnail und sieh sofort, wie viel Reward es bringt. Gleichzeitig lernen die Algorithmen im Hintergrund mit – so kannst du deine eigene Intuition direkt mit den automatischen Strategien vergleichen." /></h2>
 
             <div class="thumb-grid">
               <ThumbnailCard
                 v-for="i in form.arms"
                 :key="i"
                 :label="`Thumbnail ${String.fromCharCode(64 + i)}`"
-                :variant="`Variante ${String.fromCharCode(64 + i)}`"
                 :n="manualCounts[i - 1] || 0"
                 :estimate="estimateText(i - 1)"
                 :truth="truthText(i - 1)"
@@ -138,7 +151,7 @@
 
         <div class="col-right">
           <section id="chart-area" class="card">
-            <h2>Verl├ñufe <InfoTooltip text="Sieh live, wie sich die Algorithmen entwickeln. W├ñhle oben eine Metrik aus (z.B. Gesamt-Reward oder Regret) und klicke in der Legende auf Algorithmen, um einzelne Linien ein- oder auszublenden. So erkennst du schnell, welche Strategie am besten funktioniert." /></h2>
+            <h2>Verläufe <InfoTooltip text="Sieh live, wie sich die Algorithmen entwickeln. Wähle oben eine Metrik aus (z.B. Gesamt-Reward oder Regret) und klicke in der Legende auf Algorithmen, um einzelne Linien ein- oder auszublenden. So erkennst du schnell, welche Strategie am besten funktioniert." /></h2>
             <ChartArea
               :key="chartKey"
               :series="chartSeries"
@@ -169,6 +182,11 @@
       :html="topicHtml"
       @close="showTopic = false"
     />
+    <TruthValuesModal
+      :open="showTruthValues"
+      :truth-values="truthValues"
+      @close="showTruthValues = false"
+    />
     <AppTutorial
       :open="showTutorial"
       :hooks="tutorialHooks"
@@ -194,6 +212,7 @@ import ModeSwitch from "./components/ModeSwitch.vue";
 import ChartArea from "./components/ChartArea.vue";
 import ComparisonTable from "./components/ComparisonTable.vue";
 import TopicUnderstanding from "./components/TopicUnderstanding.vue";
+import TruthValuesModal from "./components/TruthValuesModal.vue";
 import AppTutorial from "./components/AppTutorial.vue";
 import InfoTooltip from "./components/InfoTooltip.vue";
 import ResetDialog from "./components/ResetDialog.vue";
@@ -241,6 +260,7 @@ const {
   onEnvLog,
   estimateText,
   truthText,
+  truthValues,
 } = useManualPlayground({ form, debugEnabled, lastEventText });
 
 const { policyConfigs } = usePolicyConfigs(form);
@@ -271,6 +291,7 @@ const {
 
 const showTopic = ref(false);
 const showTutorial = ref(false);
+const showTruthValues = ref(false);
 
 function startTutorial() {
   showTutorial.value = true;

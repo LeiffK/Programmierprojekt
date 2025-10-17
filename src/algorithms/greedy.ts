@@ -8,7 +8,7 @@ export class Greedy extends BasePolicy {
    * damit alle Arme mindestens einmal ausprobiert werden.
    */
   selectAction(): number {
-    // return this.tiebreak(this.getEstimates() as number[]); //Welche Arme gibt es? Wenn alle gleich "gut" nimm einfach zuf�llig irgendeinen
+    // return this.tiebreak(this.getEstimates() as number[]); //Welche Arme gibt es? Wenn alle gleich "gut" nimm einfach zufällig irgendeinen
     return this.tiebreak(this.getEstimates() as number[]);
   }
 }

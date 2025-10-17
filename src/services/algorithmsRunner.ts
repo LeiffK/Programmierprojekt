@@ -165,6 +165,9 @@ class AlgorithmsRunner {
   getTotalSteps(): number {
     return this.totalSteps;
   }
+  getRate(): number {
+    return this.rate;
+  }
   getAll(): PolicyMeta[] {
     return [...this.items.values()];
   }
@@ -655,6 +658,10 @@ class AlgorithmsRunner {
       });
       return;
     }
+
+    // Sicherstellen, dass kein alter Timer läuft
+    this.clearTimer();
+
     if (this.totalSteps > 0 && this.step >= this.totalSteps) {
       this.step = 0;
       for (const it of this.items.values()) {
@@ -667,7 +674,6 @@ class AlgorithmsRunner {
     this.emit({ type: "STARTED" });
 
     const intervalMs = Math.max(10, Math.floor(1000 / this.rate));
-    this.clearTimer();
     this.tick = window.setInterval(() => {
       if (this.status !== "RUNNING") return;
       if (this.totalSteps > 0 && this.step >= this.totalSteps) {

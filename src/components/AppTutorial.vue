@@ -354,9 +354,7 @@ async function start() {
       attach: { element: SEL.env, on: "bottom" },
       title: "1/12 – Umgebung einrichten",
       text: [
-        "Lege hier fest, wie viele Thumbnail-Varianten getestet werden.",
-        "Mit den Pfeilen kannst du die Anzahl erhöhen oder verringern.",
-        "Der Seed macht Experimente wiederholbar – gleicher Seed bedeutet immer die gleichen Ergebnisse.",
+        "Bestimme hier, wie viele Thumbnail-Varianten du testen möchtest. Mit den Pfeiltasten kannst du die Anzahl anpassen."
       ],
       run: async () => {
         await focusSelector(SEL.env);
@@ -376,8 +374,7 @@ async function start() {
       attach: { element: SEL.manual, on: "bottom" },
       title: "2/12 – Manueller Modus",
       text: [
-        "Klicke auf Thumbnails, um sie zu testen. Du siehst sofort, wie viele Punkte jede Variante bringt.",
-        "Die Algorithmen lernen dabei mit und treffen im Hintergrund ebenfalls Entscheidungen.",
+        "Klicke auf ein Thumbnail, um es zu testen. Du siehst sofort, wie viele Punkte die jeweilige Variante bringt. Währenddessen lernen die Algorithmen im Hintergrund mit und treffen parallel eigene Entscheidungen.",
       ],
       run: async () => {
         await props.hooks.switchToManual();
@@ -408,10 +405,9 @@ async function start() {
     {
       id: "to-algo",
       attach: { element: SEL.mode, on: "bottom" },
-      title: "3/12 – Wechsel zum Algorithmus-Modus",
+      title: "3/12 – Wechsel in den Algorithmus-Modus",
       text: [
-        "Im Algorithmus-Modus laufen nur die automatischen Strategien.",
-        "Deine manuelle Linie wird ausgeblendet, damit du die Algorithmen direkt miteinander vergleichen kannst.",
+        "Im Algorithmus-Modus laufen ausschließlich die automatischen Strategien. Deine manuelle Linie wird ausgeblendet, sodass du die Algorithmen direkt miteinander vergleichen kannst.",
       ],
       run: async () => {
         await clickModeAlgo();
@@ -425,9 +421,7 @@ async function start() {
       attach: { element: SEL.runner, on: "bottom" },
       title: "4/12 – Steuerung konfigurieren",
       text: [
-        "Stelle ein, wie viele Schritte insgesamt laufen sollen (0 = unendlich).",
-        "Die Geschwindigkeit bestimmt, wie schnell die Algorithmen arbeiten (Schritte pro Sekunde).",
-        "Alle Einstellungen wirken sofort – kein Speichern nötig.",
+        "Lege fest, wie viele Schritte insgesamt ausgeführt werden sollen. Die Geschwindigkeit bestimmt, wie viele Schritte pro Sekunde die Algorithmen durchlaufen.",
       ],
       run: async () => {
         await focusSelector(SEL.runner);
@@ -439,8 +433,7 @@ async function start() {
       attach: { element: SEL.runner, on: "bottom" },
       title: "5/12 – Simulation starten",
       text: [
-        "Klicke auf Start, um die Algorithmen automatisch laufen zu lassen. Der gleiche Button pausiert dann wieder.",
-        "Mit +1 Schritt kannst du einzelne Schritte ausführen – ideal, um genau zu beobachten, was passiert.",
+        "Klicke auf \"Start\", um die Algorithmen automatisch laufen zu lassen. Derselbe Button dient anschließend zum Pausieren. Mit \"+1 Schritt\" kannst du einzelne Schritte manuell ausführen – ideal, um genau zu beobachten, was passiert.",
       ],
       run: async () => {
         await sleep(200);
@@ -464,8 +457,7 @@ async function start() {
       attach: { element: SEL.chart, on: "top" },
       title: "6/12 – Das Diagramm verstehen",
       text: [
-        "Jeder Algorithmus wird als farbige Linie dargestellt. So siehst du auf einen Blick, wie sich die Strategien entwickeln.",
-        "In der Legende unten kannst du einzelne Linien ein- und ausblenden.",
+        "Jeder Algorithmus wird als farbige Linie dargestellt – so erkennst du auf einen Blick, wie sich die verschiedenen Strategien entwickeln. Über die Legende kannst du einzelne Linien ein- oder ausblenden.",
       ],
       run: async () => {
         await focusSelector(SEL.chart);
@@ -477,8 +469,7 @@ async function start() {
       attach: { element: SEL.chart, on: "top" },
       title: "7/12 – Metrik wechseln",
       text: [
-        "Wechsle jetzt zur Metrik Durchschnitt (Ø-Reward).",
-        "Damit siehst du, welcher Algorithmus durchschnittlich pro Schritt die meisten Punkte holt.",
+        "Wechsle nun zur Metrik \"Durchschnitt\" (Ø-Reward). Dadurch erkennst du, welcher Algorithmus im Schnitt pro Schritt die meisten Punkte erzielt.",
       ],
       run: async () => {
         await sleep(200);
@@ -502,8 +493,7 @@ async function start() {
       attach: { element: SEL.chart, on: "top" },
       title: "8/12 – Linien ein-/ausblenden",
       text: [
-        "Klicke in der Legende auf einen Algorithmus (z.B. Greedy), um seine Linie ein- oder auszublenden.",
-        "So kannst du einzelne Strategien isolieren und besser vergleichen.",
+        "Klicke in der Legende auf einen Algorithmus (z. B. Greedy), um dessen Linie ein- oder auszublenden. Dadurch kannst du einzelne Strategien isolieren und gezielter vergleichen.",
       ],
       run: async () => {
         await sleep(200);
@@ -527,20 +517,17 @@ async function start() {
       attach: { element: SEL.table, on: "top" },
       title: "9/12 – Detailansicht öffnen",
       text: [
-        "Die Vergleichstabelle zeigt alle wichtigen Kennzahlen auf einen Blick.",
-        "Algorithmen, die du im Chart ausgeblendet hast, sind auch hier nicht sichtbar.",
+        "Die Vergleichstabelle zeigt dir alle wichtigen Kennzahlen auf einen Blick. Algorithmen, die du im Diagramm ausgeblendet hast, werden auch hier nicht angezeigt.",
       ],
       run: async () => {
+        // Tabelle öffnen
+        await props.hooks.openTable();
+        await nextTick();
+        await sleep(300);
+
+        // Fokus auf die Tabelle setzen
+        await focusSelector(SEL.table);
         await sleep(200);
-        const head = document.querySelector(
-          SEL.tableHead,
-        ) as HTMLElement | null;
-        if (head) {
-          await moveAndClick(head);
-          await props.hooks.openTable();
-          await nextTick();
-          await sleep(500); // Tabellen-Animation abwarten
-        }
       },
     },
     {
@@ -548,11 +535,11 @@ async function start() {
       attach: { element: SEL.table, on: "top" },
       title: "10/12 – Kennzahlen erklärt",
       text: [
-        "<b>Σ Reward:</b> Alle gesammelten Punkte zusammengezählt.",
-        "<b>Ø Reward:</b> Durchschnittliche Punkte pro Schritt.",
-        "<b>Best-Quote:</b> Wie oft wurde die beste Variante gewählt? (höher ist besser)",
-        "<b>Regret:</b> Wie viele Punkte wurden im Vergleich zur perfekten Strategie verpasst? (niedriger ist besser)",
-        "<b>Zuletzt:</b> Die Punkte im letzten Schritt.",
+        "<b>Σ Reward:</b> Die Summe aller gesammelten Punkte ",
+        "<b>Ø Reward:</b> Durchschnittliche Punktzahl pro Schritt ",
+        "<b>Best-Quote:</b> Wie oft wurde die beste Variante gewählt? (je höher, desto besser) ",
+        "<b>Regret:</b> Wie viele Punkte wurden im Vergleich zur perfekten Strategie verpasst? (je niedriger, desto besser) ",
+        "<b>Zuletzt:</b> Die Punktzahl des letzten Schritts.",
       ],
       run: async () => {
         await sleep(600);
@@ -563,8 +550,7 @@ async function start() {
       attach: { element: SEL.table, on: "top" },
       title: "11/12 – Tabelle wieder schließen",
       text: [
-        "Schließe die Tabelle wieder, um mehr Platz für das Diagramm zu haben.",
-        "Du kannst sie jederzeit wieder öffnen – alle Daten bleiben gespeichert.",
+        "Schließe die Tabelle. Du kannst sie jederzeit erneut öffnen – alle Daten bleiben erhalten.",
       ],
       run: async () => {
         await sleep(200);
@@ -584,9 +570,7 @@ async function start() {
       attach: { element: "#btn-tutorial", on: "bottom" },
       title: "12/12 – Tutorial abgeschlossen",
       text: [
-        "Geschafft! Du kennst jetzt alle wichtigen Funktionen.",
-        "Die App wird zurückgesetzt, damit du frisch starten kannst. Viel Erfolg beim Experimentieren!",
-        "<b>Tipp:</b> Schalte den Debug-Modus oben rechts ein, um die echten Werte der Thumbnails zu sehen.",
+        "Geschafft! Du kennst nun alle wichtigen Funktionen. Die App wird zurückgesetzt, damit du mit einem frischen Start experimentieren kannst. Viel Erfolg! <b>Tipp:</b> Aktiviere den Debug-Modus oben rechts, um die tatsächlichen Werte der Thumbnails einzusehen."
       ],
       run: async () => {
         try {
@@ -609,7 +593,45 @@ async function start() {
       attachTo: s.attach as any,
       when: {
         show: async () => {
-          await s.run();
+          // Buttons initial deaktivieren
+          await nextTick();
+          const buttons = document.querySelectorAll('.shepherd-button');
+          const originalTexts = new Map<HTMLButtonElement, string>();
+
+          buttons.forEach((btn) => {
+            const btnEl = btn as HTMLButtonElement;
+            originalTexts.set(btnEl, btnEl.textContent || '');
+            btnEl.disabled = true;
+            btn.classList.add('shepherd-button-disabled');
+          });
+
+          // Countdown-Funktion (läuft parallel zur Step-Logik)
+          const runCountdown = async () => {
+            let countdown = 3;
+            while (countdown > 0) {
+              buttons.forEach((btn) => {
+                const btnEl = btn as HTMLButtonElement;
+                const originalText = originalTexts.get(btnEl) || '';
+                btnEl.textContent = `${originalText} (${countdown}s)`;
+              });
+              await sleep(1000);
+              countdown--;
+            }
+          };
+
+          // Step-Logik und Countdown parallel ausführen
+          await Promise.all([
+            s.run(),
+            runCountdown()
+          ]);
+
+          // Buttons wieder aktivieren und Original-Text wiederherstellen
+          buttons.forEach((btn) => {
+            const btnEl = btn as HTMLButtonElement;
+            btnEl.textContent = originalTexts.get(btnEl) || '';
+            btnEl.disabled = false;
+            btn.classList.remove('shepherd-button-disabled');
+          });
         },
       },
       buttons: [

@@ -72,10 +72,14 @@ export function useRunnerOrchestration(options: RunnerOrchestrationOptions) {
   }
 
   function configureAlgoRunner() {
+    // Aktuelle rate und totalSteps beibehalten, damit beim Reset die UI-Einstellungen nicht überschrieben werden
+    const currentRate = algorithmsRunner.getRate();
+    const currentTotalSteps = algorithmsRunner.getTotalSteps();
+
     algorithmsRunner.configure({
       envConfig: options.form.value,
-      totalSteps: 0,
-      rate: 1,
+      totalSteps: currentTotalSteps || 0,
+      rate: currentRate || 1,
       policyConfigs: options.policyConfigs.value,
     });
     refreshRunnerEnvConfigs();

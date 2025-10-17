@@ -102,6 +102,18 @@ export function useManualPlayground(options: ManualPlaygroundOptions) {
       : "-";
   }
 
+  const truthValues = computed<number[]>(() => {
+    const cfg = manualEnv.value?.config;
+    if (!cfg) return [];
+    const armCount = form.value.arms ?? 0;
+
+    if (cfg.type === "bernoulli") {
+      return Array.from({ length: armCount }, (_, i) => cfg.probs?.[i] ?? 0);
+    } else {
+      return Array.from({ length: armCount }, (_, i) => cfg.means?.[i] ?? 0);
+    }
+  });
+
   return {
     manualEnv,
     manualHistory,
@@ -113,5 +125,6 @@ export function useManualPlayground(options: ManualPlaygroundOptions) {
     onEnvLog,
     estimateText,
     truthText,
+    truthValues,
   };
 }
