@@ -2,6 +2,7 @@ import type { iPullResult } from "../env/Domain/iPullResult.ts";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
 import { randNormal } from "../utils/randNormal.ts";
 import { BasePolicy } from "./BasePolicy.ts";
+import type { iBanditPolicyConfig } from "./Domain/iBanditPolicyConfig.ts";
 
 /**
  * Thompson Sampling für Bernoulli-Banditen.
@@ -17,6 +18,9 @@ import { BasePolicy } from "./BasePolicy.ts";
  * - Passt sich dynamisch an Beobachtungen an.
  */
 export class ThompsonSamplingBernoulli extends BasePolicy {
+  constructor(cfg: iBanditPolicyConfig = {}) {
+    super(cfg);
+  }
   protected successes: number[] = []; // α-Parameter: Erfolgszählungen je Arm
   protected failures: number[] = []; // β-Parameter: Misserfolgszählungen je Arm
 

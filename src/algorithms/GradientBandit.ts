@@ -1,5 +1,6 @@
 import type { iPullResult } from "../env/Domain/iPullResult";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv";
+import type { iBanditPolicyConfig } from "./Domain/iBanditPolicyConfig.ts";
 import { BasePolicy } from "./BasePolicy.ts";
 
 /**
@@ -20,7 +21,7 @@ export class GradientBandit extends BasePolicy {
    * Optionaler Parameter alpha = Lernrate (Schrittweite für Präferenzupdate).
    * Optional: seed für Zufallszahlengenerator.
    */
-  constructor(protected cfg: { alpha?: number; seed?: number } = {}) {
+  constructor(cfg: iBanditPolicyConfig = {}) {
     super(cfg);
   }
 
@@ -62,7 +63,7 @@ export class GradientBandit extends BasePolicy {
 
     // inkrementeller Durchschnitt mit altem t
     if (oldT > 0) {
-      this.averageReward += (result.reward - this.averageReward) / oldT;
+        this.averageReward += (result.reward - this.averageReward) / this.t;
     } else {
       // Falls erstes Sample, baseline auf Reward setzen
       this.averageReward = result.reward;

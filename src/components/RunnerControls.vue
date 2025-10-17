@@ -119,13 +119,51 @@ onBeforeUnmount(() => {
 });
 
 let cfgTimer: number | null = null;
+let lastConfigKey: string | null = null;
+
+function stableStringify(input: any): string {
+  const seen = new WeakSet();
+  const walk = (value: any): any => {
+    if (value === null || typeof value !== "object") {
+      if (typeof value === "function") return "[fn]";
+      return value;
+    }
+    if (seen.has(value)) return undefined;
+    seen.add(value);
+
+    if (Array.isArray(value)) {
+      return value.map((entry) => walk(entry));
+    }
+
+    const out: Record<string, unknown> = {};
+    for (const key of Object.keys(value).sort()) {
+      const next = walk((value as Record<string, any>)[key]);
+      if (next !== undefined) out[key] = next;
+    }
+    return out;
+  };
+  try {
+    return JSON.stringify(walk(input));
+  } catch {
+    return Math.random().toString(36);
+  }
+}
 function ensureConfigured(immediate = false) {
   if (!props.envConfig) {
     configured.value = false;
     statusText.value = "Kein Environment";
+    lastConfigKey = null;
     return;
   }
+  const nextKey = stableStringify({
+    env: props.envConfig,
+    policies: props.policyConfigs,
+    totalSteps: totalSteps.value,
+    rate: rate.value,
+  });
+
   const doConfig = () => {
+    if (configured.value && lastConfigKey === nextKey) return;
     algorithmsRunner.configure({
       envConfig: props.envConfig!,
       totalSteps: totalSteps.value,
@@ -134,6 +172,7 @@ function ensureConfigured(immediate = false) {
     });
     configured.value = true;
     statusText.value = running.value ? "Läuft" : "Konfiguriert";
+    lastConfigKey = nextKey;
   };
   if (immediate) {
     doConfig();

@@ -50,11 +50,12 @@ type UcbCfg = {
 };
 
 /** Thompson ohne alpha (Bernoulli nutzt Defaults) */
-type ThompsonBernV = {}; // keine alpha-Eingabe mehr
-type ThompsonGaussV = { priorVariance?: number };
+type ThompsonBernV = { optimisticInitialValue?: number };
+type ThompsonGaussV = { priorVariance?: number; optimisticInitialValue?: number };
 type ThompsonCfg = {
   /** Einzel-Defaults (Fallbacks) */
   priorVariance?: number; // Gaussian
+  optimisticInitialValue?: number;
   /** Varianten */
   variants?: Array<ThompsonBernV | ThompsonGaussV>;
   variantsBernoulli?: ThompsonBernV[];
@@ -62,7 +63,12 @@ type ThompsonCfg = {
 };
 
 /** Gradient ohne alpha (nutzt Defaults) */
-type GradientCfg = Record<string, never>;
+type GradientVariant = { alpha?: number; optimisticInitialValue?: number };
+type GradientCfg = {
+  alpha?: number;
+  optimisticInitialValue?: number;
+  variants?: GradientVariant[];
+};
 
 export type RunnerConfig = {
   envConfig: iEnvConfig;
@@ -178,8 +184,8 @@ class AlgorithmsRunner {
         const out: iEnvConfig = {
           ...source,
         };
-        if (Array.isArray(source.probabilities)) {
-          out.probabilities = [...source.probabilities];
+        if (Array.isArray(source.probs)) {
+          out.probs = [...source.probs];
         }
         if (Array.isArray(source.means)) {
           out.means = [...source.means];
@@ -378,13 +384,18 @@ class AlgorithmsRunner {
         const isBernoulli = cfg.envConfig.type === "bernoulli";
 
         if (isBernoulli) {
+          const defaultOiv = Number.isFinite(
+            Number((tsInput as any)?.optimisticInitialValue),
+          )
+            ? Number((tsInput as any)?.optimisticInitialValue)
+            : 0.99;
           const hasBernExplicit = Array.isArray(tsInput?.variantsBernoulli);
           const hasSharedExplicit = Array.isArray(tsInput?.variants);
           const listRaw = hasBernExplicit
             ? ((tsInput?.variantsBernoulli ?? []) as ThompsonBernV[])
             : hasSharedExplicit
               ? ((tsInput?.variants ?? []) as ThompsonBernV[])
-              : ([{}] as ThompsonBernV[]);
+              : ([{ optimisticInitialValue: defaultOiv }] as ThompsonBernV[]);
 
           if (listRaw.length) {
             listRaw.forEach((_v: ThompsonBernV, idx: number) => {
@@ -393,6 +404,11 @@ class AlgorithmsRunner {
               const label = isSingle
                 ? "Thompson (Bernoulli)"
                 : `Thompson (Bernoulli) v${idx + 1}`;
+              const optimisticInitialValue = Number.isFinite(
+                Number(_v?.optimisticInitialValue),
+              )
+                ? Number(_v?.optimisticInitialValue)
+                : defaultOiv;
 
               const bernCfg: ConstructorParameters<
                 typeof ThompsonSamplingBernoulli
@@ -401,6 +417,7 @@ class AlgorithmsRunner {
                   typeof cfg.envConfig.seed === "number"
                     ? cfg.envConfig.seed
                     : undefined,
+                optimisticInitialValue,
               };
               const th = new ThompsonSamplingBernoulli(
                 bernCfg as unknown as ConstructorParameters<
@@ -427,17 +444,32 @@ class AlgorithmsRunner {
           const hasGaussExplicit = Array.isArray(tsInput?.variantsGaussian);
           const hasSharedExplicit = Array.isArray(tsInput?.variants);
           const defaultVar = Number((tsInput as any)?.priorVariance ?? 1);
+          const defaultOiv = Number.isFinite(
+            Number((tsInput as any)?.optimisticInitialValue),
+          )
+            ? Number((tsInput as any)?.optimisticInitialValue)
+            : 0;
           const listRaw = hasGaussExplicit
             ? ((tsInput?.variantsGaussian ?? []) as ThompsonGaussV[])
             : hasSharedExplicit
               ? ((tsInput?.variants ?? []) as ThompsonGaussV[])
-              : ([{ priorVariance: defaultVar }] as ThompsonGaussV[]);
+              : ([
+                  {
+                    priorVariance: defaultVar,
+                    optimisticInitialValue: defaultOiv,
+                  },
+                ] as ThompsonGaussV[]);
 
           if (listRaw.length) {
             listRaw.forEach((v: ThompsonGaussV, idx: number) => {
               const isSingle = listRaw.length === 1;
               const id = isSingle ? "thompson" : `thompson#${idx + 1}`;
               const priorVariance = Number(v?.priorVariance ?? defaultVar);
+              const optimisticInitialValue = Number.isFinite(
+                Number(v?.optimisticInitialValue),
+              )
+                ? Number(v?.optimisticInitialValue)
+                : defaultOiv;
               const label = isSingle
                 ? "Thompson (Gaussian)"
                 : `Thompson (Gaussian) v${idx + 1} (Var=${priorVariance.toFixed(2)})`;
@@ -450,6 +482,7 @@ class AlgorithmsRunner {
                     ? cfg.envConfig.seed
                     : undefined,
                 priorVariance,
+                optimisticInitialValue,
               };
               const th = new ThompsonSamplingGaussian(
                 gauCfg as unknown as ConstructorParameters<
@@ -475,29 +508,70 @@ class AlgorithmsRunner {
         }
       }
 
-      /* --- Gradient Bandit (ohne alpha, keine Varianten) --- */
+      /* --- Gradient Bandit (Varianten optional) --- */
       {
-        const gradCfg: ConstructorParameters<typeof GradientBandit>[0] = {
-          seed:
-            typeof cfg.envConfig.seed === "number"
-              ? cfg.envConfig.seed
-              : undefined,
-          // kein alpha – nutzt Default der Implementierung
-        };
-        const grad = new GradientBandit(
-          gradCfg as unknown as ConstructorParameters<typeof GradientBandit>[0],
-        );
-        const env = mkEnv(151);
-        grad.initialize(env);
+        const gradInput = (cfg.policyConfigs?.gradient ?? {}) as GradientCfg;
+        const defaultAlpha = Number.isFinite(Number((gradInput as any)?.alpha))
+          ? Number((gradInput as any)?.alpha)
+          : 0.1;
+        const defaultOiv = Number.isFinite(
+          Number((gradInput as any)?.optimisticInitialValue),
+        )
+          ? Number((gradInput as any)?.optimisticInitialValue)
+          : cfg.envConfig.type === "bernoulli"
+            ? 0.99
+            : 0;
+        const variants = Array.isArray(gradInput?.variants) && gradInput.variants.length
+          ? gradInput.variants
+          : [
+              {
+                alpha: defaultAlpha,
+                optimisticInitialValue: defaultOiv,
+              },
+            ];
 
-        this.items.set("gradient", {
-          id: "gradient",
-          label: "Gradient Bandit",
-          color: "#795548",
-          policy: grad,
-          env,
-          history: [],
-          visible: true,
+        let gradColorIdx = 0;
+        variants.forEach((variant, idx) => {
+          const isSingle = variants.length === 1;
+          const id = isSingle ? "gradient" : `gradient#${idx + 1}`;
+          const alpha = Number.isFinite(Number(variant?.alpha))
+            ? Number(variant?.alpha)
+            : defaultAlpha;
+          const optimisticInitialValue = Number.isFinite(
+            Number(variant?.optimisticInitialValue),
+          )
+            ? Number(variant?.optimisticInitialValue)
+            : defaultOiv;
+          const label = isSingle
+            ? `Gradient Bandit (alpha=${alpha.toFixed(3)})`
+            : `Gradient Bandit v${idx + 1} (alpha=${alpha.toFixed(3)})`;
+          const color = isSingle
+            ? "#795548"
+            : PALETTE[(gradColorIdx++) % PALETTE.length];
+
+          const gradCfg: ConstructorParameters<typeof GradientBandit>[0] = {
+            seed:
+              typeof cfg.envConfig.seed === "number"
+                ? cfg.envConfig.seed
+                : undefined,
+            alpha,
+            optimisticInitialValue,
+          };
+          const grad = new GradientBandit(
+            gradCfg as unknown as ConstructorParameters<typeof GradientBandit>[0],
+          );
+          const env = mkEnv(151 + idx * 3);
+          grad.initialize(env);
+
+          this.items.set(id, {
+            id,
+            label,
+            color,
+            policy: grad,
+            env,
+            history: [],
+            visible: true,
+          });
         });
       }
 
@@ -581,7 +655,7 @@ class AlgorithmsRunner {
       });
       return;
     }
-    if (this.step >= this.totalSteps) {
+    if (this.totalSteps > 0 && this.step >= this.totalSteps) {
       this.step = 0;
       for (const it of this.items.values()) {
         it.policy.reset();

@@ -409,6 +409,20 @@
                   />
                 </div>
               </div>
+              <div class="row">
+                <label class="lab" for="ts-oiv"
+                  >Optimistic&nbsp;Initial&nbsp;Value</label
+                >
+                <div class="ctrl">
+                  <NumericStepper
+                    v-model="localPolicies.thompson.optimisticInitialValue"
+                    :min="0"
+                    :max="1000"
+                    :step="0.01"
+                    @update:modelValue="emitPolicies"
+                  />
+                </div>
+              </div>
             </div>
 
             <!-- Varianten -->
@@ -432,6 +446,7 @@
                 <div class="variants-row variants-row--head" role="row">
                   <div class="cell" role="columnheader">Bezeichnung</div>
                   <div class="cell" role="columnheader">Prior-Varianz</div>
+                  <div class="cell" role="columnheader">OIV</div>
                   <div class="cell cell--end" role="columnheader"></div>
                 </div>
 
@@ -452,6 +467,15 @@
                       @update:modelValue="emitPolicies"
                     />
                   </div>
+                  <div class="cell" role="cell">
+                    <NumericStepper
+                      v-model="v.optimisticInitialValue"
+                      :min="0"
+                      :max="1000"
+                      :step="0.01"
+                      @update:modelValue="emitPolicies"
+                    />
+                  </div>
                   <div class="cell cell--end" role="cell">
                     <button
                       class="btn btn-ghost btn-pill btn-sm"
@@ -465,6 +489,117 @@
 
                 <div
                   v-if="!localPolicies.thompson.variants.length"
+                  class="variants-empty"
+                >
+                  Keine Varianten angelegt.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gradient Bandit -->
+        <div class="algo-card">
+          <button
+            class="algo-toggle"
+            type="button"
+            @click="toggleAlgo('gradient')"
+            :aria-expanded="algoOpen.gradient ? 'true' : 'false'"
+          >
+            <div class="algo-head">
+              <div class="pill pill-gradient">Gradient Bandit</div>
+            </div>
+            <span class="algo-chevron" :class="{ open: algoOpen.gradient }">▾</span>
+          </button>
+          <div class="algo-body" v-show="algoOpen.gradient">
+            <div class="algo-grid">
+              <div class="row">
+                <label class="lab" for="grad-alpha">Lernrate (alpha)</label>
+                <div class="ctrl">
+                  <NumericStepper
+                    v-model="localPolicies.gradient.alpha"
+                    :min="0.001"
+                    :max="5"
+                    :step="0.001"
+                    @update:modelValue="emitPolicies"
+                  />
+                </div>
+              </div>
+              <div class="row">
+                <label class="lab" for="grad-oiv"
+                  >Optimistic&nbsp;Initial&nbsp;Value</label
+                >
+                <div class="ctrl">
+                  <NumericStepper
+                    v-model="localPolicies.gradient.optimisticInitialValue"
+                    :min="0"
+                    :max="1000"
+                    :step="0.01"
+                    @update:modelValue="emitPolicies"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="variants">
+              <div class="variants-head">
+                <div class="title">Varianten</div>
+                <button
+                  class="btn btn-pill"
+                  type="button"
+                  @click="addGradientVariant"
+                >
+                  + Variante
+                </button>
+              </div>
+
+              <div class="variants-table" role="table" aria-label="Gradient Bandit Varianten">
+                <div class="variants-row variants-row--head" role="row">
+                  <div class="cell" role="columnheader">Bezeichnung</div>
+                  <div class="cell" role="columnheader">Lernrate</div>
+                  <div class="cell" role="columnheader">OIV</div>
+                  <div class="cell cell--end" role="columnheader"></div>
+                </div>
+
+                <div
+                  class="variants-row"
+                  v-for="(v, i) in localPolicies.gradient.variants"
+                  :key="`gradient-${i}`"
+                  role="row"
+                  :class="{ 'is-alt': i % 2 === 1 }"
+                >
+                  <div class="cell" role="cell">Gradient v{{ i + 1 }}</div>
+                  <div class="cell" role="cell">
+                    <NumericStepper
+                      v-model="v.alpha"
+                      :min="0.001"
+                      :max="5"
+                      :step="0.001"
+                      @update:modelValue="emitPolicies"
+                    />
+                  </div>
+                  <div class="cell" role="cell">
+                    <NumericStepper
+                      v-model="v.optimisticInitialValue"
+                      :min="0"
+                      :max="1000"
+                      :step="0.01"
+                      @update:modelValue="emitPolicies"
+                    />
+                  </div>
+                  <div class="cell cell--end" role="cell">
+                    <button
+                      class="btn btn-ghost btn-pill btn-sm"
+                      type="button"
+                      @click="removeGradientVariant(i)"
+                    >
+                      Entfernen
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  v-if="!localPolicies.gradient.variants.length"
                   class="variants-empty"
                 >
                   Keine Varianten angelegt.
@@ -498,15 +633,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  reactive,
-  ref,
-  watch,
-  withDefaults,
-  defineProps,
-  defineEmits,
-  nextTick,
-} from "vue";
+import { reactive, ref, watch, nextTick } from "vue";
 import AlgorithmEditor from "./AlgorithmEditor.vue";
 import InfoTooltip from "./InfoTooltip.vue";
 import NumericStepper from "./ui/NumericStepper.vue";
@@ -528,6 +655,30 @@ const emit = defineEmits<{
   (e: "update:policyConfigs", v: any): void;
   (e: "update:open", v: boolean): void;
 }>();
+
+const BERN_DEFAULT_OIV = 0.99;
+const GAUSS_DEFAULT_GREEDY_OIV = 100;
+const GAUSS_DEFAULT_EPS_OIV = 150;
+const GAUSS_DEFAULT_UCB_OIV = 120;
+const GAUSS_DEFAULT_THOMPSON_OIV = 0;
+const GAUSS_DEFAULT_GRADIENT_OIV = 0;
+const DEFAULT_OIVS = {
+  bernoulli: {
+    greedy: BERN_DEFAULT_OIV,
+    epsgreedy: BERN_DEFAULT_OIV,
+    ucb: BERN_DEFAULT_OIV,
+    thompson: BERN_DEFAULT_OIV,
+    gradient: BERN_DEFAULT_OIV,
+  },
+  gaussian: {
+    greedy: GAUSS_DEFAULT_GREEDY_OIV,
+    epsgreedy: GAUSS_DEFAULT_EPS_OIV,
+    ucb: GAUSS_DEFAULT_UCB_OIV,
+    thompson: GAUSS_DEFAULT_THOMPSON_OIV,
+    gradient: GAUSS_DEFAULT_GRADIENT_OIV,
+  },
+} as const;
+const isClose = (a: number, b: number) => Math.abs(a - b) < 1e-6;
 
 /* Lokaler Shadow-State */
 const localEnv = reactive<any>({
@@ -552,14 +703,23 @@ const localPolicies = reactive<{
     variants: Array<{ confidence: number; optimisticInitialValue: number }>;
   };
   thompson: {
-    priorVariance?: number;
-    variants: Array<{ priorVariance: number }>;
+    priorVariance: number;
+    optimisticInitialValue: number;
+    variants: Array<{ priorVariance: number; optimisticInitialValue: number }>;
+  };
+  gradient: {
+    alpha: number;
+    optimisticInitialValue: number;
+    variants: Array<{ alpha: number; optimisticInitialValue: number }>;
   };
   customPolicies: CustomPolicyRegistration[];
 }>({
   greedy: {
     optimisticInitialValue:
-      props.policyConfigs?.greedy?.optimisticInitialValue ?? 100,
+      props.policyConfigs?.greedy?.optimisticInitialValue ??
+      (localEnv.type === "bernoulli"
+        ? BERN_DEFAULT_OIV
+        : GAUSS_DEFAULT_GREEDY_OIV),
     variants: Array.isArray(props.policyConfigs?.greedy?.variants)
       ? [...(props.policyConfigs?.greedy?.variants ?? [])]
       : [],
@@ -567,7 +727,10 @@ const localPolicies = reactive<{
   epsgreedy: {
     epsilon: props.policyConfigs?.epsgreedy?.epsilon ?? 0.1,
     optimisticInitialValue:
-      props.policyConfigs?.epsgreedy?.optimisticInitialValue ?? 150,
+      props.policyConfigs?.epsgreedy?.optimisticInitialValue ??
+      (localEnv.type === "bernoulli"
+        ? BERN_DEFAULT_OIV
+        : GAUSS_DEFAULT_EPS_OIV),
     variants: Array.isArray(props.policyConfigs?.epsgreedy?.variants)
       ? [...props.policyConfigs.epsgreedy.variants]
       : [],
@@ -576,15 +739,49 @@ const localPolicies = reactive<{
     confidence: props.policyConfigs?.ucb?.confidence ?? 1.0,
     optimisticInitialValue:
       props.policyConfigs?.ucb?.optimisticInitialValue ??
-      (localEnv.type === "bernoulli" ? 0.6 : 120),
+      (localEnv.type === "bernoulli"
+        ? BERN_DEFAULT_OIV
+        : GAUSS_DEFAULT_UCB_OIV),
     variants: Array.isArray(props.policyConfigs?.ucb?.variants)
       ? [...props.policyConfigs.ucb.variants]
       : [],
   },
   thompson: {
     priorVariance: props.policyConfigs?.thompson?.priorVariance ?? 1,
+    optimisticInitialValue:
+      props.policyConfigs?.thompson?.optimisticInitialValue ??
+      (localEnv.type === "bernoulli"
+        ? BERN_DEFAULT_OIV
+        : GAUSS_DEFAULT_THOMPSON_OIV),
     variants: Array.isArray(props.policyConfigs?.thompson?.variants)
-      ? [...props.policyConfigs.thompson.variants]
+      ? props.policyConfigs.thompson.variants.map((v: any) => ({
+          priorVariance:
+            v?.priorVariance ??
+            (props.policyConfigs?.thompson?.priorVariance ?? 1),
+          optimisticInitialValue:
+            v?.optimisticInitialValue ??
+            (localEnv.type === "bernoulli"
+              ? BERN_DEFAULT_OIV
+              : GAUSS_DEFAULT_THOMPSON_OIV),
+        }))
+      : [],
+  },
+  gradient: {
+    alpha: props.policyConfigs?.gradient?.alpha ?? 0.1,
+    optimisticInitialValue:
+      props.policyConfigs?.gradient?.optimisticInitialValue ??
+      (localEnv.type === "bernoulli"
+        ? BERN_DEFAULT_OIV
+        : GAUSS_DEFAULT_GRADIENT_OIV),
+    variants: Array.isArray(props.policyConfigs?.gradient?.variants)
+      ? props.policyConfigs.gradient.variants.map((v: any) => ({
+          alpha: v?.alpha ?? (props.policyConfigs?.gradient?.alpha ?? 0.1),
+          optimisticInitialValue:
+            v?.optimisticInitialValue ??
+            (localEnv.type === "bernoulli"
+              ? BERN_DEFAULT_OIV
+              : GAUSS_DEFAULT_GRADIENT_OIV),
+        }))
       : [],
   },
   customPolicies: Array.isArray(props.policyConfigs?.customPolicies)
@@ -599,6 +796,7 @@ const algoOpen = reactive({
   eps: false,
   ucb: false,
   thompson: false,
+  gradient: false,
 });
 
 function ensureVariantDefaults(source?: any) {
@@ -634,6 +832,16 @@ function ensureVariantDefaults(source?: any) {
   ) {
     localPolicies.thompson.variants.push({
       priorVariance: localPolicies.thompson.priorVariance ?? 1,
+      optimisticInitialValue: localPolicies.thompson.optimisticInitialValue,
+    });
+  }
+  if (
+    !Array.isArray(source?.gradient?.variants) &&
+    !localPolicies.gradient.variants.length
+  ) {
+    localPolicies.gradient.variants.push({
+      alpha: localPolicies.gradient.alpha,
+      optimisticInitialValue: localPolicies.gradient.optimisticInitialValue,
     });
   }
 }
@@ -683,8 +891,32 @@ watch(
 
     localPolicies.thompson.priorVariance =
       p.thompson?.priorVariance ?? localPolicies.thompson.priorVariance;
+    localPolicies.thompson.optimisticInitialValue =
+      p.thompson?.optimisticInitialValue ??
+      localPolicies.thompson.optimisticInitialValue;
     localPolicies.thompson.variants = Array.isArray(p.thompson?.variants)
-      ? [...p.thompson.variants]
+      ? p.thompson.variants.map((v: any) => ({
+          priorVariance:
+            v?.priorVariance ??
+            (p.thompson?.priorVariance ?? localPolicies.thompson.priorVariance),
+          optimisticInitialValue:
+            v?.optimisticInitialValue ??
+            localPolicies.thompson.optimisticInitialValue,
+        }))
+      : [];
+
+    localPolicies.gradient.alpha =
+      p.gradient?.alpha ?? localPolicies.gradient.alpha;
+    localPolicies.gradient.optimisticInitialValue =
+      p.gradient?.optimisticInitialValue ??
+      localPolicies.gradient.optimisticInitialValue;
+    localPolicies.gradient.variants = Array.isArray(p.gradient?.variants)
+      ? p.gradient.variants.map((v: any) => ({
+          alpha: v?.alpha ?? (p.gradient?.alpha ?? localPolicies.gradient.alpha),
+          optimisticInitialValue:
+            v?.optimisticInitialValue ??
+            localPolicies.gradient.optimisticInitialValue,
+        }))
       : [];
 
     localPolicies.customPolicies = Array.isArray(p.customPolicies)
@@ -706,10 +938,87 @@ watch(
   () => localEnv.type,
   (type, prev) => {
     if (type === prev) return;
+    const fromKey = prev === "bernoulli" ? "bernoulli" : "gaussian";
+    const toKey = type === "bernoulli" ? "bernoulli" : "gaussian";
+    const swapDefault = (
+      value: number | undefined,
+      algo: keyof (typeof DEFAULT_OIVS)["bernoulli"],
+    ) => {
+      const fromVal = DEFAULT_OIVS[fromKey][algo];
+      const toVal = DEFAULT_OIVS[toKey][algo];
+      if (typeof value !== "number") return toVal;
+      return isClose(value, fromVal) ? toVal : value;
+    };
+
+    localPolicies.greedy.optimisticInitialValue = swapDefault(
+      localPolicies.greedy.optimisticInitialValue,
+      "greedy",
+    );
+    localPolicies.greedy.variants = localPolicies.greedy.variants.map((v) => ({
+      ...v,
+      optimisticInitialValue: swapDefault(v.optimisticInitialValue, "greedy"),
+    }));
+
+    localPolicies.epsgreedy.optimisticInitialValue = swapDefault(
+      localPolicies.epsgreedy.optimisticInitialValue,
+      "epsgreedy",
+    );
+    localPolicies.epsgreedy.variants = localPolicies.epsgreedy.variants.map(
+      (v) => ({
+        ...v,
+        optimisticInitialValue: swapDefault(
+          v.optimisticInitialValue,
+          "epsgreedy",
+        ),
+      }),
+    );
+
+    localPolicies.ucb.optimisticInitialValue = swapDefault(
+      localPolicies.ucb.optimisticInitialValue,
+      "ucb",
+    );
+    localPolicies.ucb.variants = localPolicies.ucb.variants.map((v) => ({
+      ...v,
+      optimisticInitialValue: swapDefault(v.optimisticInitialValue, "ucb"),
+    }));
+
+    localPolicies.thompson.optimisticInitialValue = swapDefault(
+      localPolicies.thompson.optimisticInitialValue,
+      "thompson",
+    );
     if (!localPolicies.thompson.variants.length) {
       localPolicies.thompson.variants.push({
         priorVariance: localPolicies.thompson.priorVariance ?? 1,
+        optimisticInitialValue: localPolicies.thompson.optimisticInitialValue,
       });
+    } else {
+      localPolicies.thompson.variants = localPolicies.thompson.variants.map(
+        (v) => ({
+          ...v,
+          optimisticInitialValue: swapDefault(
+            v.optimisticInitialValue,
+            "thompson",
+          ),
+        }),
+      );
+    }
+    localPolicies.gradient.optimisticInitialValue = swapDefault(
+      localPolicies.gradient.optimisticInitialValue,
+      "gradient",
+    );
+    if (!localPolicies.gradient.variants.length) {
+      localPolicies.gradient.variants.push({
+        alpha: localPolicies.gradient.alpha,
+        optimisticInitialValue: localPolicies.gradient.optimisticInitialValue,
+      });
+    } else {
+      localPolicies.gradient.variants = localPolicies.gradient.variants.map((v) => ({
+        ...v,
+        optimisticInitialValue: swapDefault(
+          v.optimisticInitialValue,
+          "gradient",
+        ),
+      }));
     }
     ensureVariantDefaults(props.policyConfigs);
     emitPolicies();
@@ -758,9 +1067,14 @@ function emitPolicies() {
     },
     thompson: {
       priorVariance: localPolicies.thompson.priorVariance,
+      optimisticInitialValue: localPolicies.thompson.optimisticInitialValue,
       variants: [...localPolicies.thompson.variants],
     },
-    /* WICHTIG: KEIN gradient mehr – keine alpha-Felder, keine Varianten */
+    gradient: {
+      alpha: localPolicies.gradient.alpha,
+      optimisticInitialValue: localPolicies.gradient.optimisticInitialValue,
+      variants: [...localPolicies.gradient.variants],
+    },
     customPolicies: [...localPolicies.customPolicies],
   };
   emit("update:policyConfigs", out);
@@ -798,7 +1112,10 @@ function removeGreedyVariant(i: number) {
 function addEpsVariant() {
   localPolicies.epsgreedy.variants.push({
     epsilon: 0.1,
-    optimisticInitialValue: localEnv.type === "bernoulli" ? 0.6 : 150,
+    optimisticInitialValue:
+      localEnv.type === "bernoulli"
+        ? BERN_DEFAULT_OIV
+        : GAUSS_DEFAULT_EPS_OIV,
   });
   algoOpen.eps = true;
   emitPolicies();
@@ -812,7 +1129,10 @@ function removeEpsVariant(i: number) {
 function addUcbVariant() {
   localPolicies.ucb.variants.push({
     confidence: 1.0,
-    optimisticInitialValue: localEnv.type === "bernoulli" ? 0.6 : 120,
+    optimisticInitialValue:
+      localEnv.type === "bernoulli"
+        ? BERN_DEFAULT_OIV
+        : GAUSS_DEFAULT_UCB_OIV,
   });
   algoOpen.ucb = true;
   emitPolicies();
@@ -825,7 +1145,8 @@ function removeUcbVariant(i: number) {
 
 function addThompsonVariant() {
   localPolicies.thompson.variants.push({
-    priorVariance: localPolicies.thompson.priorVariance ?? 1
+    priorVariance: localPolicies.thompson.priorVariance ?? 1,
+    optimisticInitialValue: localPolicies.thompson.optimisticInitialValue,
   });
   algoOpen.thompson = true;
   emitPolicies();
@@ -833,6 +1154,20 @@ function addThompsonVariant() {
 }
 function removeThompsonVariant(i: number) {
   localPolicies.thompson.variants.splice(i, 1);
+  emitPolicies();
+}
+
+function addGradientVariant() {
+  localPolicies.gradient.variants.push({
+    alpha: localPolicies.gradient.alpha,
+    optimisticInitialValue: localPolicies.gradient.optimisticInitialValue,
+  });
+  algoOpen.gradient = true;
+  emitPolicies();
+  nextTick();
+}
+function removeGradientVariant(i: number) {
+  localPolicies.gradient.variants.splice(i, 1);
   emitPolicies();
 }
 
@@ -1107,6 +1442,10 @@ function onCustomToggle(e: Event) {
 .pill-thompson {
   border-color: #607d8b;
   color: #d9e4ea;
+}
+.pill-gradient {
+  border-color: #795548;
+  color: #ffe4d6;
 }
 .pill-custom {
   border-color: #ef5350;

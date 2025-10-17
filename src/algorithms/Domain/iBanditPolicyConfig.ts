@@ -4,4 +4,6 @@ export interface iBanditPolicyConfig {
   optimisticInitialValue?: number;
   epsilon?: number; // für epsilon-greedy
   confidence?: number; // für UCB
+  priorVariance?: number; // für Thompson (Gaussian)
+  alpha?: number; // für Gradient Bandit
 }

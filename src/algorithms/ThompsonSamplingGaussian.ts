@@ -2,6 +2,7 @@ import type { iPullResult } from "../env/Domain/iPullResult.ts";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
 import { randNormal } from "../utils/randNormal.ts";
 import { BasePolicy } from "./BasePolicy.ts";
+import type { iBanditPolicyConfig } from "./Domain/iBanditPolicyConfig.ts";
 
 /**
  * Thompson Sampling für Gaussian-Banditen.
@@ -23,7 +24,7 @@ export class ThompsonSamplingGaussian extends BasePolicy {
   protected priorVariance: number;
   protected obsVariances: number[] = [];
 
-  constructor(cfg: { seed?: number; priorVariance?: number } = {}) {
+  constructor(cfg: iBanditPolicyConfig = {}) {
     super(cfg);
     this.priorVariance = cfg.priorVariance ?? 1;
   }

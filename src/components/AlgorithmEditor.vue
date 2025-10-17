@@ -25,26 +25,28 @@
 
         <h4>Verfügbare Funktionen aus BasePolicy</h4>
         <table class="help-table">
-          <tr>
-            <td><code>this.nArms</code></td>
-            <td>Anzahl der verfügbaren Arme</td>
-          </tr>
-          <tr>
-            <td><code>this.rng()</code></td>
-            <td>Gibt eine Zufallszahl zwischen 0 und 1 zurück</td>
-          </tr>
-          <tr>
-            <td><code>this.randomArm()</code></td>
-            <td>Gibt einen zufälligen Armindex zurück</td>
-          </tr>
-          <tr>
-            <td><code>this.getEstimates()</code></td>
-            <td>Array mit aktuellen Schätzungen für jeden Arm</td>
-          </tr>
-          <tr>
-            <td><code>this.getCounts()</code></td>
-            <td>Array mit Anzahl der Ziehungen pro Arm</td>
-          </tr>
+          <tbody>
+            <tr>
+              <td><code>this.nArms</code></td>
+              <td>Anzahl der verfügbaren Arme</td>
+            </tr>
+            <tr>
+              <td><code>this.rng()</code></td>
+              <td>Gibt eine Zufallszahl zwischen 0 und 1 zurück</td>
+            </tr>
+            <tr>
+              <td><code>this.randomArm()</code></td>
+              <td>Gibt einen zufälligen Armindex zurück</td>
+            </tr>
+            <tr>
+              <td><code>this.getEstimates()</code></td>
+              <td>Array mit aktuellen Schätzungen für jeden Arm</td>
+            </tr>
+            <tr>
+              <td><code>this.getCounts()</code></td>
+              <td>Array mit Anzahl der Ziehungen pro Arm</td>
+            </tr>
+          </tbody>
         </table>
 
         <h4>Wichtige Hinweise</h4>
