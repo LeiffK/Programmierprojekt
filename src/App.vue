@@ -174,54 +174,11 @@
       :hooks="tutorialHooks"
       @close="showTutorial = false"
     />
-
-    <!-- In-App Reset-Dialog -->
-    <div
-      v-if="showReset"
-      class="modal-backdrop"
-      @click.self="closeResetModal"
-      @keydown.esc.prevent.stop="closeResetModal"
-    >
-      <div
-        class="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="reset-title"
-        aria-describedby="reset-desc"
-        tabindex="-1"
-        ref="modalRef"
-      >
-        <div class="modal-header">
-          <div class="modal-title" id="reset-title">
-            Zurücksetzen bestätigen
-          </div>
-        </div>
-        <div class="modal-body" id="reset-desc">
-          <p>
-            Alle Daten und Einstellungen gehen verloren. Dieser Schritt kann
-            nicht rückgängig gemacht werden.
-          </p>
-        </div>
-        <div class="modal-footer">
-          <button
-            class="btn btn-ghost btn-pill"
-            type="button"
-            @click="closeResetModal"
-            ref="cancelBtnRef"
-          >
-            Abbrechen
-          </button>
-          <button
-            class="btn btn-danger btn-pill"
-            type="button"
-            @click="confirmReset"
-            ref="confirmBtnRef"
-          >
-            Jetzt zurücksetzen
-          </button>
-        </div>
-      </div>
-    </div>
+    <ResetDialog
+      :open="showReset"
+      @close="closeResetModal"
+      @confirm="confirmReset"
+    />
   </div>
 </template>
 
@@ -247,9 +204,17 @@ import ComparisonTable from "./components/ComparisonTable.vue";
 import TopicUnderstanding from "./components/TopicUnderstanding.vue";
 import AppTutorial from "./components/AppTutorial.vue";
 import InfoTooltip from "./components/InfoTooltip.vue";
+import ResetDialog from "./components/ResetDialog.vue";
 
 /* Content */
 import { topicHtml } from "./content/topicContent";
+
+/* Styles */
+import "./App.css";
+
+/* Composables */
+import { useTutorialHooks } from "./composables/useTutorialHooks";
+import { useSeriesManagement } from "./composables/useSeriesManagement";
 
 /* Domain */
 import type { ManualStep } from "./domain/iHistory";
@@ -260,12 +225,8 @@ import type { iEnvConfig } from "./env/Domain/iEnvConfig";
 import type { iBanditEnv } from "./env/Domain/iBanditEnv";
 import { GaussianBanditEnv } from "./env/GaussianBanditEnv";
 import { BernoulliBanditEnv } from "./env/BernoulliBanditEnv";
-import type {
-  CustomPolicyRegistration,
-  iCustomPolicyRegistration,
-} from "./algorithms/Domain/iCustomPolicyRegistration";
+import type { iCustomPolicyRegistration } from "./algorithms/Domain/iCustomPolicyRegistration";
 import {
-  getSeriesState,
   setSeriesVisible,
   resetSeriesStore,
   ensureSeries,
@@ -317,20 +278,12 @@ function toggleDebug() {
 /* In-App-Reset-Dialog State */
 const showReset = ref(false);
 const resetBtnRef = ref<HTMLButtonElement | null>(null);
-const modalRef = ref<HTMLDivElement | null>(null);
-const cancelBtnRef = ref<HTMLButtonElement | null>(null);
-const confirmBtnRef = ref<HTMLButtonElement | null>(null);
 
 function openResetModal() {
   showReset.value = true;
-  nextTick(() => {
-    // Fokus in den Dialog legen
-    confirmBtnRef.value?.focus?.();
-  });
 }
 function closeResetModal() {
   showReset.value = false;
-  // Fokus zurück auf Auslöser
   nextTick(() => resetBtnRef.value?.focus?.());
 }
 async function confirmReset() {
@@ -529,132 +482,21 @@ function truthText(idx: number) {
 }
 
 /* Serien-Store + Algo-Serien */
-const seriesState = getSeriesState();
-type ActiveSeries = { id: string; label: string; color: string };
-const activeAlgoSeries = ref<ActiveSeries[]>([]);
-const algoHistory = ref<Record<string, ManualStep[]>>({});
-
-const PALETTE = [
-  "#4fc3f7",
-  "#f39c12",
-  "#e91e63",
-  "#9c27b0",
-  "#00bcd4",
-  "#8bc34a",
-  "#ffc107",
-  "#ff5722",
-  "#03a9f4",
-  "#cddc39",
-];
-let paletteIdx = 0;
-const nextColor = () => PALETTE[paletteIdx++ % PALETTE.length];
-
-function getCustomPolicies(): CustomPolicyRegistration[] {
-  const list = policyConfigs.value?.customPolicies;
-  return Array.isArray(list) ? (list as CustomPolicyRegistration[]) : [];
-}
-
-/* Runner-first: IDs aus dem tatsächlich konfigurierten Runner ableiten */
-function expectedAlgoIds(): string[] {
-  try {
-    const live = algorithmsRunner.getAll?.() ?? [];
-    if (Array.isArray(live) && live.length) {
-      return live.map((it: any) => String(it.id)).filter(Boolean);
-    }
-  } catch {}
-  // Fallback (nur falls Runner noch nicht bereit ist)
-  const eg: any = policyConfigs.value?.epsgreedy ?? {};
-  const list =
-    Array.isArray(eg.variants) && eg.variants.length
-      ? eg.variants
-      : [
-          {
-            epsilon: eg.epsilon ?? 0.1,
-            optimisticInitialValue: eg.optimisticInitialValue ?? 150,
-          },
-        ];
-  const ids: string[] =
-    list.length === 1
-      ? ["greedy", "epsgreedy"]
-      : ["greedy", ...list.map((_v: any, i: number) => `epsgreedy#${i + 1}`)];
-  getCustomPolicies().forEach((cp) => ids.push(cp.id));
-  return ids.filter((id, idx) => ids.indexOf(id) === idx);
-}
-
-function labelFromRunner(id: string): string | undefined {
-  try {
-    const all = algorithmsRunner.getAll?.() ?? [];
-    const hit = all.find((x: any) => String(x.id) === id);
-    return hit?.label;
-  } catch {}
-  return undefined;
-}
-
-function prettyLabelFromId(id: string) {
-  const live = labelFromRunner(id);
-  if (live) return live;
-
-  if (id === "greedy") return "Greedy";
-  if (id === "epsgreedy") {
-    const eps = Number(
-      policyConfigs.value?.epsgreedy?.epsilon ??
-        policyConfigs.value?.epsgreedy?.variants?.[0]?.epsilon ??
-        0.1,
-    );
-    return `ε-Greedy (ε=${eps.toFixed(2)})`;
-  }
-  const m = id.match(/^epsgreedy#(\d+)$/);
-  if (m) {
-    const idx = Number(m[1]) - 1;
-    const v = policyConfigs.value?.epsgreedy?.variants?.[idx];
-    const eps = Number(v?.epsilon ?? 0.1);
-    return `ε-Greedy v${m[1]} (ε=${eps.toFixed(2)})`;
-  }
-  const custom = getCustomPolicies().find((cp) => cp.id === id);
-  if (custom) return custom.name;
-  return id;
-}
-function setSeriesLabelLocal(id: string, label: string) {
-  const s = (seriesState as any)[id];
-  if (s && typeof s === "object") s.label = label;
-  const idx = activeAlgoSeries.value.findIndex((a) => a.id === id);
-  if (idx >= 0)
-    activeAlgoSeries.value[idx] = { ...activeAlgoSeries.value[idx], label };
-}
-function reconcileActiveSeries() {
-  const expected = new Set(expectedAlgoIds());
-  const newList: ActiveSeries[] = [];
-  expected.forEach((id) => {
-    const color = (seriesState as any)[id]?.color ?? nextColor();
-    const label = prettyLabelFromId(id);
-    ensureSeries(id, label, color);
-    newList.push({ id, label, color });
-    if (!algoHistory.value[id]) algoHistory.value[id] = [];
-  });
-  activeAlgoSeries.value = newList;
-  newList.forEach((s) => setSeriesLabelLocal(s.id, prettyLabelFromId(s.id)));
-}
-function isManualSeriesLike(obj: any) {
-  if (!obj) return false;
-  const id = String(obj.id ?? "");
-  const label = String(obj.label ?? "");
-  const color = String(obj.color ?? "");
-  return (
-    id === "manual" ||
-    /manuell/i.test(label) ||
-    color.toLowerCase() === "#4caf50"
-  );
-}
-function purgeManualSeriesHard() {
-  try {
-    setSeriesVisible("manual", false);
-  } catch {}
-  try {
-    delete (seriesState as any).manual;
-  } catch {}
-  manualHistory.value = [];
-  manualCounts.value = Array.from({ length: form.value.arms ?? 0 }, () => 0);
-}
+const {
+  seriesState,
+  activeAlgoSeries,
+  algoHistory,
+  reconcileActiveSeries,
+  isManualSeriesLike,
+  purgeManualSeriesHard,
+  resetPalette,
+  handleRunnerResult,
+} = useSeriesManagement({
+  policyConfigs,
+  form,
+  manualHistory,
+  manualCounts,
+});
 
 /* Runner-Events */
 const offRunner = algorithmsRunner.on((msg: any) => {
@@ -670,25 +512,12 @@ const offRunner = algorithmsRunner.on((msg: any) => {
     lastEventText.value = `Gestoppt: ${msg.payload?.reason ?? "—"}`;
 
   if (msg.type === "RESULT") {
-    const id = String(msg.payload.policyId);
-
-    // Selbstheilung: unbekannte Serien sofort registrieren
-    if (!activeAlgoSeries.value.some((s) => s.id === id)) {
-      const color = (seriesState as any)[id]?.color ?? nextColor();
-      const label = prettyLabelFromId(id);
-      ensureSeries(id, label, color);
-      activeAlgoSeries.value = [
-        ...activeAlgoSeries.value,
-        { id, label, color },
-      ];
-      setSeriesLabelLocal(id, label);
-    }
-
-    (algoHistory.value[id] ??= []).push({
-      action: msg.payload.action,
-      reward: msg.payload.reward,
-      isOptimal: msg.payload.isOptimal,
-    });
+    handleRunnerResult(
+      msg.payload.policyId,
+      msg.payload.action,
+      msg.payload.reward,
+      msg.payload.isOptimal,
+    );
   }
 });
 
@@ -722,7 +551,7 @@ function hardResetForMode(newMode: "manual" | "algo") {
   manualCounts.value = Array.from({ length: form.value.arms ?? 0 }, () => 0);
   algoHistory.value = {};
   activeAlgoSeries.value = [];
-  paletteIdx = 0;
+  resetPalette();
   try {
     if ((seriesState as any).manual) delete (seriesState as any).manual;
     Object.keys(seriesState as any).forEach((k) => {
@@ -778,7 +607,7 @@ async function onManual(a: number) {
   }
 }
 function onEnvLog(msg: string) {
-  const looksJson = /^\s*\{[\s\S]*\}\s*$/.test(String(msg));
+  const looksJson = /^\s*{[\s\S]*}\s*$/.test(String(msg));
   if (looksJson && !debugEnabled.value) return;
   lastEventText.value = String(msg);
 }
@@ -903,325 +732,14 @@ function startTutorial() {
   showTutorial.value = true;
 }
 
-const tutorialHooks = {
-  resetBaseline: async () => {
-    if (mode.value !== "manual") {
-      mode.value = "manual";
-      onModeChange();
-      await nextTick();
-    }
-    try {
-      algorithmsRunner.stop("tutorial-baseline");
-    } catch {}
-    onRunnerReset?.();
-    form.value.arms = 3;
-    settingsOpen.value = false;
-    tableOpen.value = false;
-    await nextTick();
-  },
-  restoreBaseline: async () => {
-    if (mode.value !== "manual") {
-      mode.value = "manual";
-      onModeChange();
-      await nextTick();
-    }
-    try {
-      algorithmsRunner.stop("tutorial-restore");
-    } catch {}
-    onRunnerReset?.();
-    form.value.arms = 3;
-    settingsOpen.value = false;
-    tableOpen.value = false;
-    await nextTick();
-  },
-  incArms: () => {
-    form.value.arms = Math.max(1, (form.value.arms ?? 1) + 1);
-  },
-  decArms: () => {
-    form.value.arms = Math.max(1, (form.value.arms ?? 1) - 1);
-  },
-  openAdvanced: () => {
-    settingsOpen.value = true;
-  },
-  closeAdvanced: () => {
-    settingsOpen.value = false;
-  },
-  switchToManual: async () => {
-    if (mode.value !== "manual") {
-      mode.value = "manual";
-      onModeChange();
-      await nextTick();
-    }
-  },
-  switchToAlgo: async () => {
-    if (mode.value !== "algo") {
-      mode.value = "algo";
-      onModeChange();
-      await nextTick();
-    }
-  },
-  manualClick: async (i: number) => {
-    await onManual(i);
-  },
-  runnerStart: async () => {
-    try {
-      algorithmsRunner.start();
-    } catch {}
-  },
-  runnerPause: async () => {
-    try {
-      algorithmsRunner.pause();
-    } catch {}
-  },
-  setMetric: async (m: string) => {
-    chartMetric.value = m as any;
-    await nextTick();
-  },
-  toggleSeries: async (id: string, v: boolean) => {
-    setSeriesVisible(id, v);
-    await nextTick();
-  },
-  openTable: async () => {
-    tableOpen.value = true;
-    await nextTick();
-  },
-  closeTable: async () => {
-    tableOpen.value = false;
-    await nextTick();
-  },
-};
+const tutorialHooks = useTutorialHooks({
+  mode,
+  onModeChange,
+  onRunnerReset,
+  form,
+  settingsOpen,
+  tableOpen,
+  onManual,
+  chartMetric,
+});
 </script>
-
-<style>
-/* Header */
-.shell {
-  min-height: 100vh;
-  background: #0e0e0e;
-  color: #fff;
-}
-.bar {
-  background: #111;
-  border-bottom: 1px solid #1c1c1c;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
-.bar-inner {
-  width: 100%;
-  margin: 0;
-  padding: 12px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.brand {
-  font-weight: 700;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-.yt-logo {
-  width: 28px;
-  height: 20px;
-  display: inline-block;
-}
-.yt-logo rect {
-  fill: #ff0000; /* YouTube-Primärrot */
-}
-.yt-logo polygon {
-  fill: #ffffff;
-}
-.bar-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  white-space: nowrap;
-  padding-right: 12px;
-}
-.btn {
-  height: 36px;
-  line-height: 36px;
-  padding: 0 14px;
-  border: 1px solid #333;
-  background: #1a1a1a;
-  color: #e5e5e5;
-  border-radius: 10px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.btn .icon {
-  width: 16px;
-  height: 16px;
-}
-.btn:hover {
-  background: #202020;
-  border-color: #3a3a3a;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.08);
-}
-.btn-pill {
-  border-radius: 999px;
-}
-.btn-ghost {
-  background: #171717;
-  border-color: #2a2a2a;
-}
-.btn-ghost:hover {
-  background: #1d1d1d;
-  border-color: #333;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.06);
-}
-.btn-primary {
-  background: #1f2a44;
-  border-color: #2b3a5c;
-}
-.btn-primary:hover {
-  background: #243255;
-  border-color: #3a4a6c;
-  box-shadow: 0 0 10px rgba(79, 130, 246, 0.25);
-}
-
-/* Glow-Effekt für Tutorial-Button */
-#btn-tutorial {
-  position: relative;
-  animation: glow-pulse 3s ease-in-out infinite;
-}
-
-@keyframes glow-pulse {
-  0%, 100% {
-    box-shadow: 0 0 3px rgba(59, 130, 246, 0.2),
-                0 0 6px rgba(59, 130, 246, 0.15);
-  }
-  50% {
-    box-shadow: 0 0 6px rgba(59, 130, 246, 0.35),
-                0 0 12px rgba(59, 130, 246, 0.25),
-                0 0 18px rgba(59, 130, 246, 0.15);
-  }
-}
-.btn-danger {
-  background: #7a1f1f;
-  border-color: #9b2b2b;
-}
-.btn-danger:hover {
-  background: #8b2525;
-  border-color: #ab3b3b;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
-}
-
-/* Layout */
-.wrap {
-  width: 100%;
-  margin: 0;
-  padding: 16px 24px;
-}
-.page-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-}
-.col-left,
-.col-right {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.card {
-  background: #151515;
-  border: 1px solid #282828;
-  border-radius: 10px;
-  padding: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-h2 {
-  margin: 0 0 8px 0;
-}
-.thumb-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-.toast {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 10px 12px;
-  border: 1px solid #2d2d2d;
-  border-radius: 10px;
-  background: #1c1c1c;
-}
-.pill {
-  display: inline-block;
-  background: #222;
-  border: 1px solid #333;
-  border-radius: 999px;
-  padding: 3px 8px;
-  font-size: 12px;
-}
-.muted {
-  color: #9aa0a6;
-}
-
-/* Modal (In-App) */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(10, 10, 10, 0.8);
-  backdrop-filter: blur(3px);
-  display: grid;
-  place-items: center;
-  z-index: 1000;
-  padding: 16px;
-}
-.modal {
-  width: 100%;
-  max-width: 520px;
-  background: #181818;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
-  outline: none;
-}
-.modal-header {
-  padding: 14px 16px 6px 16px;
-  border-bottom: 1px solid #2d2d2d;
-  background: #1c1c1c;
-}
-.modal-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #f0f0f0;
-}
-.modal-body {
-  padding: 16px;
-  color: #e5e7eb;
-  background: #181818;
-}
-.modal-footer {
-  padding: 12px 16px 16px 16px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  border-top: 1px solid #2d2d2d;
-  background: #1c1c1c;
-}
-
-/* Responsive */
-@media (max-width: 980px) {
-  .page-grid {
-    grid-template-columns: 1fr;
-  }
-  .thumb-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (max-width: 620px) {
-  .thumb-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
