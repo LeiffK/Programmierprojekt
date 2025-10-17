@@ -41,19 +41,6 @@
               </button>
             </div>
           </div>
-
-          <div class="row">
-            <label class="lab" for="arms">Arme</label>
-            <div class="ctrl">
-              <NumericStepper
-                v-model="localEnv.arms"
-                :min="1"
-                :max="64"
-                :step="1"
-                @update:modelValue="emitEnv"
-              />
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1011,6 +998,7 @@ function onCustomToggle(e: Event) {
 .seed-line {
   display: flex;
   gap: 8px;
+  justify-content: flex-end;
 }
 
 .input {

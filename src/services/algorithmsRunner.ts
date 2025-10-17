@@ -174,12 +174,35 @@ class AlgorithmsRunner {
       this.items.clear();
       this.step = 0;
 
-      // eigener Env je Policy mit Seed-Offset
-      const mkEnv = (seedOffset: number) => {
-        const initCfg = {
-          ...cfg.envConfig,
-          seed: (cfg.envConfig.seed ?? 0) + seedOffset,
+      const cloneEnvConfig = (source: iEnvConfig): iEnvConfig => {
+        const out: iEnvConfig = {
+          ...source,
         };
+        if (Array.isArray(source.probabilities)) {
+          out.probabilities = [...source.probabilities];
+        }
+        if (Array.isArray(source.means)) {
+          out.means = [...source.means];
+        }
+        if (Array.isArray(source.stdDev)) {
+          out.stdDev = [...source.stdDev];
+        }
+        return out;
+      };
+
+      // Basis-Umgebung einmal erzeugen, damit alle Policies identische Wahrscheinlichkeiten/Mittelwerte teilen
+      const baseEnv =
+        cfg.envConfig.type === "bernoulli"
+          ? new BernoulliBanditEnv(cloneEnvConfig(cfg.envConfig))
+          : new GaussianBanditEnv(cloneEnvConfig(cfg.envConfig));
+
+      const sharedEnvConfig = cloneEnvConfig(baseEnv.config);
+      const baseSeed = cfg.envConfig.seed ?? 0;
+
+      // eigener Env je Policy – identische Parameter, aber eigener RNG-Seed
+      const mkEnv = (seedOffset: number) => {
+        const initCfg = cloneEnvConfig(sharedEnvConfig);
+        initCfg.seed = baseSeed + seedOffset;
         return initCfg.type === "bernoulli"
           ? new BernoulliBanditEnv(initCfg)
           : new GaussianBanditEnv(initCfg);
