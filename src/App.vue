@@ -96,7 +96,7 @@
           </div>
 
           <section id="manual-section" class="card" v-if="mode === 'manual'">
-            <h2>Wähle, welches Thumbnail am besten performed</h2>
+            <h2>Wähle, welches Thumbnail am besten performen wird <InfoTooltip text="Hier testest du manuell: Klicke auf ein Thumbnail und sieh sofort, wie viel Reward es bringt. Gleichzeitig lernen die Algorithmen im Hintergrund mit – so kannst du deine eigene Intuition direkt mit den automatischen Strategien vergleichen." /></h2>
 
             <div class="thumb-grid">
               <ThumbnailCard
@@ -138,7 +138,7 @@
 
         <div class="col-right">
           <section id="chart-area" class="card">
-            <h2>Verläufe</h2>
+            <h2>Verläufe <InfoTooltip text="Sieh live, wie sich die Algorithmen entwickeln. Wähle oben eine Metrik aus (z.B. Gesamt-Reward oder Regret) und klicke in der Legende auf Algorithmen, um einzelne Linien ein- oder auszublenden. So erkennst du schnell, welche Strategie am besten funktioniert." /></h2>
             <ChartArea
               :key="chartKey"
               :series="chartSeries"
@@ -246,6 +246,10 @@ import ChartArea from "./components/ChartArea.vue";
 import ComparisonTable from "./components/ComparisonTable.vue";
 import TopicUnderstanding from "./components/TopicUnderstanding.vue";
 import AppTutorial from "./components/AppTutorial.vue";
+import InfoTooltip from "./components/InfoTooltip.vue";
+
+/* Content */
+import { topicHtml } from "./content/topicContent";
 
 /* Domain */
 import type { ManualStep } from "./domain/iHistory";
@@ -893,27 +897,6 @@ watch(
 
 /* ---------------- Info/Overlays ---------------- */
 const showTopic = ref(false);
-const topicHtml = `
-  <h2>Multi-Armed-Bandits — Überblick</h2>
-  <p>Banditenprobleme modellieren Sequenzen von Entscheidungen unter Unsicherheit. In jedem Schritt wird ein Arm gewählt, eine Belohnung realisiert und das Wissen aktualisiert.</p>
-  <h3>Exploration vs. Exploitation</h3>
-  <ul>
-    <li><b>Exploration</b>: neue Informationen sammeln</li>
-    <li><b>Exploitation</b>: aktuelle beste Option nutzen</li>
-  </ul>
-  <h3>Policies</h3>
-  <ul>
-    <li><b>Greedy</b>: wählt stets den höchsten aktuellen Erwartungswert</li>
-    <li><b>ε-Greedy</b>: mit Wahrscheinlichkeit ε explorieren, sonst exploiten</li>
-    <li><b>UCB</b>: optimistische Schranken für wohldosierte Exploration</li>
-    <li><b>Thompson</b>: probabilistische Auswahl nach Posterior</li>
-    <li><b>Gradient</b>: Präferenzlernen via Softmax</li>
-  </ul>
-  <h3>KPIs</h3>
-  <ul>
-    <li>Kumulierter und durchschnittlicher Reward, Best-Quote (Anteil optimaler Züge), Regret (optional)</li>
-  </ul>
-`;
 
 const showTutorial = ref(false);
 function startTutorial() {
@@ -1078,6 +1061,7 @@ const tutorialHooks = {
 .btn:hover {
   background: #202020;
   border-color: #3a3a3a;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.08);
 }
 .btn-pill {
   border-radius: 999px;
@@ -1089,6 +1073,7 @@ const tutorialHooks = {
 .btn-ghost:hover {
   background: #1d1d1d;
   border-color: #333;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.06);
 }
 .btn-primary {
   background: #1f2a44;
@@ -1097,6 +1082,25 @@ const tutorialHooks = {
 .btn-primary:hover {
   background: #243255;
   border-color: #3a4a6c;
+  box-shadow: 0 0 10px rgba(79, 130, 246, 0.25);
+}
+
+/* Glow-Effekt für Tutorial-Button */
+#btn-tutorial {
+  position: relative;
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 3px rgba(59, 130, 246, 0.2),
+                0 0 6px rgba(59, 130, 246, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.35),
+                0 0 12px rgba(59, 130, 246, 0.25),
+                0 0 18px rgba(59, 130, 246, 0.15);
+  }
 }
 .btn-danger {
   background: #7a1f1f;
@@ -1105,6 +1109,7 @@ const tutorialHooks = {
 .btn-danger:hover {
   background: #8b2525;
   border-color: #ab3b3b;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
 }
 
 /* Layout */
