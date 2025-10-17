@@ -127,9 +127,28 @@ const option = computed<EChartsOption>(() => {
     ...props.series.map((s) => s.points.cumReward.length),
   );
 
+  // Y-Achsen-Label je nach Metrik
+  const yAxisName = computed(() => {
+    switch (localMetric.value) {
+      case "cumReward":
+      case "avgReward":
+        return "Watchtime (Sekunden)";
+      case "regret":
+        return "Regret";
+      case "bestRate":
+        return "Best-Quote (%)";
+      default:
+        return "Wert";
+    }
+  });
+
   // Achsen als 'any' typisiert, um TS-Inkompatibilitäten zwischen ECharts-Versionen zu vermeiden
   const xAxis: any = {
     type: "value",
+    name: "Clicks",
+    nameLocation: "middle",
+    nameGap: 25,
+    nameTextStyle: { color: "#c0c0c0", fontSize: 12 },
     min: 1,
     max: maxStep,
     boundaryGap: [0, 0] as [number, number],
@@ -139,6 +158,10 @@ const option = computed<EChartsOption>(() => {
   };
   const yAxis: any = {
     type: "value",
+    name: yAxisName.value,
+    nameLocation: "middle",
+    nameGap: 45,
+    nameTextStyle: { color: "#c0c0c0", fontSize: 12 },
     axisLine: { lineStyle: { color: "#333" } },
     axisLabel: { color: "#9aa0a6" },
     splitLine: { show: true, lineStyle: { color: "#202020" } },

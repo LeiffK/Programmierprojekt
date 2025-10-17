@@ -24,8 +24,6 @@
           <thead>
             <tr>
               <th>Serie</th>
-              <th>Typ</th>
-              <th class="num">n</th>
               <th class="num">Σ&nbsp;Reward</th>
               <th class="num">Ø&nbsp;Reward</th>
               <th class="num">Best-Quote</th>
@@ -56,12 +54,6 @@
                   {{ r.label }}
                 </span>
               </td>
-
-              <!-- Typ -->
-              <td>{{ deriveType(r) }}</td>
-
-              <!-- n -->
-              <td class="num">{{ pickInt(r.n, r.count, r.steps) }}</td>
 
               <!-- Σ Reward -->
               <td class="num">

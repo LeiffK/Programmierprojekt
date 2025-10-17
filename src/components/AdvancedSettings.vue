@@ -6,9 +6,7 @@
       @click="toggleOpen"
       :aria-expanded="openLocal ? 'true' : 'false'"
     >
-      <div class="head-left">
-        <span class="badge">Erweiterte Einstellungen</span>
-      </div>
+      <h2>Erweiterte Einstellungen</h2>
       <div class="head-right">
         <span class="chev" :class="{ open: openLocal }">▾</span>
       </div>
@@ -957,7 +955,7 @@ function onCustomToggle(e: Event) {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 12px 14px;
+  padding: 8px 10px;
   border: none;
   background: var(--bg-17);
   border-bottom: 1px solid var(--br-22);
@@ -968,12 +966,9 @@ function onCustomToggle(e: Event) {
 .head:hover {
   background: #1b1b1b;
 }
-.head-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.badge {
+.head h2 {
+  margin: 0;
+  font-size: 16px;
   font-weight: 600;
 }
 .head-right .chev {

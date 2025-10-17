@@ -277,7 +277,11 @@ import { algorithmsRunner } from "./services/algorithmsRunner";
 import { attachRunner } from "./services/debugStore";
 
 /* ---------------- Basiszustand ---------------- */
-const form = ref<iEnvConfig>({ type: "gaussian", arms: 3, seed: 12345 });
+const form = ref<iEnvConfig>({
+  type: "gaussian",
+  arms: 3,
+  seed: Math.floor(Math.random() * 1_000_000)
+});
 const busy = ref(false);
 const lastEventText = ref("—");
 const mode = ref<"manual" | "algo">("manual");
@@ -1055,14 +1059,15 @@ const tutorialHooks = {
   align-items: center;
   gap: 10px;
   white-space: nowrap;
+  padding-right: 12px;
 }
 .btn {
   height: 36px;
   line-height: 36px;
   padding: 0 14px;
-  border: 1px solid #2d2d2d;
-  background: #171717;
-  color: #eaeaea;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #e5e5e5;
   border-radius: 10px;
   cursor: pointer;
   display: inline-flex;
@@ -1074,13 +1079,19 @@ const tutorialHooks = {
   height: 16px;
 }
 .btn:hover {
-  background: #1b1b1b;
+  background: #202020;
+  border-color: #3a3a3a;
 }
 .btn-pill {
   border-radius: 999px;
 }
 .btn-ghost {
-  background: #161616;
+  background: #171717;
+  border-color: #2a2a2a;
+}
+.btn-ghost:hover {
+  background: #1d1d1d;
+  border-color: #333;
 }
 .btn-primary {
   background: #1f2a44;
@@ -1088,6 +1099,7 @@ const tutorialHooks = {
 }
 .btn-primary:hover {
   background: #243255;
+  border-color: #3a4a6c;
 }
 .btn-danger {
   background: #7a1f1f;
@@ -1095,6 +1107,7 @@ const tutorialHooks = {
 }
 .btn-danger:hover {
   background: #8b2525;
+  border-color: #ab3b3b;
 }
 
 /* Layout */
@@ -1115,10 +1128,11 @@ const tutorialHooks = {
   gap: 16px;
 }
 .card {
-  background: #141414;
-  border: 1px solid #222;
+  background: #151515;
+  border: 1px solid #282828;
   border-radius: 10px;
   padding: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 h2 {
   margin: 0 0 8px 0;
@@ -1134,14 +1148,14 @@ h2 {
   gap: 10px;
   margin-top: 12px;
   padding: 10px 12px;
-  border: 1px solid #2a2a2a;
+  border: 1px solid #2d2d2d;
   border-radius: 10px;
-  background: #191919;
+  background: #1c1c1c;
 }
 .pill {
   display: inline-block;
-  background: #1a1a1a;
-  border: 1px solid #262626;
+  background: #222;
+  border: 1px solid #333;
   border-radius: 999px;
   padding: 3px 8px;
   font-size: 12px;
@@ -1154,8 +1168,8 @@ h2 {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 15, 15, 0.7);
-  backdrop-filter: blur(2px);
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(3px);
   display: grid;
   place-items: center;
   z-index: 1000;
@@ -1164,30 +1178,34 @@ h2 {
 .modal {
   width: 100%;
   max-width: 520px;
-  background: #141414;
-  border: 1px solid #242424;
+  background: #181818;
+  border: 1px solid #2a2a2a;
   border-radius: 12px;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
   outline: none;
 }
 .modal-header {
   padding: 14px 16px 6px 16px;
-  border-bottom: 1px solid #1f1f1f;
+  border-bottom: 1px solid #2d2d2d;
+  background: #1c1c1c;
 }
 .modal-title {
   font-size: 16px;
   font-weight: 700;
+  color: #f0f0f0;
 }
 .modal-body {
   padding: 16px;
   color: #e5e7eb;
+  background: #181818;
 }
 .modal-footer {
   padding: 12px 16px 16px 16px;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  border-top: 1px solid #1f1f1f;
+  border-top: 1px solid #2d2d2d;
+  background: #1c1c1c;
 }
 
 /* Responsive */
