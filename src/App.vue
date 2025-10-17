@@ -96,11 +96,7 @@
           </div>
 
           <section id="manual-section" class="card" v-if="mode === 'manual'">
-            <h2>Manuell testen</h2>
-            <p class="muted">
-              Jeder Klick triggert zusätzlich alle Algorithmen für einen
-              Schritt.
-            </p>
+            <h2>Wähle, welches Thumbnail am besten performed</h2>
 
             <div class="thumb-grid">
               <ThumbnailCard
@@ -146,6 +142,7 @@
             <ChartArea
               :key="chartKey"
               :series="chartSeries"
+              :env-type="form.type"
               v-model="chartMetric"
               @toggle="onChartToggle"
             />

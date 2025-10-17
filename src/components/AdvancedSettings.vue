@@ -1,16 +1,21 @@
 <template>
   <section class="card adv" aria-label="Erweiterte Einstellungen">
     <!-- Header / Aufklappbar -->
-    <button
-      class="head"
+    <header
+      class="accordion-head"
+      role="button"
+      tabindex="0"
       @click="toggleOpen"
-      :aria-expanded="openLocal ? 'true' : 'false'"
+      @keydown.enter.prevent="toggleOpen"
+      @keydown.space.prevent="toggleOpen"
     >
       <h2>Erweiterte Einstellungen</h2>
-      <div class="head-right">
-        <span class="chev" :class="{ open: openLocal }">▾</span>
+      <div class="meta">
+        <button class="btn btn-ghost btn-pill" type="button">
+          {{ openLocal ? "Einklappen" : "Einblenden" }}
+        </button>
       </div>
-    </button>
+    </header>
 
     <div v-show="openLocal" class="body">
       <!-- Umgebung -->
@@ -946,36 +951,45 @@ function onCustomToggle(e: Event) {
   --br-26: #262626;
 
   padding: 0;
-  background: var(--bg-14);
-  border-color: var(--br-22);
-  border-radius: 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
-.head {
+.accordion-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
   padding: 8px 10px;
-  border: none;
-  background: var(--bg-17);
-  border-bottom: 1px solid var(--br-22);
-  border-radius: 12px 12px 0 0;
-  color: #eaeaea;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  background: #171717;
+  margin-bottom: 8px;
   cursor: pointer;
 }
-.head:hover {
-  background: #1b1b1b;
-}
-.head h2 {
+.accordion-head h2 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
 }
-.head-right .chev {
-  transition: transform 0.18s ease;
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.head-right .chev.open {
-  transform: rotate(180deg);
+.btn {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #2d2d2d;
+  background: #171717;
+  color: #eaeaea;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.btn-ghost {
+  background: #161616;
+}
+.btn-pill {
+  border-radius: 999px;
 }
 .body {
   padding: 12px;
