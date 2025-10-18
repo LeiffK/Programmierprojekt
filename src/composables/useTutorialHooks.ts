@@ -13,6 +13,7 @@ export interface TutorialHooksOptions {
   tableOpen: Ref<boolean>;
   onManual: (i: number) => Promise<void>;
   chartMetric: Ref<ChartMetric>;
+  showTruthValues: Ref<boolean>;
 }
 
 export function useTutorialHooks(options: TutorialHooksOptions) {
@@ -25,6 +26,7 @@ export function useTutorialHooks(options: TutorialHooksOptions) {
     tableOpen,
     onManual,
     chartMetric,
+    showTruthValues,
   } = options;
 
   return {
@@ -111,6 +113,14 @@ export function useTutorialHooks(options: TutorialHooksOptions) {
     },
     closeTable: async () => {
       tableOpen.value = false;
+      await nextTick();
+    },
+    openTruthValues: async () => {
+      showTruthValues.value = true;
+      await nextTick();
+    },
+    closeTruthValues: async () => {
+      showTruthValues.value = false;
       await nextTick();
     },
   };

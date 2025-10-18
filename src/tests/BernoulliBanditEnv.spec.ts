@@ -84,4 +84,32 @@ describe("BernoulliBanditEnv", () => {
       expect(p).toBeLessThanOrEqual(0.99);
     });
   });
+
+  it("throws error when type is not 'bernoulli'", () => {
+    const invalidConfig: iEnvConfig = {
+      type: "gaussian" as any,
+      arms: 2,
+      seed: 123,
+    };
+
+    expect(() => new BernoulliBanditEnv(invalidConfig)).toThrow(
+      'BernoulliBanditEnv expects type to be "bernoulli"',
+    );
+  });
+
+  it("getProbs returns a copy of probabilities", () => {
+    const env = new BernoulliBanditEnv(baseConfig);
+    const probs1 = env.getProbs();
+    const probs2 = env.getProbs();
+
+    // Sollten gleich sein
+    expect(probs1).toEqual(probs2);
+
+    // Aber unterschiedliche Array-Referenzen (Kopie)
+    expect(probs1).not.toBe(probs2);
+
+    // Modifikation der Kopie sollte Original nicht beeinflussen
+    probs1[0] = 999;
+    expect(env.getProbs()[0]).not.toBe(999);
+  });
 });

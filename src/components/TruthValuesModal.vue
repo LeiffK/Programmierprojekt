@@ -27,7 +27,7 @@
                 >★ Bestes</span
               >
             </div>
-            <div class="truth-value">{{ value.toFixed(3) }}</div>
+            <div class="truth-value">{{ formatValue(value) }}</div>
           </div>
         </div>
       </div>
@@ -41,6 +41,7 @@ import { computed } from "vue";
 const props = defineProps<{
   open: boolean;
   truthValues: number[];
+  envType: "bernoulli" | "gaussian";
 }>();
 
 defineEmits<{ (e: "close"): void }>();
@@ -57,6 +58,14 @@ const bestIndex = computed(() => {
   }
   return maxIdx;
 });
+
+const formatValue = (value: number) => {
+  if (props.envType === "bernoulli") {
+    return `${(value * 100).toFixed(2)}%`;
+  } else {
+    return `${value.toFixed(2)}s`;
+  }
+};
 </script>
 
 <style scoped>

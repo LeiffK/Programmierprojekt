@@ -16,75 +16,82 @@
           <span>Bandit-Studio</span>
         </div>
         <div class="bar-actions">
-          <!-- Reset-Button: öffnet In-App-Dialog -->
-          <button
-            class="btn btn-ghost btn-pill"
-            type="button"
-            @click="openResetModal"
-            title="Alle Einstellungen & Daten zurücksetzen"
-            aria-label="Alle Einstellungen und lokal gespeicherten Daten zurücksetzen"
-            ref="resetBtnRef"
-          >
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M12 5V2L7 6l5 4V7a5 5 0 1 1-4.9 6.1 1 1 0 0 0-1.96.4A7 7 0 1 0 12 5z"
-                fill="currentColor"
-              />
-            </svg>
-            Zurücksetzen
-          </button>
+          <!-- Zentrale Buttons -->
+          <div class="bar-actions-center">
+            <button
+              class="btn btn-ghost btn-pill"
+              @click="showTopic = true"
+              title="Thema verstehen"
+            >
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2zm0 15a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm1-4.75h-2V7h2v5.25z"
+                  fill="currentColor"
+                />
+              </svg>
+              Thema verstehen
+            </button>
 
-          <!-- Debug-Schalter -->
-          <button
-            class="btn btn-pill"
-            :class="debugEnabled ? 'btn-primary' : 'btn-ghost'"
-            type="button"
-            :aria-pressed="debugEnabled ? 'true' : 'false'"
-            @click="toggleDebug"
-            title="Debug-Modus ein/aus"
-          >
-            {{ debugEnabled ? "Debug: an" : "Debug: aus" }}
-          </button>
+            <button
+              id="btn-tutorial"
+              class="btn btn-primary btn-pill"
+              @click="startTutorial"
+              title="Anwendung verstehen"
+            >
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 5v14l11-7z" fill="currentColor" />
+              </svg>
+              Anwendung verstehen
+            </button>
 
-          <button
-            class="btn btn-ghost btn-pill"
-            @click="showTruthValues = true"
-            title="Wahre Werte anzeigen"
-          >
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
-                fill="currentColor"
-              />
-            </svg>
-            Wahre Werte
-          </button>
+            <button
+              id="btn-truth-values"
+              class="btn btn-ghost btn-pill btn-gold-glow"
+              @click="showTruthValues = true"
+              title="Wahre Werte anzeigen"
+            >
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+                  fill="currentColor"
+                />
+              </svg>
+              Wahre Werte
+            </button>
+          </div>
 
-          <button
-            class="btn btn-ghost btn-pill"
-            @click="showTopic = true"
-            title="Thema verstehen"
-          >
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2zm0 15a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm1-4.75h-2V7h2v5.25z"
-                fill="currentColor"
-              />
-            </svg>
-            Thema verstehen
-          </button>
+          <!-- Rechte Buttons -->
+          <div class="bar-actions-right">
+            <!-- Reset-Button: öffnet In-App-Dialog -->
+            <button
+              class="btn btn-ghost btn-pill"
+              type="button"
+              @click="openResetModal"
+              title="Alle Einstellungen & Daten zurücksetzen"
+              aria-label="Alle Einstellungen und lokal gespeicherten Daten zurücksetzen"
+              ref="resetBtnRef"
+            >
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 5V2L7 6l5 4V7a5 5 0 1 1-4.9 6.1 1 1 0 0 0-1.96.4A7 7 0 1 0 12 5z"
+                  fill="currentColor"
+                />
+              </svg>
+              Zurücksetzen
+            </button>
 
-          <button
-            id="btn-tutorial"
-            class="btn btn-primary btn-pill"
-            @click="startTutorial"
-            title="Anwendung verstehen"
-          >
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M8 5v14l11-7z" fill="currentColor" />
-            </svg>
-            Anwendung verstehen
-          </button>
+            <!-- Debug-Schalter -->
+            <button
+              class="btn btn-pill"
+              :class="debugEnabled ? 'btn-primary' : 'btn-ghost'"
+              type="button"
+              :aria-pressed="debugEnabled ? 'true' : 'false'"
+              @click="toggleDebug"
+              title="Debug-Modus ein/aus"
+            >
+              {{ debugEnabled ? "Debug: an" : "Debug: aus" }}
+            </button>
+          </div>
         </div>
       </div>
     </header>
@@ -111,7 +118,7 @@
 
           <section id="manual-section" class="card" v-if="mode === 'manual'">
             <h2>
-              Wähle, welches Thumbnail am besten performen wird
+              Teste Thumbnails manuell an Zuschauenr
               <InfoTooltip
                 text="Hier testest du manuell: Klicke auf ein Thumbnail und sieh sofort, wie viel Reward es bringt. Gleichzeitig lernen die Algorithmen im Hintergrund mit – so kannst du deine eigene Intuition direkt mit den automatischen Strategien vergleichen."
               />
@@ -195,6 +202,7 @@
     <TruthValuesModal
       :open="showTruthValues"
       :truth-values="truthValues"
+      :env-type="form.type"
       @close="showTruthValues = false"
     />
     <AppTutorial
@@ -316,6 +324,7 @@ const tutorialHooks = useTutorialHooks({
   tableOpen,
   onManual,
   chartMetric,
+  showTruthValues,
 });
 
 function scrollTop() {
