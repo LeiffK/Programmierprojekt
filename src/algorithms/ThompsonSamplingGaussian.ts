@@ -4,12 +4,6 @@ import { randNormal } from "../utils/randNormal.ts";
 import { BasePolicy } from "./BasePolicy.ts";
 import type { iBanditPolicyConfig } from "./Domain/iBanditPolicyConfig.ts";
 
-export interface ThompsonGaussianConfig extends iBanditPolicyConfig {
-  priorMean?: number;
-  priorVariance?: number;
-  observationVariance?: number;
-}
-
 /**
  * Thompson Sampling für Gaussian-Banditen.
  *
@@ -32,7 +26,7 @@ export class ThompsonSamplingGaussian extends BasePolicy {
   private priorVariance: number;
   private defaultObservationVariance: number;
 
-  constructor(cfg: ThompsonGaussianConfig = {}) {
+  constructor(cfg: iBanditPolicyConfig = {}) {
     super(cfg);
     this.priorMean = cfg.priorMean ?? cfg.optimisticInitialValue ?? 0;
     this.priorVariance = cfg.priorVariance ?? 1;

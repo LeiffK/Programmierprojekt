@@ -4,11 +4,6 @@ import { randNormal } from "../utils/randNormal.ts";
 import { BasePolicy } from "./BasePolicy.ts";
 import type { iBanditPolicyConfig } from "./Domain/iBanditPolicyConfig.ts";
 
-export interface ThompsonBernoulliConfig extends iBanditPolicyConfig {
-  alpha?: number;
-  beta?: number;
-}
-
 /**
  * Thompson Sampling für Bernoulli-Banditen.
  *
@@ -28,7 +23,7 @@ export class ThompsonSamplingBernoulli extends BasePolicy {
   protected successes: number[] = []; // α-Parameter: Erfolgszählungen je Arm
   protected failures: number[] = []; // β-Parameter: Misserfolgszählungen je Arm
 
-  constructor(cfg: ThompsonBernoulliConfig = {}) {
+  constructor(cfg: iBanditPolicyConfig = {}) {
     super(cfg);
     this.alpha0 = cfg.alpha ?? 1;
     this.beta0 = cfg.beta ?? 1;

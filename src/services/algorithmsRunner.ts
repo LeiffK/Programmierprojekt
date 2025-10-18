@@ -50,29 +50,11 @@ type UcbCfg = {
 };
 
 /** Thompson ohne alpha (Bernoulli nutzt Defaults) */
-type ThompsonBernV = {
-  alpha?: number;
-  beta?: number;
-  optimisticInitialValue?: number;
-};
-type ThompsonGaussV = {
-  priorMean?: number;
-  priorVariance?: number;
-  observationVariance?: number;
-  optimisticInitialValue?: number;
-};
-type ThompsonCfg = {
-  /** Einzel-Defaults (Fallbacks) */
-  alpha?: number;
-  beta?: number;
-  priorMean?: number;
-  priorVariance?: number; // Gaussian
-  observationVariance?: number;
-  optimisticInitialValue?: number;
-  /** Varianten */
-  variants?: Array<ThompsonBernV | ThompsonGaussV>;
-  variantsBernoulli?: ThompsonBernV[];
-  variantsGaussian?: ThompsonGaussV[];
+type ThompsonVariant = iBanditPolicyConfig;
+type ThompsonCfg = iBanditPolicyConfig & {
+  variants?: ThompsonVariant[];
+  variantsBernoulli?: ThompsonVariant[];
+  variantsGaussian?: ThompsonVariant[];
 };
 
 /** Gradient ohne alpha (nutzt Defaults) */
@@ -413,19 +395,19 @@ class AlgorithmsRunner {
           const hasBernExplicit = Array.isArray(tsInput?.variantsBernoulli);
           const hasSharedExplicit = Array.isArray(tsInput?.variants);
           const listRaw = hasBernExplicit
-            ? ((tsInput?.variantsBernoulli ?? []) as ThompsonBernV[])
+            ? ((tsInput?.variantsBernoulli ?? []) as ThompsonVariant[])
             : hasSharedExplicit
-              ? ((tsInput?.variants ?? []) as ThompsonBernV[])
+              ? ((tsInput?.variants ?? []) as ThompsonVariant[])
               : ([
                   {
                     alpha: defaultAlpha,
                     beta: defaultBeta,
                     optimisticInitialValue: defaultOiv,
                   },
-                ] as ThompsonBernV[]);
+                ] as ThompsonVariant[]);
 
           if (listRaw.length) {
-            listRaw.forEach((_v: ThompsonBernV, idx: number) => {
+            listRaw.forEach((_v: ThompsonVariant, idx: number) => {
               const isSingle = listRaw.length === 1;
               const id = isSingle ? "thompson" : `thompson#${idx + 1}`;
               const label = isSingle
@@ -443,9 +425,7 @@ class AlgorithmsRunner {
                 ? Number(_v?.optimisticInitialValue)
                 : defaultOiv;
 
-              const bernCfg: ConstructorParameters<
-                typeof ThompsonSamplingBernoulli
-              >[0] = {
+              const bernCfg: ConstructorParameters<typeof ThompsonSamplingBernoulli>[0] = {
                 seed:
                   typeof cfg.envConfig.seed === "number"
                     ? cfg.envConfig.seed
@@ -455,9 +435,7 @@ class AlgorithmsRunner {
                 optimisticInitialValue,
               };
               const th = new ThompsonSamplingBernoulli(
-                bernCfg as unknown as ConstructorParameters<
-                  typeof ThompsonSamplingBernoulli
-                >[0],
+                bernCfg as unknown as ConstructorParameters<typeof ThompsonSamplingBernoulli>[0],
               );
               const env = mkEnv(131 + idx * 5);
               th.initialize(env);
@@ -489,9 +467,9 @@ class AlgorithmsRunner {
             ? Number((tsInput as any)?.optimisticInitialValue)
             : 0;
           const listRaw = hasGaussExplicit
-            ? ((tsInput?.variantsGaussian ?? []) as ThompsonGaussV[])
+            ? ((tsInput?.variantsGaussian ?? []) as ThompsonVariant[])
             : hasSharedExplicit
-              ? ((tsInput?.variants ?? []) as ThompsonGaussV[])
+              ? ((tsInput?.variants ?? []) as ThompsonVariant[])
               : ([
                   {
                     priorMean: defaultMean,
@@ -499,10 +477,10 @@ class AlgorithmsRunner {
                     observationVariance: defaultObsVar,
                     optimisticInitialValue: defaultOiv,
                   },
-                ] as ThompsonGaussV[]);
+                ] as ThompsonVariant[]);
 
           if (listRaw.length) {
-            listRaw.forEach((v: ThompsonGaussV, idx: number) => {
+            listRaw.forEach((v: ThompsonVariant, idx: number) => {
               const isSingle = listRaw.length === 1;
               const id = isSingle ? "thompson" : `thompson#${idx + 1}`;
               const priorMean = Number.isFinite(Number(v?.priorMean))
@@ -525,9 +503,7 @@ class AlgorithmsRunner {
                 ? "Thompson (Gaussian)"
                 : `Thompson (Gaussian) v${idx + 1} (μ=${priorMean.toFixed(2)}, Var=${priorVariance.toFixed(2)})`;
 
-              const gauCfg: ConstructorParameters<
-                typeof ThompsonSamplingGaussian
-              >[0] = {
+              const gauCfg: ConstructorParameters<typeof ThompsonSamplingGaussian>[0] = {
                 seed:
                   typeof cfg.envConfig.seed === "number"
                     ? cfg.envConfig.seed
@@ -538,9 +514,7 @@ class AlgorithmsRunner {
                 optimisticInitialValue,
               };
               const th = new ThompsonSamplingGaussian(
-                gauCfg as unknown as ConstructorParameters<
-                  typeof ThompsonSamplingGaussian
-                >[0],
+                gauCfg as unknown as ConstructorParameters<typeof ThompsonSamplingGaussian>[0],
               );
               const env = mkEnv(141 + idx * 5);
               th.initialize(env);
