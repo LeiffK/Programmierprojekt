@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { randBernoulli } from "../utils/randBernoulli";
+import { randBernoulli } from "../env/BernoulliBanditEnv.ts";
 
 describe("randBernoulli", () => {
   it("gibt 1 zurück wenn rng() < p", () => {

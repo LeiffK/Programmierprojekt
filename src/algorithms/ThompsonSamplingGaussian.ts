@@ -1,8 +1,20 @@
 import type { iPullResult } from "../env/Domain/iPullResult.ts";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
-import { randNormal } from "../utils/randNormal.ts";
 import { BasePolicy } from "./BasePolicy.ts";
 import type { iBanditPolicyConfig } from "./Domain/iBanditPolicyConfig.ts";
+
+function sampleNormal(
+  rng: () => number,
+  mean: number = 0,
+  stdDev: number = 1,
+): number {
+  let u1 = 0;
+  let u2 = 0;
+  while (u1 === 0) u1 = rng();
+  u2 = rng();
+  const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+  return mean + z0 * stdDev;
+}
 
 /**
  * Thompson Sampling für Gaussian-Banditen.
@@ -51,7 +63,7 @@ export class ThompsonSamplingGaussian extends BasePolicy {
     const samples = this.means.map((mean, idx) => {
       const variance = Math.max(this.variances[idx], 1e-12);
       const stdDev = Math.sqrt(variance);
-      return randNormal(this.rng, mean, stdDev);
+      return sampleNormal(this.rng, mean, stdDev);
     });
 
     return this.tiebreak(samples);

@@ -1,8 +1,32 @@
 import type { iEnvConfig } from "./Domain/iEnvConfig";
 import type { iPullResult } from "./Domain/iPullResult";
-import { randGaussianDist } from "../utils/randGaussianDist.ts";
 import { BanditEnv } from "./BanditEnv.ts";
-import { randNormal } from "../utils/randNormal.ts";
+
+export function randGaussianDist(
+  rng: () => number,
+  lowerBound: number = 0,
+  upperBound: number = 300,
+  standardDeviationFactor: number = 0.5,
+) {
+  const mean = rng() * (upperBound - lowerBound) + lowerBound;
+  const standardDeviation =
+    Math.abs(rng() * (upperBound - lowerBound) + lowerBound - mean) *
+    standardDeviationFactor;
+  return { mean, standardDeviation };
+}
+
+export function randNormal(
+  rng: () => number,
+  mean: number = 0,
+  stdDev: number = 1,
+): number {
+  let u1 = 0;
+  let u2 = 0;
+  while (u1 === 0) u1 = rng();
+  u2 = rng();
+  const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+  return mean + z0 * stdDev;
+}
 
 const SQRT2 = Math.sqrt(2);
 const INV_SQRT_2PI = 1 / Math.sqrt(2 * Math.PI);

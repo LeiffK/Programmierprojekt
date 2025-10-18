@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateProbabilities } from "../utils/generateProbabilities";
+import { generateProbabilities } from "../env/BernoulliBanditEnv.ts";
 
 describe("generateProbabilities", () => {
   it("generiert k Wahrscheinlichkeiten", () => {
