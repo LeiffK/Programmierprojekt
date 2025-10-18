@@ -13,6 +13,10 @@ function bestMeanFrom(cfg?: iEnvConfig | null): number {
   ) {
     return Math.max(...cfg.probs);
   }
+  const truncated = (cfg as any).truncatedMeans;
+  if (Array.isArray(truncated) && truncated.length) {
+    return Math.max(...truncated);
+  }
   if (Array.isArray(cfg.means) && cfg.means.length) {
     return Math.max(...cfg.means);
   }

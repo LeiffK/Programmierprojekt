@@ -397,14 +397,62 @@
           </button>
           <div class="algo-body" v-show="algoOpen.thompson">
             <div class="algo-grid">
-              <div class="row">
+              <div class="row" v-if="localEnv.type === 'gaussian'">
+                <label class="lab" for="ts-pm">Prior-Mean</label>
+                <div class="ctrl">
+                  <NumericStepper
+                    v-model="localPolicies.thompson.priorMean"
+                    :min="-1000"
+                    :max="1000"
+                    :step="0.1"
+                    @update:modelValue="emitPolicies"
+                  />
+                </div>
+              </div>
+              <div class="row" v-if="localEnv.type === 'gaussian'">
                 <label class="lab" for="ts-pv">Prior-Varianz</label>
                 <div class="ctrl">
                   <NumericStepper
                     v-model="localPolicies.thompson.priorVariance"
-                    :min="0.1"
-                    :max="100"
-                    :step="0.1"
+                    :min="0.0001"
+                    :max="1000"
+                    :step="0.0001"
+                    @update:modelValue="emitPolicies"
+                  />
+                </div>
+              </div>
+              <div class="row" v-if="localEnv.type === 'gaussian'">
+                <label class="lab" for="ts-ov">Beobachtungs-Varianz</label>
+                <div class="ctrl">
+                  <NumericStepper
+                    v-model="localPolicies.thompson.observationVariance"
+                    :min="0.0001"
+                    :max="1000"
+                    :step="0.0001"
+                    @update:modelValue="emitPolicies"
+                  />
+                </div>
+              </div>
+              <div class="row" v-if="localEnv.type !== 'gaussian'">
+                <label class="lab" for="ts-alpha">Alpha</label>
+                <div class="ctrl">
+                  <NumericStepper
+                    v-model="localPolicies.thompson.alpha"
+                    :min="0.01"
+                    :max="1000"
+                    :step="0.01"
+                    @update:modelValue="emitPolicies"
+                  />
+                </div>
+              </div>
+              <div class="row" v-if="localEnv.type !== 'gaussian'">
+                <label class="lab" for="ts-beta">Beta</label>
+                <div class="ctrl">
+                  <NumericStepper
+                    v-model="localPolicies.thompson.beta"
+                    :min="0.01"
+                    :max="1000"
+                    :step="0.01"
                     @update:modelValue="emitPolicies"
                   />
                 </div>
@@ -443,50 +491,124 @@
                 role="table"
                 aria-label="Thompson Varianten"
               >
-                <div class="variants-row variants-row--head" role="row">
-                  <div class="cell" role="columnheader">Bezeichnung</div>
-                  <div class="cell" role="columnheader">Prior-Varianz</div>
-                  <div class="cell" role="columnheader">OIV</div>
-                  <div class="cell cell--end" role="columnheader"></div>
-                </div>
-
-                <div
-                  class="variants-row"
-                  v-for="(v, i) in localPolicies.thompson.variants"
-                  :key="`ts-${i}`"
-                  role="row"
-                  :class="{ 'is-alt': i % 2 === 1 }"
-                >
-                  <div class="cell" role="cell">Thompson v{{ i + 1 }}</div>
-                  <div class="cell" role="cell">
-                    <NumericStepper
-                      v-model="v.priorVariance"
-                      :min="0.1"
-                      :max="100"
-                      :step="0.1"
-                      @update:modelValue="emitPolicies"
-                    />
+                <template v-if="localEnv.type === 'gaussian'">
+                  <div class="variants-row variants-row--head" role="row">
+                    <div class="cell" role="columnheader">Bezeichnung</div>
+                    <div class="cell" role="columnheader">Prior-Mean</div>
+                    <div class="cell" role="columnheader">Prior-Varianz</div>
+                    <div class="cell" role="columnheader">Obs-Var</div>
+                    <div class="cell" role="columnheader">OIV</div>
+                    <div class="cell cell--end" role="columnheader"></div>
                   </div>
-                  <div class="cell" role="cell">
-                    <NumericStepper
-                      v-model="v.optimisticInitialValue"
-                      :min="0"
-                      :max="1000"
-                      :step="0.01"
-                      @update:modelValue="emitPolicies"
-                    />
+                  <div
+                    class="variants-row"
+                    v-for="(v, i) in localPolicies.thompson.variants"
+                    :key="`ts-${i}`"
+                    role="row"
+                    :class="{ 'is-alt': i % 2 === 1 }"
+                  >
+                    <div class="cell" role="cell">Thompson v{{ i + 1 }}</div>
+                    <div class="cell" role="cell">
+                      <NumericStepper
+                        v-model="v.priorMean"
+                        :min="-1000"
+                        :max="1000"
+                        :step="0.1"
+                        @update:modelValue="emitPolicies"
+                      />
+                    </div>
+                    <div class="cell" role="cell">
+                      <NumericStepper
+                        v-model="v.priorVariance"
+                        :min="0.0001"
+                        :max="1000"
+                        :step="0.0001"
+                        @update:modelValue="emitPolicies"
+                      />
+                    </div>
+                    <div class="cell" role="cell">
+                      <NumericStepper
+                        v-model="v.observationVariance"
+                        :min="0.0001"
+                        :max="1000"
+                        :step="0.0001"
+                        @update:modelValue="emitPolicies"
+                      />
+                    </div>
+                    <div class="cell" role="cell">
+                      <NumericStepper
+                        v-model="v.optimisticInitialValue"
+                        :min="0"
+                        :max="1000"
+                        :step="0.01"
+                        @update:modelValue="emitPolicies"
+                      />
+                    </div>
+                    <div class="cell cell--end" role="cell">
+                      <button
+                        class="btn btn-ghost btn-pill btn-sm"
+                        type="button"
+                        @click="removeThompsonVariant(i)"
+                      >
+                        Entfernen
+                      </button>
+                    </div>
                   </div>
-                  <div class="cell cell--end" role="cell">
-                    <button
-                      class="btn btn-ghost btn-pill btn-sm"
-                      type="button"
-                      @click="removeThompsonVariant(i)"
-                    >
-                      Entfernen
-                    </button>
+                </template>
+                <template v-else>
+                  <div class="variants-row variants-row--head" role="row">
+                    <div class="cell" role="columnheader">Bezeichnung</div>
+                    <div class="cell" role="columnheader">Alpha</div>
+                    <div class="cell" role="columnheader">Beta</div>
+                    <div class="cell" role="columnheader">OIV</div>
+                    <div class="cell cell--end" role="columnheader"></div>
                   </div>
-                </div>
-
+                  <div
+                    class="variants-row"
+                    v-for="(v, i) in localPolicies.thompson.variants"
+                    :key="`ts-${i}`"
+                    role="row"
+                    :class="{ 'is-alt': i % 2 === 1 }"
+                  >
+                    <div class="cell" role="cell">Thompson v{{ i + 1 }}</div>
+                    <div class="cell" role="cell">
+                      <NumericStepper
+                        v-model="v.alpha"
+                        :min="0.01"
+                        :max="1000"
+                        :step="0.01"
+                        @update:modelValue="emitPolicies"
+                      />
+                    </div>
+                    <div class="cell" role="cell">
+                      <NumericStepper
+                        v-model="v.beta"
+                        :min="0.01"
+                        :max="1000"
+                        :step="0.01"
+                        @update:modelValue="emitPolicies"
+                      />
+                    </div>
+                    <div class="cell" role="cell">
+                      <NumericStepper
+                        v-model="v.optimisticInitialValue"
+                        :min="0"
+                        :max="1000"
+                        :step="0.01"
+                        @update:modelValue="emitPolicies"
+                      />
+                    </div>
+                    <div class="cell cell--end" role="cell">
+                      <button
+                        class="btn btn-ghost btn-pill btn-sm"
+                        type="button"
+                        @click="removeThompsonVariant(i)"
+                      >
+                        Entfernen
+                      </button>
+                    </div>
+                  </div>
+                </template>
                 <div
                   v-if="!localPolicies.thompson.variants.length"
                   class="variants-empty"
@@ -702,11 +824,22 @@ const localPolicies = reactive<{
     optimisticInitialValue: number;
     variants: Array<{ confidence: number; optimisticInitialValue: number }>;
   };
-  thompson: {
-    priorVariance: number;
-    optimisticInitialValue: number;
-    variants: Array<{ priorVariance: number; optimisticInitialValue: number }>;
-  };
+    thompson: {
+      alpha: number;
+      beta: number;
+      priorMean: number;
+      priorVariance: number;
+      observationVariance: number;
+      optimisticInitialValue: number;
+      variants: Array<{
+        alpha: number;
+        beta: number;
+        priorMean: number;
+        priorVariance: number;
+        observationVariance: number;
+        optimisticInitialValue: number;
+      }>;
+    };
   gradient: {
     alpha: number;
     optimisticInitialValue: number;
@@ -746,25 +879,48 @@ const localPolicies = reactive<{
       ? [...props.policyConfigs.ucb.variants]
       : [],
   },
-  thompson: {
-    priorVariance: props.policyConfigs?.thompson?.priorVariance ?? 1,
-    optimisticInitialValue:
-      props.policyConfigs?.thompson?.optimisticInitialValue ??
-      (localEnv.type === "bernoulli"
-        ? BERN_DEFAULT_OIV
-        : GAUSS_DEFAULT_THOMPSON_OIV),
-    variants: Array.isArray(props.policyConfigs?.thompson?.variants)
-      ? props.policyConfigs.thompson.variants.map((v: any) => ({
-          priorVariance:
-            v?.priorVariance ??
-            (props.policyConfigs?.thompson?.priorVariance ?? 1),
-          optimisticInitialValue:
-            v?.optimisticInitialValue ??
-            (localEnv.type === "bernoulli"
-              ? BERN_DEFAULT_OIV
-              : GAUSS_DEFAULT_THOMPSON_OIV),
-        }))
-      : [],
+    thompson: {
+      alpha: props.policyConfigs?.thompson?.alpha ?? 1,
+      beta: props.policyConfigs?.thompson?.beta ?? 1,
+      priorMean: props.policyConfigs?.thompson?.priorMean ?? 0,
+      priorVariance: props.policyConfigs?.thompson?.priorVariance ?? 1,
+      observationVariance:
+        props.policyConfigs?.thompson?.observationVariance ?? 1,
+      optimisticInitialValue:
+        props.policyConfigs?.thompson?.optimisticInitialValue ??
+        (localEnv.type === "bernoulli"
+          ? BERN_DEFAULT_OIV
+          : GAUSS_DEFAULT_THOMPSON_OIV),
+      variants: Array.isArray(props.policyConfigs?.thompson?.variants)
+        ? props.policyConfigs.thompson.variants.map((v: any) => ({
+            alpha: Number.isFinite(Number(v?.alpha))
+              ? Number(v?.alpha)
+              : Number(props.policyConfigs?.thompson?.alpha ?? 1),
+            beta: Number.isFinite(Number(v?.beta))
+              ? Number(v?.beta)
+              : Number(props.policyConfigs?.thompson?.beta ?? 1),
+            priorMean: Number.isFinite(Number(v?.priorMean))
+              ? Number(v?.priorMean)
+              : Number(props.policyConfigs?.thompson?.priorMean ?? 0),
+            priorVariance: Number.isFinite(Number(v?.priorVariance))
+              ? Number(v?.priorVariance)
+              : Number(props.policyConfigs?.thompson?.priorVariance ?? 1),
+            observationVariance: Number.isFinite(
+              Number(v?.observationVariance),
+            )
+              ? Number(v?.observationVariance)
+              : Number(
+                  props.policyConfigs?.thompson?.observationVariance ?? 1,
+                ),
+            optimisticInitialValue: Number.isFinite(
+              Number(v?.optimisticInitialValue),
+            )
+              ? Number(v?.optimisticInitialValue)
+              : localEnv.type === "bernoulli"
+                ? BERN_DEFAULT_OIV
+                : GAUSS_DEFAULT_THOMPSON_OIV,
+          }))
+        : [],
   },
   gradient: {
     alpha: props.policyConfigs?.gradient?.alpha ?? 0.1,
@@ -831,7 +987,11 @@ function ensureVariantDefaults(source?: any) {
     !localPolicies.thompson.variants.length
   ) {
     localPolicies.thompson.variants.push({
-      priorVariance: localPolicies.thompson.priorVariance ?? 1,
+      alpha: localPolicies.thompson.alpha,
+      beta: localPolicies.thompson.beta,
+      priorMean: localPolicies.thompson.priorMean,
+      priorVariance: localPolicies.thompson.priorVariance,
+      observationVariance: localPolicies.thompson.observationVariance,
       optimisticInitialValue: localPolicies.thompson.optimisticInitialValue,
     });
   }
@@ -889,16 +1049,47 @@ watch(
       ? [...p.ucb.variants]
       : [];
 
-    localPolicies.thompson.priorVariance =
-      p.thompson?.priorVariance ?? localPolicies.thompson.priorVariance;
-    localPolicies.thompson.optimisticInitialValue =
-      p.thompson?.optimisticInitialValue ??
-      localPolicies.thompson.optimisticInitialValue;
+    localPolicies.thompson.alpha = Number.isFinite(Number(p.thompson?.alpha))
+      ? Number(p.thompson?.alpha)
+      : localPolicies.thompson.alpha;
+    localPolicies.thompson.beta = Number.isFinite(Number(p.thompson?.beta))
+      ? Number(p.thompson?.beta)
+      : localPolicies.thompson.beta;
+    localPolicies.thompson.priorMean = Number.isFinite(
+      Number(p.thompson?.priorMean),
+    )
+      ? Number(p.thompson?.priorMean)
+      : localPolicies.thompson.priorMean;
+    localPolicies.thompson.priorVariance = Number.isFinite(
+      Number(p.thompson?.priorVariance),
+    )
+      ? Number(p.thompson?.priorVariance)
+      : localPolicies.thompson.priorVariance;
+    localPolicies.thompson.observationVariance = Number.isFinite(
+      Number(p.thompson?.observationVariance),
+    )
+      ? Number(p.thompson?.observationVariance)
+      : localPolicies.thompson.observationVariance;
+    localPolicies.thompson.optimisticInitialValue = Number.isFinite(
+      Number(p.thompson?.optimisticInitialValue),
+    )
+      ? Number(p.thompson?.optimisticInitialValue)
+      : localPolicies.thompson.optimisticInitialValue;
     localPolicies.thompson.variants = Array.isArray(p.thompson?.variants)
       ? p.thompson.variants.map((v: any) => ({
+          alpha: v?.alpha ?? (p.thompson?.alpha ?? localPolicies.thompson.alpha),
+          beta: v?.beta ?? (p.thompson?.beta ?? localPolicies.thompson.beta),
+          priorMean:
+            v?.priorMean ??
+            (p.thompson?.priorMean ?? localPolicies.thompson.priorMean),
           priorVariance:
             v?.priorVariance ??
-            (p.thompson?.priorVariance ?? localPolicies.thompson.priorVariance),
+            (p.thompson?.priorVariance ??
+              localPolicies.thompson.priorVariance),
+          observationVariance:
+            v?.observationVariance ??
+            (p.thompson?.observationVariance ??
+              localPolicies.thompson.observationVariance),
           optimisticInitialValue:
             v?.optimisticInitialValue ??
             localPolicies.thompson.optimisticInitialValue,
@@ -988,7 +1179,11 @@ watch(
     );
     if (!localPolicies.thompson.variants.length) {
       localPolicies.thompson.variants.push({
-        priorVariance: localPolicies.thompson.priorVariance ?? 1,
+        alpha: localPolicies.thompson.alpha,
+        beta: localPolicies.thompson.beta,
+        priorMean: localPolicies.thompson.priorMean,
+        priorVariance: localPolicies.thompson.priorVariance,
+        observationVariance: localPolicies.thompson.observationVariance,
         optimisticInitialValue: localPolicies.thompson.optimisticInitialValue,
       });
     } else {
@@ -1066,7 +1261,11 @@ function emitPolicies() {
       variants: [...localPolicies.ucb.variants],
     },
     thompson: {
+      alpha: localPolicies.thompson.alpha,
+      beta: localPolicies.thompson.beta,
+      priorMean: localPolicies.thompson.priorMean,
       priorVariance: localPolicies.thompson.priorVariance,
+      observationVariance: localPolicies.thompson.observationVariance,
       optimisticInitialValue: localPolicies.thompson.optimisticInitialValue,
       variants: [...localPolicies.thompson.variants],
     },
@@ -1145,7 +1344,11 @@ function removeUcbVariant(i: number) {
 
 function addThompsonVariant() {
   localPolicies.thompson.variants.push({
-    priorVariance: localPolicies.thompson.priorVariance ?? 1,
+    alpha: localPolicies.thompson.alpha,
+    beta: localPolicies.thompson.beta,
+    priorMean: localPolicies.thompson.priorMean,
+    priorVariance: localPolicies.thompson.priorVariance,
+    observationVariance: localPolicies.thompson.observationVariance,
     optimisticInitialValue: localPolicies.thompson.optimisticInitialValue,
   });
   algoOpen.thompson = true;

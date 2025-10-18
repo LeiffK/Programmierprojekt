@@ -17,6 +17,22 @@ type PolicyConfigs = {
     optimisticInitialValue: number;
     variants: Array<{ alpha: number; optimisticInitialValue: number }>;
   };
+  thompson: {
+    alpha: number;
+    beta: number;
+    priorMean: number;
+    priorVariance: number;
+    observationVariance: number;
+    optimisticInitialValue: number;
+    variants: Array<{
+      alpha?: number;
+      beta?: number;
+      priorMean?: number;
+      priorVariance?: number;
+      observationVariance?: number;
+      optimisticInitialValue?: number;
+    }>;
+  };
   customPolicies: iCustomPolicyRegistration[];
   [key: string]: any;
 };
@@ -42,6 +58,25 @@ export function usePolicyConfigs(form: Ref<iEnvConfig>) {
         },
       ],
     },
+    thompson: {
+      alpha: 1,
+      beta: 1,
+      priorMean: 0,
+      priorVariance: 1,
+      observationVariance: 1,
+      optimisticInitialValue: form.value?.type === "bernoulli" ? 0.99 : 0,
+      variants: [
+        {
+          alpha: 1,
+          beta: 1,
+          priorMean: 0,
+          priorVariance: 1,
+          observationVariance: 1,
+          optimisticInitialValue:
+            form.value?.type === "bernoulli" ? 0.99 : 0,
+        },
+      ],
+    },
     customPolicies: [],
   });
 
@@ -52,8 +87,13 @@ export function usePolicyConfigs(form: Ref<iEnvConfig>) {
     const greedy = { ...(current.greedy ?? {}) };
     const eps = { ...(current.epsgreedy ?? {}) };
     const gradient = { ...(current.gradient ?? {}) };
+    const thompson = { ...(current.thompson ?? {}) };
 
     const ensureAlpha = (val?: number, fallback = 0.1) => {
+      const n = Number(val);
+      return Number.isFinite(n) && n > 0 ? n : fallback;
+    };
+    const ensurePositive = (val?: number, fallback = 1) => {
       const n = Number(val);
       return Number.isFinite(n) && n > 0 ? n : fallback;
     };
@@ -109,6 +149,43 @@ export function usePolicyConfigs(form: Ref<iEnvConfig>) {
         optimisticInitialValue: clamp01(
           variant?.optimisticInitialValue,
           gradient.optimisticInitialValue,
+        ),
+      }));
+
+      thompson.alpha = ensurePositive(thompson.alpha, 1);
+      thompson.beta = ensurePositive(thompson.beta, 1);
+      thompson.optimisticInitialValue = clamp01(
+        thompson.optimisticInitialValue,
+        0.99,
+      );
+      const thompsonVariantsSrc =
+        Array.isArray(thompson.variants) && thompson.variants.length
+          ? thompson.variants
+          : [
+              {
+                alpha: thompson.alpha,
+                beta: thompson.beta,
+                optimisticInitialValue: thompson.optimisticInitialValue,
+              },
+            ];
+      thompson.variants = thompsonVariantsSrc.map((variant: any) => ({
+        ...variant,
+        alpha: ensurePositive(variant?.alpha, thompson.alpha),
+        beta: ensurePositive(variant?.beta, thompson.beta),
+        optimisticInitialValue: clamp01(
+          variant?.optimisticInitialValue,
+          thompson.optimisticInitialValue,
+        ),
+        priorMean: Number.isFinite(Number(variant?.priorMean))
+          ? Number(variant?.priorMean)
+          : thompson.priorMean ?? 0,
+        priorVariance: ensurePositive(
+          variant?.priorVariance,
+          thompson.priorVariance ?? 1,
+        ),
+        observationVariance: ensurePositive(
+          variant?.observationVariance,
+          thompson.observationVariance ?? 1,
         ),
       }));
     } else {
@@ -169,6 +246,46 @@ export function usePolicyConfigs(form: Ref<iEnvConfig>) {
           baseGradOiv,
         ),
       }));
+
+      thompson.priorMean = ensureNonNegative(thompson.priorMean, 0);
+      thompson.priorVariance = ensurePositive(thompson.priorVariance, 1);
+      thompson.observationVariance = ensurePositive(
+        thompson.observationVariance,
+        1,
+      );
+      thompson.optimisticInitialValue = ensureNonNegative(
+        thompson.optimisticInitialValue,
+        0,
+      );
+      const thompsonVariantsSrc =
+        Array.isArray(thompson.variants) && thompson.variants.length
+          ? thompson.variants
+          : [
+              {
+                priorMean: thompson.priorMean,
+                priorVariance: thompson.priorVariance,
+                observationVariance: thompson.observationVariance,
+                optimisticInitialValue: thompson.optimisticInitialValue,
+              },
+            ];
+      thompson.variants = thompsonVariantsSrc.map((variant: any) => ({
+        ...variant,
+        priorMean: ensureNonNegative(variant?.priorMean, thompson.priorMean),
+        priorVariance: ensurePositive(
+          variant?.priorVariance,
+          thompson.priorVariance,
+        ),
+        observationVariance: ensurePositive(
+          variant?.observationVariance,
+          thompson.observationVariance,
+        ),
+        optimisticInitialValue: ensureNonNegative(
+          variant?.optimisticInitialValue,
+          thompson.optimisticInitialValue,
+        ),
+        alpha: ensurePositive(variant?.alpha, thompson.alpha ?? 1),
+        beta: ensurePositive(variant?.beta, thompson.beta ?? 1),
+      }));
     }
 
     policyConfigs.value = {
@@ -176,6 +293,7 @@ export function usePolicyConfigs(form: Ref<iEnvConfig>) {
       greedy: { ...current.greedy, ...greedy },
       epsgreedy: { ...current.epsgreedy, ...eps },
       gradient: { ...current.gradient, ...gradient },
+      thompson: { ...current.thompson, ...thompson },
     };
   }
 

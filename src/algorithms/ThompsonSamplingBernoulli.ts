@@ -4,6 +4,12 @@ import { randNormal } from "../utils/randNormal.ts";
 import { BasePolicy } from "./BasePolicy.ts";
 import type { iBanditPolicyConfig } from "./Domain/iBanditPolicyConfig.ts";
 
+export interface ThompsonBernoulliConfig extends iBanditPolicyConfig {
+  alpha?: number;
+  beta?: number;
+}
+
+
 /**
  * Thompson Sampling für Bernoulli-Banditen.
  *
@@ -18,11 +24,16 @@ import type { iBanditPolicyConfig } from "./Domain/iBanditPolicyConfig.ts";
  * - Passt sich dynamisch an Beobachtungen an.
  */
 export class ThompsonSamplingBernoulli extends BasePolicy {
-  constructor(cfg: iBanditPolicyConfig = {}) {
-    super(cfg);
-  }
+  private alpha0: number;
+  private beta0: number;
   protected successes: number[] = []; // α-Parameter: Erfolgszählungen je Arm
   protected failures: number[] = []; // β-Parameter: Misserfolgszählungen je Arm
+
+  constructor(cfg: ThompsonBernoulliConfig = {}) {
+    super(cfg);
+    this.alpha0 = cfg.alpha ?? 1;
+    this.beta0 = cfg.beta ?? 1;
+  }
 
   /**
    * Initialisierung der Policy mit Environment.
@@ -31,8 +42,8 @@ export class ThompsonSamplingBernoulli extends BasePolicy {
   override initialize(env: iBanditEnv): void {
     super.initialize(env);
     const n = this.nArms;
-    this.successes = new Array(n).fill(1);
-    this.failures = new Array(n).fill(1);
+    this.successes = new Array(n).fill(this.alpha0);
+    this.failures = new Array(n).fill(this.beta0);
   }
 
   /**
@@ -40,8 +51,8 @@ export class ThompsonSamplingBernoulli extends BasePolicy {
    */
   override reset(): void {
     super.reset();
-    this.successes.fill(1);
-    this.failures.fill(1);
+    this.successes.fill(this.alpha0);
+    this.failures.fill(this.beta0);
   }
 
   /**

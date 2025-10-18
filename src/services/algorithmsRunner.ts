@@ -50,11 +50,24 @@ type UcbCfg = {
 };
 
 /** Thompson ohne alpha (Bernoulli nutzt Defaults) */
-type ThompsonBernV = { optimisticInitialValue?: number };
-type ThompsonGaussV = { priorVariance?: number; optimisticInitialValue?: number };
+type ThompsonBernV = {
+  alpha?: number;
+  beta?: number;
+  optimisticInitialValue?: number;
+};
+type ThompsonGaussV = {
+  priorMean?: number;
+  priorVariance?: number;
+  observationVariance?: number;
+  optimisticInitialValue?: number;
+};
 type ThompsonCfg = {
   /** Einzel-Defaults (Fallbacks) */
+  alpha?: number;
+  beta?: number;
+  priorMean?: number;
   priorVariance?: number; // Gaussian
+  observationVariance?: number;
   optimisticInitialValue?: number;
   /** Varianten */
   variants?: Array<ThompsonBernV | ThompsonGaussV>;
@@ -137,6 +150,7 @@ class AlgorithmsRunner {
   private rate = 1;
   private tick: number | null = null;
   private listeners: Set<(e: RunnerEvent) => void> = new Set();
+  private sharedEnv: iBanditEnv | null = null;
 
   constructor() {
     queueMicrotask(() => this.emit({ type: "READY" }));
@@ -182,6 +196,7 @@ class AlgorithmsRunner {
       this.clearTimer();
       this.items.clear();
       this.step = 0;
+      this.sharedEnv = null;
 
       const cloneEnvConfig = (source: iEnvConfig): iEnvConfig => {
         const out: iEnvConfig = {
@@ -204,6 +219,7 @@ class AlgorithmsRunner {
         cfg.envConfig.type === "bernoulli"
           ? new BernoulliBanditEnv(cloneEnvConfig(cfg.envConfig))
           : new GaussianBanditEnv(cloneEnvConfig(cfg.envConfig));
+      this.sharedEnv = baseEnv;
 
       const sharedEnvConfig = cloneEnvConfig(baseEnv.config);
       const baseSeed = cfg.envConfig.seed ?? 0;
@@ -387,6 +403,8 @@ class AlgorithmsRunner {
         const isBernoulli = cfg.envConfig.type === "bernoulli";
 
         if (isBernoulli) {
+          const defaultAlpha = Number((tsInput as any)?.alpha ?? 1);
+          const defaultBeta = Number((tsInput as any)?.beta ?? 1);
           const defaultOiv = Number.isFinite(
             Number((tsInput as any)?.optimisticInitialValue),
           )
@@ -398,7 +416,13 @@ class AlgorithmsRunner {
             ? ((tsInput?.variantsBernoulli ?? []) as ThompsonBernV[])
             : hasSharedExplicit
               ? ((tsInput?.variants ?? []) as ThompsonBernV[])
-              : ([{ optimisticInitialValue: defaultOiv }] as ThompsonBernV[]);
+              : ([
+                  {
+                    alpha: defaultAlpha,
+                    beta: defaultBeta,
+                    optimisticInitialValue: defaultOiv,
+                  },
+                ] as ThompsonBernV[]);
 
           if (listRaw.length) {
             listRaw.forEach((_v: ThompsonBernV, idx: number) => {
@@ -407,6 +431,12 @@ class AlgorithmsRunner {
               const label = isSingle
                 ? "Thompson (Bernoulli)"
                 : `Thompson (Bernoulli) v${idx + 1}`;
+              const alpha = Number.isFinite(Number(_v?.alpha))
+                ? Number(_v?.alpha)
+                : defaultAlpha;
+              const beta = Number.isFinite(Number(_v?.beta))
+                ? Number(_v?.beta)
+                : defaultBeta;
               const optimisticInitialValue = Number.isFinite(
                 Number(_v?.optimisticInitialValue),
               )
@@ -420,6 +450,8 @@ class AlgorithmsRunner {
                   typeof cfg.envConfig.seed === "number"
                     ? cfg.envConfig.seed
                     : undefined,
+                alpha,
+                beta,
                 optimisticInitialValue,
               };
               const th = new ThompsonSamplingBernoulli(
@@ -446,7 +478,9 @@ class AlgorithmsRunner {
         } else {
           const hasGaussExplicit = Array.isArray(tsInput?.variantsGaussian);
           const hasSharedExplicit = Array.isArray(tsInput?.variants);
+          const defaultMean = Number((tsInput as any)?.priorMean ?? 0);
           const defaultVar = Number((tsInput as any)?.priorVariance ?? 1);
+          const defaultObsVar = Number((tsInput as any)?.observationVariance ?? 1);
           const defaultOiv = Number.isFinite(
             Number((tsInput as any)?.optimisticInitialValue),
           )
@@ -458,7 +492,9 @@ class AlgorithmsRunner {
               ? ((tsInput?.variants ?? []) as ThompsonGaussV[])
               : ([
                   {
+                    priorMean: defaultMean,
                     priorVariance: defaultVar,
+                    observationVariance: defaultObsVar,
                     optimisticInitialValue: defaultOiv,
                   },
                 ] as ThompsonGaussV[]);
@@ -467,7 +503,17 @@ class AlgorithmsRunner {
             listRaw.forEach((v: ThompsonGaussV, idx: number) => {
               const isSingle = listRaw.length === 1;
               const id = isSingle ? "thompson" : `thompson#${idx + 1}`;
-              const priorVariance = Number(v?.priorVariance ?? defaultVar);
+              const priorMean = Number.isFinite(Number(v?.priorMean))
+                ? Number(v?.priorMean)
+                : defaultMean;
+              const priorVariance = Number.isFinite(Number(v?.priorVariance))
+                ? Number(v?.priorVariance)
+                : defaultVar;
+              const observationVariance = Number.isFinite(
+                Number(v?.observationVariance),
+              )
+                ? Number(v?.observationVariance)
+                : defaultObsVar;
               const optimisticInitialValue = Number.isFinite(
                 Number(v?.optimisticInitialValue),
               )
@@ -475,7 +521,7 @@ class AlgorithmsRunner {
                 : defaultOiv;
               const label = isSingle
                 ? "Thompson (Gaussian)"
-                : `Thompson (Gaussian) v${idx + 1} (Var=${priorVariance.toFixed(2)})`;
+                : `Thompson (Gaussian) v${idx + 1} (μ=${priorMean.toFixed(2)}, Var=${priorVariance.toFixed(2)})`;
 
               const gauCfg: ConstructorParameters<
                 typeof ThompsonSamplingGaussian
@@ -484,7 +530,9 @@ class AlgorithmsRunner {
                   typeof cfg.envConfig.seed === "number"
                     ? cfg.envConfig.seed
                     : undefined,
+                priorMean,
                 priorVariance,
+                observationVariance,
                 optimisticInitialValue,
               };
               const th = new ThompsonSamplingGaussian(
@@ -717,10 +765,23 @@ class AlgorithmsRunner {
 
   private stepAll() {
     this.step += 1;
+    const rewardCache = new Map<number, iPullResult>();
 
     for (const it of this.items.values()) {
       const action = it.policy.selectAction();
-      const res: iPullResult = it.env.pull(action);
+      let shared = rewardCache.get(action);
+      if (!shared) {
+        if (!this.sharedEnv) {
+          throw new Error("Shared environment not initialized.");
+        }
+        shared = this.sharedEnv.pull(action);
+        rewardCache.set(action, shared);
+      }
+      const res: iPullResult = {
+        action: shared.action,
+        reward: shared.reward,
+        isOptimal: shared.isOptimal,
+      };
       it.policy.update(res);
       it.history.push({
         action: res.action,
