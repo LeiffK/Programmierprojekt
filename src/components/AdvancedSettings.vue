@@ -65,6 +65,10 @@
             >
               <div class="algo-head">
                 <div class="pill pill-greedy">Greedy</div>
+                <InfoTooltip
+                  text="Der Greedy-Algorithmus wählt immer die Variante mit dem bisher höchsten Durchschnittswert. Optimistic Initial Value (OIV): Startwert für alle Varianten – höhere Werte fördern anfängliche Exploration, da jede Variante erst 'beweisen' muss, dass sie wirklich gut ist."
+                  @click.stop
+                />
               </div>
               <span class="algo-chevron" :class="{ open: algoOpen.greedy }"
                 >▾</span
@@ -161,6 +165,10 @@
             >
               <div class="algo-head">
                 <div class="pill pill-eps">ε-Greedy</div>
+                <InfoTooltip
+                  text="ε-Greedy balanciert Exploitation und Exploration: Mit Wahrscheinlichkeit ε wird eine zufällige Variante getestet, sonst die bisher beste. ε (Epsilon): Explorations-Rate (z.B. 0.1 = 10% zufällige Wahl). Höhere Werte = mehr Exploration. OIV: Optimistic Initial Value – Startwert für initiale Exploration."
+                  @click.stop
+                />
               </div>
               <span class="algo-chevron" :class="{ open: algoOpen.eps }"
                 >▾</span
@@ -281,6 +289,10 @@
             >
               <div class="algo-head">
                 <div class="pill pill-ucb">UCB</div>
+                <InfoTooltip
+                  text="Upper Confidence Bound nutzt statistische Unsicherheit: Varianten, die wenig getestet wurden, bekommen einen Bonus. c (Konfidenz): Steuert die Exploration – höhere Werte (z.B. 2.0) bedeuten mehr Exploration durch größeren Unsicherheits-Bonus, niedrigere Werte (z.B. 0.5) fokussieren stärker auf bekannte gute Varianten. OIV: Optimistic Initial Value für Startwerte."
+                  @click.stop
+                />
               </div>
               <span class="algo-chevron" :class="{ open: algoOpen.ucb }"
                 >▾</span
@@ -399,6 +411,12 @@
             >
               <div class="algo-head">
                 <div class="pill pill-thompson">Thompson</div>
+                <InfoTooltip
+                  :text="localEnv.type === 'gaussian'
+                    ? 'Thompson Sampling ist ein bayesianischer Ansatz, der Wahrscheinlichkeitsverteilungen nutzt. Für Gaussian: Prior-Mean = erwarteter Startwert, Prior-Varianz = initiale Unsicherheit (höher = mehr Exploration), Beobachtungs-Varianz (Obs-Var) = angenommenes Rauschen der Messungen, OIV = Optimistic Initial Value.'
+                    : 'Thompson Sampling ist ein bayesianischer Ansatz mit Beta-Verteilung für Bernoulli-Banditen. Alpha = Startwert für Erfolge + 1, Beta = Startwert für Misserfolge + 1. Höhere Werte bedeuten stärkere Prior-Überzeugung. OIV = Optimistic Initial Value für initiale Exploration.'"
+                  @click.stop
+                />
               </div>
               <span class="algo-chevron" :class="{ open: algoOpen.thompson }"
                 >▾</span
@@ -497,63 +515,19 @@
 
                 <div
                   class="variants-table"
+                  :class="{ 'variants-table--thompson-gauss': localEnv.type === 'gaussian' }"
                   role="table"
                   aria-label="Thompson Varianten"
                 >
                   <template v-if="localEnv.type === 'gaussian'">
-                    <div class="variants-row variants-row--head" role="row">
-                      <div class="cell" role="columnheader">Bezeichnung</div>
-                      <div class="cell" role="columnheader">Prior-Mean</div>
-                      <div class="cell" role="columnheader">Prior-Varianz</div>
-                      <div class="cell" role="columnheader">Obs-Var</div>
-                      <div class="cell" role="columnheader">OIV</div>
-                      <div class="cell cell--end" role="columnheader"></div>
-                    </div>
                     <div
-                      class="variants-row"
+                      class="thompson-variant-card"
                       v-for="(v, i) in localPolicies.thompson.variants"
                       :key="`ts-${i}`"
-                      role="row"
                       :class="{ 'is-alt': i % 2 === 1 }"
                     >
-                      <div class="cell" role="cell">Thompson v{{ i + 1 }}</div>
-                      <div class="cell" role="cell">
-                        <NumericStepper
-                          v-model="v.priorMean"
-                          :min="-1000"
-                          :max="1000"
-                          :step="0.1"
-                          @update:modelValue="emitPolicies"
-                        />
-                      </div>
-                      <div class="cell" role="cell">
-                        <NumericStepper
-                          v-model="v.priorVariance"
-                          :min="0.0001"
-                          :max="1000"
-                          :step="0.0001"
-                          @update:modelValue="emitPolicies"
-                        />
-                      </div>
-                      <div class="cell" role="cell">
-                        <NumericStepper
-                          v-model="v.observationVariance"
-                          :min="0.0001"
-                          :max="1000"
-                          :step="0.0001"
-                          @update:modelValue="emitPolicies"
-                        />
-                      </div>
-                      <div class="cell" role="cell">
-                        <NumericStepper
-                          v-model="v.optimisticInitialValue"
-                          :min="0"
-                          :max="1000"
-                          :step="0.01"
-                          @update:modelValue="emitPolicies"
-                        />
-                      </div>
-                      <div class="cell cell--end" role="cell">
+                      <div class="thompson-variant-header">
+                        <div class="thompson-variant-label">Thompson v{{ i + 1 }}</div>
                         <button
                           class="btn btn-ghost btn-pill btn-sm"
                           type="button"
@@ -561,6 +535,56 @@
                         >
                           Entfernen
                         </button>
+                      </div>
+
+                      <div class="thompson-variant-params">
+                        <!-- Erste Zeile: Prior-Mean, Prior-Varianz -->
+                        <div class="thompson-param-group">
+                          <div class="thompson-param">
+                            <label class="thompson-param-label">Prior-Mean</label>
+                            <NumericStepper
+                              v-model="v.priorMean"
+                              :min="-1000"
+                              :max="1000"
+                              :step="0.1"
+                              @update:modelValue="emitPolicies"
+                            />
+                          </div>
+                          <div class="thompson-param">
+                            <label class="thompson-param-label">Prior-Varianz</label>
+                            <NumericStepper
+                              v-model="v.priorVariance"
+                              :min="0.0001"
+                              :max="1000"
+                              :step="0.0001"
+                              @update:modelValue="emitPolicies"
+                            />
+                          </div>
+                        </div>
+
+                        <!-- Zweite Zeile: Obs-Var, OIV -->
+                        <div class="thompson-param-group">
+                          <div class="thompson-param">
+                            <label class="thompson-param-label">Obs-Var</label>
+                            <NumericStepper
+                              v-model="v.observationVariance"
+                              :min="0.0001"
+                              :max="1000"
+                              :step="0.0001"
+                              @update:modelValue="emitPolicies"
+                            />
+                          </div>
+                          <div class="thompson-param">
+                            <label class="thompson-param-label">OIV</label>
+                            <NumericStepper
+                              v-model="v.optimisticInitialValue"
+                              :min="0"
+                              :max="1000"
+                              :step="0.01"
+                              @update:modelValue="emitPolicies"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </template>
@@ -639,6 +663,10 @@
             >
               <div class="algo-head">
                 <div class="pill pill-gradient">Gradient Bandit</div>
+                <InfoTooltip
+                  text="Gradient Bandit nutzt Präferenzen statt Wertschätzungen und wandelt diese via Softmax in Wahrscheinlichkeiten um. Lernrate (Alpha): Bestimmt, wie schnell Präferenzen angepasst werden – höhere Werte (z.B. 0.5) = schnellere Anpassung aber instabiler, niedrigere Werte (z.B. 0.01) = langsamer aber stabiler. OIV = Optimistic Initial Value."
+                  @click.stop
+                />
               </div>
               <span class="algo-chevron" :class="{ open: algoOpen.gradient }"
                 >▾</span
@@ -1635,6 +1663,9 @@ function onCustomToggle(e: Event) {
   gap: 8px;
   margin-bottom: 0;
 }
+.algo-head :deep(.info-tooltip) {
+  pointer-events: auto;
+}
 
 .pill {
   display: inline-block;
@@ -1748,6 +1779,72 @@ function onCustomToggle(e: Event) {
 .variants-empty {
   padding: 12px;
   color: #aeb4bd;
+}
+
+/* Thompson Sampling Gaussian - Card Layout */
+.variants-table--thompson-gauss {
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.thompson-variant-card {
+  background: #151515;
+  border: 1px solid var(--br-22);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.thompson-variant-card.is-alt {
+  background: #131313;
+}
+
+.thompson-variant-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--br-22);
+}
+
+.thompson-variant-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #e8e8e8;
+}
+
+.thompson-variant-params {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.thompson-param-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.thompson-param {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.thompson-param-label {
+  font-size: 12px;
+  color: #b8b8b8;
+  font-weight: 500;
+}
+
+/* Responsive: Stack auf schmalen Bildschirmen */
+@media (max-width: 640px) {
+  .thompson-param-group {
+    grid-template-columns: 1fr;
+  }
 }
 .custom {
   margin-top: 10px;

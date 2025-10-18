@@ -48,6 +48,8 @@ type TutorialHooks = {
   toggleSeries: (id: string, visible: boolean) => void | Promise<void>;
   openTable: () => void | Promise<void>;
   closeTable: () => void | Promise<void>;
+  openTruthValues: () => void | Promise<void>;
+  closeTruthValues: () => void | Promise<void>;
 };
 
 const props = defineProps<{ open: boolean; hooks: TutorialHooks }>();
@@ -55,7 +57,38 @@ const emit = defineEmits<{ (e: "close"): void }>();
 
 /* UI-Block state */
 const openLocal = ref(false);
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+let abortFlag = false; // Flag zum Abbrechen laufender Operationen
+const activeSleeps = new Set<() => void>(); // Tracke alle aktiven sleep-Promises
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve, reject) => {
+    if (abortFlag) return reject(new Error("aborted"));
+
+    let timer: NodeJS.Timeout | null = null;
+    let checkInterval: NodeJS.Timeout | null = null;
+
+    const cleanup = () => {
+      if (timer) clearTimeout(timer);
+      if (checkInterval) clearInterval(checkInterval);
+      activeSleeps.delete(cleanup);
+    };
+
+    timer = setTimeout(() => {
+      cleanup();
+      if (abortFlag) reject(new Error("aborted"));
+      else resolve();
+    }, ms);
+
+    // Prüfe regelmäßig auf abortFlag
+    checkInterval = setInterval(() => {
+      if (abortFlag) {
+        cleanup();
+        reject(new Error("aborted"));
+      }
+    }, 50);
+
+    activeSleeps.add(cleanup);
+  });
 
 /* Cursor */
 const curX = ref(-9999),
@@ -88,7 +121,7 @@ function domClick(el: HTMLElement) {
   el.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
   el.click?.();
 }
-async function moveAndClick(el: HTMLElement, delay = 1200, dur = 1100) {
+async function moveAndClick(el: HTMLElement, dur = 1100) {
   await nextTick(); // Sicherstellen dass Element im DOM ist
   const r = el.getBoundingClientRect();
   animateCursorTo(
@@ -228,6 +261,8 @@ const SEL = {
 
   table: "#comparison-table",
   tableHead: "#comparison-table .head",
+
+  truthValuesBtn: '#btn-truth-values',
 };
 
 function findButtonByText(rootSel: string, text: string): HTMLElement | null {
@@ -309,12 +344,18 @@ async function clickModeManual() {
 let tour: any = null;
 
 async function start() {
+  // Setze abortFlag zurück für neue Tour
+  abortFlag = false;
+
   if (tour) {
     try {
       tour.cancel();
     } catch {}
     tour = null;
   }
+
+  // Warte kurz, um sicherzustellen dass vorherige Tour komplett aufgeräumt ist
+  await new Promise((r) => setTimeout(r, 100));
 
   // Seite fixieren (kein Scroll außerhalb)
   document.documentElement.classList.add("tour-lock");
@@ -352,7 +393,7 @@ async function start() {
     {
       id: "env-stepper",
       attach: { element: SEL.env, on: "bottom" },
-      title: "1/12 – Umgebung einrichten",
+      title: "1/13 – Umgebung einrichten",
       text: [
         "Bestimme hier, wie viele Thumbnail-Varianten du testen möchtest. Mit den Pfeiltasten kannst du die Anzahl anpassen.",
       ],
@@ -372,7 +413,7 @@ async function start() {
     {
       id: "manual-thumbs",
       attach: { element: SEL.manual, on: "bottom" },
-      title: "2/12 – Manueller Modus",
+      title: "2/13 – Manueller Modus",
       text: [
         "Klicke auf ein Thumbnail, um es zu testen. Du siehst sofort, wie viele Punkte die jeweilige Variante bringt. Währenddessen lernen die Algorithmen im Hintergrund mit und treffen parallel eigene Entscheidungen.",
       ],
@@ -405,7 +446,7 @@ async function start() {
     {
       id: "to-algo",
       attach: { element: SEL.mode, on: "bottom" },
-      title: "3/12 – Wechsel in den Algorithmus-Modus",
+      title: "3/13 – Wechsel in den Algorithmus-Modus",
       text: [
         "Im Algorithmus-Modus laufen ausschließlich die automatischen Strategien. Deine manuelle Linie wird ausgeblendet, sodass du die Algorithmen direkt miteinander vergleichen kannst.",
       ],
@@ -419,7 +460,7 @@ async function start() {
     {
       id: "runner-explain",
       attach: { element: SEL.runner, on: "bottom" },
-      title: "4/12 – Steuerung konfigurieren",
+      title: "4/13 – Steuerung konfigurieren",
       text: [
         "Lege fest, wie viele Schritte insgesamt ausgeführt werden sollen. Die Geschwindigkeit bestimmt, wie viele Schritte pro Sekunde die Algorithmen durchlaufen.",
       ],
@@ -431,7 +472,7 @@ async function start() {
     {
       id: "runner-start",
       attach: { element: SEL.runner, on: "bottom" },
-      title: "5/12 – Simulation starten",
+      title: "5/13 – Simulation starten",
       text: [
         'Klicke auf "Start", um die Algorithmen automatisch laufen zu lassen. Derselbe Button dient anschließend zum Pausieren. Mit "+1 Schritt" kannst du einzelne Schritte manuell ausführen – ideal, um genau zu beobachten, was passiert.',
       ],
@@ -455,7 +496,7 @@ async function start() {
     {
       id: "chart-show",
       attach: { element: SEL.chart, on: "top" },
-      title: "6/12 – Das Diagramm verstehen",
+      title: "6/13 – Das Diagramm verstehen",
       text: [
         "Jeder Algorithmus wird als farbige Linie dargestellt – so erkennst du auf einen Blick, wie sich die verschiedenen Strategien entwickeln. Über die Legende kannst du einzelne Linien ein- oder ausblenden.",
       ],
@@ -465,9 +506,33 @@ async function start() {
       },
     },
     {
+      id: "truth-values",
+      attach: { element: SEL.truthValuesBtn, on: "bottom" },
+      title: "7/13 – Wahre Werte anzeigen",
+      text: [
+        "Klicke auf 'Wahre Werte', um die tatsächliche Performance jedes Thumbnails zu sehen. Das beste Thumbnail hat den höchsten Wert. Das ist der Mittelwert.",
+      ],
+      run: async () => {
+        await focusSelector(SEL.truthValuesBtn);
+        await sleep(200);
+        const btn = document.querySelector(
+          SEL.truthValuesBtn,
+        ) as HTMLElement | null;
+        if (btn) {
+          await moveAndClick(btn);
+          await props.hooks.openTruthValues();
+          await nextTick();
+          await sleep(1500); // Modal öffnen und anzeigen
+          await props.hooks.closeTruthValues();
+          await nextTick();
+          await sleep(300); // Modal schließen
+        }
+      },
+    },
+    {
       id: "metrics-switch",
       attach: { element: SEL.chart, on: "top" },
-      title: "7/12 – Metrik wechseln",
+      title: "8/13 – Metrik wechseln",
       text: [
         'Wechsle nun zur Metrik "Durchschnitt" (Ø-Reward). Dadurch erkennst du, welcher Algorithmus im Schnitt pro Schritt die meisten Punkte erzielt.',
       ],
@@ -491,7 +556,7 @@ async function start() {
     {
       id: "series-toggle",
       attach: { element: SEL.chart, on: "top" },
-      title: "8/12 – Linien ein-/ausblenden",
+      title: "9/13 – Linien ein-/ausblenden",
       text: [
         "Klicke in der Legende auf einen Algorithmus (z. B. Greedy), um dessen Linie ein- oder auszublenden. Dadurch kannst du einzelne Strategien isolieren und gezielter vergleichen.",
       ],
@@ -515,7 +580,7 @@ async function start() {
     {
       id: "table-open",
       attach: { element: SEL.table, on: "top" },
-      title: "9/12 – Detailansicht öffnen",
+      title: "10/13 – Detailansicht öffnen",
       text: [
         "Die Vergleichstabelle zeigt dir alle wichtigen Kennzahlen auf einen Blick. Algorithmen, die du im Diagramm ausgeblendet hast, werden auch hier nicht angezeigt.",
       ],
@@ -533,7 +598,7 @@ async function start() {
     {
       id: "table-explain",
       attach: { element: SEL.table, on: "top" },
-      title: "10/12 – Kennzahlen erklärt",
+      title: "11/13 – Kennzahlen erklärt",
       text: [
         "<b>Σ Reward:</b> Die Summe aller gesammelten Punkte ",
         "<b>Ø Reward:</b> Durchschnittliche Punktzahl pro Schritt ",
@@ -548,7 +613,7 @@ async function start() {
     {
       id: "table-close",
       attach: { element: SEL.table, on: "top" },
-      title: "11/12 – Tabelle wieder schließen",
+      title: "12/13 – Tabelle wieder schließen",
       text: [
         "Schließe die Tabelle. Du kannst sie jederzeit erneut öffnen – alle Daten bleiben erhalten.",
       ],
@@ -568,9 +633,9 @@ async function start() {
     {
       id: "finish",
       attach: { element: "#btn-tutorial", on: "bottom" },
-      title: "12/12 – Tutorial abgeschlossen",
+      title: "13/13 – Tutorial abgeschlossen",
       text: [
-        "Geschafft! Du kennst nun alle wichtigen Funktionen. Die App wird zurückgesetzt, damit du mit einem frischen Start experimentieren kannst. Viel Erfolg! <b>Tipp:</b> Aktiviere den Debug-Modus oben rechts, um die tatsächlichen Werte der Thumbnails einzusehen.",
+        "Geschafft! Du kennst nun alle wichtigen Funktionen. Die App wird zurückgesetzt, damit du mit einem frischen Start experimentieren kannst. Viel Erfolg!",
       ],
       run: async () => {
         try {
@@ -593,42 +658,51 @@ async function start() {
       attachTo: s.attach as any,
       when: {
         show: async () => {
-          // Buttons initial deaktivieren
-          await nextTick();
-          const buttons = document.querySelectorAll(".shepherd-button");
-          const originalTexts = new Map<HTMLButtonElement, string>();
+          try {
+            // Buttons initial deaktivieren
+            await nextTick();
+            const buttons = document.querySelectorAll(".shepherd-button");
+            const originalTexts = new Map<HTMLButtonElement, string>();
 
-          buttons.forEach((btn) => {
-            const btnEl = btn as HTMLButtonElement;
-            originalTexts.set(btnEl, btnEl.textContent || "");
-            btnEl.disabled = true;
-            btn.classList.add("shepherd-button-disabled");
-          });
+            buttons.forEach((btn) => {
+              const btnEl = btn as HTMLButtonElement;
+              originalTexts.set(btnEl, btnEl.textContent || "");
+              btnEl.disabled = true;
+              btn.classList.add("shepherd-button-disabled");
+            });
 
-          // Countdown-Funktion (läuft parallel zur Step-Logik)
-          const runCountdown = async () => {
-            let countdown = 3;
-            while (countdown > 0) {
-              buttons.forEach((btn) => {
-                const btnEl = btn as HTMLButtonElement;
-                const originalText = originalTexts.get(btnEl) || "";
-                btnEl.textContent = `${originalText} (${countdown}s)`;
-              });
-              await sleep(1000);
-              countdown--;
+            // Countdown-Funktion (läuft parallel zur Step-Logik)
+            const runCountdown = async () => {
+              let countdown = 3;
+              while (countdown > 0) {
+                if (abortFlag) throw new Error("aborted");
+                buttons.forEach((btn) => {
+                  const btnEl = btn as HTMLButtonElement;
+                  const originalText = originalTexts.get(btnEl) || "";
+                  btnEl.textContent = `${originalText} (${countdown}s)`;
+                });
+                await sleep(1000);
+                countdown--;
+              }
+            };
+
+            // Step-Logik und Countdown parallel ausführen
+            await Promise.all([s.run(), runCountdown()]);
+
+            // Buttons wieder aktivieren und Original-Text wiederherstellen
+            buttons.forEach((btn) => {
+              const btnEl = btn as HTMLButtonElement;
+              btnEl.textContent = originalTexts.get(btnEl) || "";
+              btnEl.disabled = false;
+              btn.classList.remove("shepherd-button-disabled");
+            });
+          } catch (err: any) {
+            // Ignoriere aborted errors - Tour wurde vorzeitig geschlossen
+            if (err?.message === "aborted") {
+              return;
             }
-          };
-
-          // Step-Logik und Countdown parallel ausführen
-          await Promise.all([s.run(), runCountdown()]);
-
-          // Buttons wieder aktivieren und Original-Text wiederherstellen
-          buttons.forEach((btn) => {
-            const btnEl = btn as HTMLButtonElement;
-            btnEl.textContent = originalTexts.get(btnEl) || "";
-            btnEl.disabled = false;
-            btn.classList.remove("shepherd-button-disabled");
-          });
+            throw err;
+          }
         },
       },
       buttons: [
@@ -661,35 +735,181 @@ async function start() {
 }
 
 function forceClose() {
-  cleanup();
+  // KRITISCH: openLocal SOFORT auf false, damit tour-root und tour-dim aus dem DOM entfernt werden
   openLocal.value = false;
+
+  // Cleanup in separatem Microtask, damit Vue zuerst das Template aktualisieren kann
+  Promise.resolve().then(() => {
+    cleanup();
+  });
+
   emit("close");
 }
 
 /* Cleanup */
 function cleanup() {
+  // Setze abortFlag sofort, um alle laufenden Operationen abzubrechen
+  abortFlag = true;
+
+  // Räume alle aktiven sleep-Promises auf
+  activeSleeps.forEach((cleanupFn) => {
+    try {
+      cleanupFn();
+    } catch {}
+  });
+  activeSleeps.clear();
+
   try {
     tour?.cancel();
   } catch {}
   tour = null;
   ring.value.visible = false;
   curVisible.value = false;
+  curX.value = -9999;
+  curY.value = -9999;
   highlight(null);
   currentEl = null;
   resizeObs?.disconnect();
   resizeObs = null;
   mutObs?.disconnect();
   mutObs = null;
+
+  // SOFORT Locks entfernen (NICHT in nextTick!)
   document.documentElement.classList.remove("tour-lock");
   document.body.classList.remove("tour-lock");
+
+  // SOFORT Shepherd-Klassen entfernen
+  try {
+    document.body.classList.remove("shepherd-active", "shepherd-modal-is-visible");
+  } catch {}
+
+  // SOFORT pointer-events wiederherstellen
+  try {
+    document.body.style.removeProperty("pointer-events");
+    document.documentElement.style.removeProperty("pointer-events");
+  } catch {}
+
+  // SOFORT Shepherd-Elemente entfernen (NICHT in nextTick!)
+  try {
+    const shepherdElements = document.querySelectorAll(
+      ".shepherd-modal-overlay-container, .shepherd-element, .shepherd-target, .shepherd-modal-is-visible"
+    );
+    shepherdElements.forEach((el) => {
+      try {
+        el.remove();
+      } catch {}
+    });
+  } catch {}
+
+  // SOFORT tour-highlight Klassen entfernen
+  try {
+    document
+      .querySelectorAll(".tour-highlight")
+      .forEach((el) => {
+        try {
+          el.classList.remove("tour-highlight");
+        } catch {}
+      });
+  } catch {}
+
+  // Zusätzliche Sicherheits-Checks nach nextTick (falls DOM noch nachhängt)
+  nextTick(() => {
+    try {
+      document.documentElement.classList.remove("tour-lock");
+      document.body.classList.remove("tour-lock");
+      document.body.classList.remove("shepherd-active", "shepherd-modal-is-visible");
+      document.body.style.removeProperty("pointer-events");
+      document.documentElement.style.removeProperty("pointer-events");
+    } catch {}
+
+    // Nochmal alle Shepherd-Elemente entfernen (falls welche nachgeladen wurden)
+    try {
+      const shepherdElements = document.querySelectorAll(
+        ".shepherd-modal-overlay-container, .shepherd-element, .shepherd-target"
+      );
+      shepherdElements.forEach((el) => {
+        try {
+          el.remove();
+        } catch {}
+      });
+    } catch {}
+  });
+
+  // Noch ein letzter Check mit setTimeout (für langsame Browser)
+  setTimeout(() => {
+    try {
+      document.documentElement.classList.remove("tour-lock");
+      document.body.classList.remove("tour-lock");
+      document.body.classList.remove("shepherd-active", "shepherd-modal-is-visible");
+      document.body.style.removeProperty("pointer-events");
+      document.documentElement.style.removeProperty("pointer-events");
+
+      const shepherdElements = document.querySelectorAll(
+        ".shepherd-modal-overlay-container, .shepherd-element, .shepherd-target"
+      );
+      shepherdElements.forEach((el) => {
+        try {
+          el.remove();
+        } catch {}
+      });
+
+      // EXTRA-AGGRESSIV: Entferne ALLE Elemente die pointer-events blockieren könnten
+      const allElements = document.querySelectorAll("*");
+      allElements.forEach((el) => {
+        const htmlEl = el as HTMLElement;
+        const style = window.getComputedStyle(htmlEl);
+
+        // Entferne Elemente mit sehr hohem z-index die blockieren könnten
+        if (
+          (style.position === "fixed" || style.position === "absolute") &&
+          parseInt(style.zIndex) > 2000 &&
+          htmlEl.className &&
+          (htmlEl.className.includes("shepherd") ||
+           htmlEl.className.includes("tour-root") ||
+           htmlEl.className.includes("tour-dim"))
+        ) {
+          try {
+            htmlEl.remove();
+          } catch {}
+        }
+      });
+    } catch {}
+  }, 100);
+
+  // Nochmal ein letzter letzter Check nach 500ms
+  setTimeout(() => {
+    try {
+      document.body.style.removeProperty("pointer-events");
+      document.documentElement.style.removeProperty("pointer-events");
+      document.documentElement.classList.remove("tour-lock");
+      document.body.classList.remove("tour-lock", "shepherd-active", "shepherd-modal-is-visible");
+
+      // Entferne alle verbleibenden Shepherd und Tour Elemente
+      const allShepherd = document.querySelectorAll('[class*="shepherd"], [class*="tour"]');
+      allShepherd.forEach((el) => {
+        try {
+          if (el.className.includes("shepherd") || el.className.includes("tour")) {
+            (el as HTMLElement).remove();
+          }
+        } catch {}
+      });
+    } catch {}
+  }, 500);
 }
 
 watch(
   () => props.open,
   (v) => {
-    openLocal.value = v;
-    if (v) start();
-    else cleanup();
+    if (v) {
+      openLocal.value = true;
+      start();
+    } else {
+      // KRITISCH: Sofort openLocal auf false, dann cleanup
+      openLocal.value = false;
+      Promise.resolve().then(() => {
+        cleanup();
+      });
+    }
   },
 );
 onMounted(() => {

@@ -42,8 +42,22 @@
 .bar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 20px;
   white-space: nowrap;
+  flex: 1;
+}
+.bar-actions-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  flex: 1;
+}
+.bar-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding-right: 12px;
 }
 .btn {
@@ -108,6 +122,27 @@
       0 0 6px rgba(59, 130, 246, 0.35),
       0 0 12px rgba(59, 130, 246, 0.25),
       0 0 18px rgba(59, 130, 246, 0.15);
+  }
+}
+
+/* Glow-Effekt für Wahre Werte Button - Goldton */
+.btn-gold-glow {
+  position: relative;
+  animation: gold-glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes gold-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 3px rgba(218, 165, 32, 0.25),
+      0 0 6px rgba(218, 165, 32, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 0 6px rgba(218, 165, 32, 0.4),
+      0 0 12px rgba(218, 165, 32, 0.3),
+      0 0 18px rgba(218, 165, 32, 0.2);
   }
 }
 .btn-danger {
