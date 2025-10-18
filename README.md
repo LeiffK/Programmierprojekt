@@ -1,229 +1,85 @@
-# k-Armed Bandit Tool
+# Bandit-Studio
 
-Eine lokal laufendes, visuell hochwertiges Single Page Application (SPA) Tool zur Konfiguration, Simulation und Analyse von Multi-Armed-Bandit-Algorithmen in zwei Umgebungen: Bernoulli (binär) und Gaussian (kontinuierlich). Das Tool unterstützt Standardalgorithmen und bietet eine intuitive UI mit Live-Feedback und Vergleichsmöglichkeiten.
+Interaktive Single-Page-Application zur Simulation und Analyse von Multi-Armed-Bandit-Algorithmen am Beispiel von YouTube-Thumbnail-Tests.
 
-# Technologie-Stack und Entwicklungsebene
+## Was kann die App?
 
-Die Anwendung basiert auf einem modernen und performanten Technologie-Stack:
-
-## Vue 3 + TypeScript + Vite
-
-- Vue 3 ist ein weit verbreitetes, modernes JavaScript-Framework zur einfachen und schnellen Erstellung von Benutzeroberflächen.
-
-- TypeScript ergänzt JavaScript mit statischer Typisierung, was hilft, Fehler frühzeitig zu erkennen und den Code besser wartbar zu machen.
-
-- Vite ist ein schneller Entwicklungsserver und Build-Tool, das für moderne Frontend-Projekte optimiert ist und kurze Start- und Aktualisierungszeiten bietet.
-
-Die Vorlage verwendet dabei Vue 3's <script setup> Syntax für Single File Components (SFCs), eine moderne und vereinfachte Art, Komponenten zu schreiben. Weitere Details dazu findest Du in der offiziellen Vue 3 Dokumentation.
-
-Für einen Überblick über empfohlene Projekt-Einrichtung und IDE-Unterstützung mit TypeScript im Vue-Umfeld ist die Vue TypeScript Guide eine wertvolle Ressource.
-
-# Features
-
-- Auswählbarer Bandit-Typ (Bernoulli, Gaussian) mit dynamischer UI-Anpassung entsprechend Use-Case.
-
-- Konfigurierbare Anzahl von Aktionen (Armen) und Iterationen.
-
-- Live-Visualisierung von Rewards und Bernoulli-Ergebnissen.
-
-- Tabellarische und grafische Performance-Auswertung im Vergleich zu Standardalgorithmen.
-
-- Standard-Algorithmen: Greedy, Epsilon-Greedy, Optimistic Initial Values, Upper-Confidence-Bound (UCB), Thompson Sampling, Gradient Bandit.
-
-- Neben den Standard-Algorithmen kann im Tool über den Button „Eigener Algorithmus“ ein individueller Algorithmus eingegeben werden. Nach Klick auf diesen Button öffnet sich ein Editor, in dem eigener TypeScript-Code direkt eingegeben werden kann. Der Algorithmus kann so direkt im Vergleich mit den Standard-Strategien getestet und live ausgewertet werden.
-
-- Responsive & desktop-first UI, performant dank Web-Worker und Comlink.
-
-- Modernes Frontend mit Vue 3 (Composition API) + TypeScript, Pinia für State Management.
-
-- UI Libraries: Naive UI & TailwindCSS.
-
-- Leistungsfähige Charts via Apache ECharts.
-
-- Vollständig lokal, keine Remote-Datenhaltung.
-
-- Umfangreiche Tests: Vitest (Unit/UI), Playwright (E2E).
-
-- CI/CD: Automatisches Prüfen via Pull Requests, automatische Veröffentlichung auf GitHub Pages.
-
-# Begriffserklärungen
-
-## Single Page Application (SPA)
-
-Eine SPA lädt nicht bei jedem Klick die ganze Seite neu, sondern aktualisiert nur die Teile, die sich ändern. Das sorgt für eine schnelle und flüssige Bedienung, ähnlich wie bei einer installierten App auf dem Smartphone oder PC.
-
-## State Management (Pinia)
-
-Die Anwendung benötigt einen „Zustand“, also alle wichtigen Daten, die sie gerade verwendet (zum Beispiel gewählte Einstellungen oder Zwischenergebnisse). Pinia ist das Werkzeug, das dabei hilft, diesen Zustand übersichtlich und sicher zu verwalten, sodass alle Teile der Anwendung immer die gleichen, aktuellen Daten haben.
-
-## Web-Worker & Comlink
-
-Aufwändige Berechnungen, zum Beispiel das Ausführen von Algorithmen, können eine Webseite langsam machen. Web-Worker sind kleine Helferprogramme, die im Hintergrund laufen, sodass die Benutzeroberfläche schnell bleibt. Comlink ermöglicht eine einfache und sichere Kommunikation zwischen der Hauptanwendung und diesen Web-Workern.
-
-## Algorithmen im Tool
-
-Die Algorithmen entscheiden, wie man aus mehreren Möglichkeiten (z.B. verschiedenen Thumbnails) die beste auswählt:
-
-- Greedy: Immer die aktuell beste bekannte Option wählen.
-
-- ε-Greedy (Epsilon-Greedy): Meist die beste Option wählen, aber manchmal auch eine zufällige, um Neues zu entdecken.
-
-- Optimistic Initial Values: Alle Optionen am Anfang sehr positiv bewerten, damit alle mindestens einmal getestet werden.
-
-- Upper Confidence Bound (UCB): Berücksichtigt bisherige Ergebnisse und Unsicherheit, um Optionen gezielt zu untersuchen.
-
-- Thompson Sampling: Nutzt Wahrscheinlichkeiten, um unter Unsicherheit kluge Entscheidungen zu treffen.
-
-- Gradient Bandit: Lernt die Vorlieben über kleine Anpassungen im Laufe der Zeit; besonders geeignet bei kontinuierlichen Belohnungen.
-
-- Neben den Standard-Algorithmen kann im Tool über den Button „Eigener Algorithmus“ ein individueller Algorithmus eingegeben werden. Nach Klick auf diesen Button öffnet sich ein Editor, in dem eigener TypeScript-Code direkt eingegeben werden kann.
-
-## Exploration vs. Exploitation
-
-- Exploration: Neue oder weniger getestete Optionen ausprobieren, um mehr darüber zu lernen.
-
-- Exploitation: Bewährte, bekannte Optionen wählen, um möglichst viel Gewinn zu erzielen.
-
-Unsere Algorithmen balancieren diese beiden Ziele, um langfristig die beste Auswahl zu treffen.
-
-## CI/CD Pipeline
-
-Continuous Integration (CI) und Continuous Deployment (CD) sind automatisierte Prozesse, die sicherstellen, dass jeder neue Code geprüft, getestet und erst dann in das Hauptprojekt übernommen wird. Nach erfolgreichem Einbau wird die Anwendung automatisch online bereitgestellt. So bleibt die Software stabil und immer aktuell.
-
-## Unit-Tests und End-to-End (E2E) Tests
-
-- Unit-Tests: Prüfen einzelne Funktionen oder Komponenten isoliert.
-
-- End-to-End (E2E) Tests: Prüfen das Zusammenspiel der gesamten Anwendung aus der Sicht eines Nutzers.
-
-## MIT-Lizenz
-
-Die MIT-Lizenz ist eine Open-Source-Softwarelizenz, die es jedem erlaubt, den Code frei zu verwenden, zu verändern und weiterzugeben – auch in eigenen Projekten. Dabei muss ein Hinweis auf die ursprünglichen Urheber und die Lizenz beigefügt werden. Die Lizenz stellt den Code ohne Garantie bereit und die Urheber übernehmen keine Haftung.
-
-# Zielgruppe und Verwendung
-
-Dieses Tool richtet sich vor allem an Studierende, Lehrende und Forschende, die Multi-Armed-Bandit-Algorithmen besser verstehen, ausprobieren und vergleichen möchten – hier im Kontext von YouTube-Thumbnails. Es bietet eine praxisnahe, interaktive Umgebung, um Entscheidungsstrategien unter Unsicherheit zu erforschen.
-
-# Getting Started
-
-## Voraussetzungen
-
-- Node.js (empfohlene Version: aktuelle LTS)
-
-- npm oder yarn
+- **Zwei Test-Szenarien**:
+  - Gaussian (Watchtime in Sekunden)
+  - Bernoulli (Klicks ja/nein)
+- **Algorithmen-Vergleich**: Greedy, Epsilon-Greedy, UCB, Thompson Sampling, Gradient Bandit
+- **Eigene Algorithmen**: TypeScript-Code direkt im Editor eingeben und testen
+- **Live-Visualisierung**: Echtzeit-Charts mit Apache ECharts
+- **Interaktives Tutorial**: Geführte Einführung via Shepherd.js
+- **Vollständig lokal**: Keine Backend-Kommunikation, alles läuft im Browser
 
 ## Installation
 
-bash
+**Voraussetzungen**: Node.js (LTS-Version empfohlen)
+
+```bash
+# Repository klonen
 git clone https://github.com/LeiffK/Programmierprojekt.git
 cd Programmierprojekt
+
+# Dependencies installieren
 npm install
 
-## Entwicklung starten
-
-bash
+# Development Server starten
 npm run dev
+```
 
-Die Anwendung läuft unter: https://leiffk.github.io/Programmierprojekt/
+Die App läuft dann unter `http://localhost:5173`
 
-## Produktion-Build
+## Verfügbare Scripts
 
-bash
-npm run build
+```bash
+npm run dev        # Development Server starten
+npm run build      # Production Build erstellen
+npm run preview    # Build lokal testen
+npm run test       # Tests ausführen (Vitest)
+npm run type-check # TypeScript-Typen prüfen
+npm run format     # Code formatieren (Prettier)
+```
 
-Die gebauten Dateien liegen im Ordner dist und werden nach einem Merge automatisch auf GitHub Pages veröffentlicht.
+## Schnellstart
+
+1. Environment-Typ wählen (Gaussian oder Bernoulli)
+2. Anzahl der Thumbnails und Test-Iterationen festlegen
+3. Algorithmen konfigurieren und starten
+4. Ergebnisse in Echtzeit-Charts und Tabellen analysieren
+
+## Tech-Stack
+
+- **Frontend**: Vue 3 (Composition API, `<script setup>`)
+- **Sprache**: TypeScript
+- **Build**: Vite
+- **UI**: Naive UI + eigenes Design-System (CSS Custom Properties)
+- **Charts**: Apache ECharts + vue-echarts
+- **Tutorial**: Shepherd.js
+- **Testing**: Vitest
+- **Styling**: TailwindCSS
 
 ## Projektstruktur
 
-text
-/src
-/app # Startpunkt der App: App.vue, Router, globale Styles und UI-Theme
-/components # Kleine und wiederverwendbare UI-Bausteine (Cards, Tabellen, Charts)
-/features # Größere Funktionseinheiten (Konfiguration, Live-Simulation, Analyse, Custom-Algo)
-/stores # Pinia-Stores für den globalen Zustand
-/domain # Kernlogik: Algorithmen, Umgebungen und Metriken (rein TypeScript)
-/workers # Browser Web-Worker mit Comlink-Schnittstelle
-/composables # Wiederverwendbare Funktions-Hooks (z. B. Simulation, Charts, Validierung)
-/assets # Statische Dateien wie Bilder, Fonts
-/tests # Testfälle: Unit, UI und End-to-End Tests
+```
+src/
+├── algorithms/     # Bandit-Algorithmen (Greedy, UCB, Thompson, etc.)
+├── env/           # Umgebungen (Bernoulli, Gaussian)
+├── components/    # Vue-Komponenten
+├── composables/   # Wiederverwendbare Composition-Functions
+├── services/      # Business-Logik und State
+├── utils/         # Helper-Funktionen
+├── domain/        # TypeScript Interfaces und Types
+├── content/       # Statische Inhalte (z.B. Tutorial-Texte)
+├── tests/         # Unit-Tests
+└── styles/        # Globale CSS (tokens, utilities, motion)
+```
 
-## Nutzung
+## Tests
 
-1. Wähle den Bandit-Typ (Bernoulli oder Gaussian). Die UI passt sich dem Use-Case dynamisch an.
-
-2. Definiere Anzahl der Aktionen (Arme) und Iterationen (Simulationsschritte).
-
-3. Starte manuelles Testen oder mehrere parallele Algorithmen-Simulationen.
-
-4. Beobachte das Live-Feedback in Form von Rewards oder Klick-Ergebnissen.
-
-5. Ergebnisse werden tabellarisch und grafisch mit Standardalgorithmen verglichen.
-
-# Entwicklung & Testing
-
-- Code in Englisch (UI-Texte können Deutsch sein).
-
-- Einheitliche Namenskonventionen für bessere Leserlichkeit.
-
-- Manuelles und automatisiertes Testen:
-
--- Vitest für Unit- und UI-Tests.
-
--- Playwright für End-to-End Tests.
-
-- Peer-Reviews vor Mergen sind Pflicht.
-
-# Architekturelle Schwerpunkte
-
-- Rechenintensive Simulationen laufen in Web-Workern im Hintergrund, damit die UI schnell und flüssig bleibt.
-
-- Pinia verwaltet den globalen Zustand übersichtlich.
-
-- Klare Trennung in Features wie Konfiguration, Live-Daten, Analyse und Custom-Algorithmen ermöglicht gute Wartbarkeit und Erweiterbarkeit.
-
-# Continuous Integration & Deployment (CI/CD)
-
-- Alle Code-Änderungen werden automatisch geprüft (Formatierung, Typen, Tests, Build).
-
-- Nur geprüfter Code darf in den Haupt-Branch (main) gemerged werden.
-
-- Nach Merge: automatisches Deployment der App via GitHub Pages.
-
-# Häufige Fragen (FAQ)
-
-## Für wen ist das Tool geeignet?
-
-Für alle, die Multi-Armed-Bandit-Algorithmen verstehen oder selbst testen wollen, besonders Studierende.
-
-## Welche Browser werden unterstützt?
-
-Moderne Browser mit Unterstützung für Web-Worker und ES6+ Features, z.B. Chrome, Firefox, Edge und Safari.
-
-# Weitere Ressourcen
-
-- Figma UI-Mockup
-
-- Jira Board
-
-- Ausführliche Algorithmen- und Kennzahlen-Dokumentationen im Team-Wiki
-
-# Contribution Guidelines
-
-- Feature-Branches vom main aus erstellen.
-
-- Änderungen implementieren und lokal testen.
-
-- Pull Request mit Beschreibung und Tests eröffnen.
-
-- Peer-Review und automatisierte Checks abwarten.
-
-- Nach Freigabe wird der Code in den Haupt-Branch gemerged.
-
-# Lizenz
-
-Dieses Projekt steht unter der MIT-Lizenz.
-Diese erlaubt es jedem, den Code frei zu nutzen, zu modifizieren und weiterzugeben, solange der ursprüngliche Lizenzhinweis erhalten bleibt. Eine Garantie für Fehlerfreiheit gibt es nicht.
-
-# Kontakt und Support
-
-Bei Fragen oder Problemen wende Dich bitte an das Projektteam über die Kommunikationskanäle des Kurses.
+```bash
+npm run test              # Alle Tests ausführen
+npm run test -- --ui      # Tests mit UI
+npm run test -- --coverage # Coverage-Report generieren
+```
