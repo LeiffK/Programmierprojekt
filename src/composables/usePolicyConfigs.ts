@@ -72,8 +72,7 @@ export function usePolicyConfigs(form: Ref<iEnvConfig>) {
           priorMean: 0,
           priorVariance: 1,
           observationVariance: 1,
-          optimisticInitialValue:
-            form.value?.type === "bernoulli" ? 0.99 : 0,
+          optimisticInitialValue: form.value?.type === "bernoulli" ? 0.99 : 0,
         },
       ],
     },
@@ -178,7 +177,7 @@ export function usePolicyConfigs(form: Ref<iEnvConfig>) {
         ),
         priorMean: Number.isFinite(Number(variant?.priorMean))
           ? Number(variant?.priorMean)
-          : thompson.priorMean ?? 0,
+          : (thompson.priorMean ?? 0),
         priorVariance: ensurePositive(
           variant?.priorVariance,
           thompson.priorVariance ?? 1,
@@ -296,7 +295,6 @@ export function usePolicyConfigs(form: Ref<iEnvConfig>) {
       thompson: { ...current.thompson, ...thompson },
     };
   }
-
 
   watch(
     () => form.value.type,

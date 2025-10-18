@@ -77,8 +77,8 @@ export abstract class BasePolicy implements iBanditPolicy {
     this.N[a] += 1; // Zähler des Arms erhöhen
     const n = this.N[a]; // Anzahl Ziehungen dieses Arms
     // Mittelwert-Update mit inkrementeller Form
-    // this.Q[a] += (result.reward - this.Q[a]) / (n + 1);
-    this.Q[a] += (result.reward - this.Q[a]) / n;
+    this.Q[a] += (result.reward - this.Q[a]) / (n + 1);
+    // this.Q[a] += (result.reward - this.Q[a]) / n;
 
     //Alt
     // this.Q[a] += (result.reward - this.Q[a]) / n+1;

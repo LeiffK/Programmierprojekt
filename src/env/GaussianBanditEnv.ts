@@ -20,7 +20,7 @@ function erf(x: number): number {
   const t = 1 / (1 + p * abs);
   const y =
     1 -
-    (((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t) * Math.exp(-abs * abs);
+    ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-abs * abs);
   return sign * y;
 }
 
@@ -89,9 +89,28 @@ export class GaussianBanditEnv extends BanditEnv {
       }
     }
 
-    this.truncatedMeans = means!.map((m, idx) =>
-      truncatedGaussianMean(m, stdDev![idx]),
+    this.truncatedMeans = this.config.means.map((m, idx) =>
+      truncatedGaussianMean(m, this.config.stdDev![idx]),
     );
+    if (generatedRandom && this.truncatedMeans.length > 1) {
+      let sortedTrunc = [...this.truncatedMeans].sort((a, b) => b - a);
+      let bestTrunc = sortedTrunc[0];
+      const targetGap = (sortedTrunc[1] ?? sortedTrunc[0]) + 75;
+      const bestIdx = this.truncatedMeans.indexOf(bestTrunc);
+      let iterations = 0;
+      while (bestTrunc < targetGap && iterations < 10) {
+        const currentMean = this.config.means![bestIdx];
+        const delta = targetGap - bestTrunc;
+        this.config.means![bestIdx] = currentMean + delta + 1; // push deutlich darüber
+        this.truncatedMeans[bestIdx] = truncatedGaussianMean(
+          this.config.means![bestIdx],
+          this.config.stdDev![bestIdx],
+        );
+        bestTrunc = this.truncatedMeans[bestIdx];
+        sortedTrunc = [...this.truncatedMeans].sort((a, b) => b - a);
+        iterations += 1;
+      }
+    }
     const bestMean = Math.max(...this.truncatedMeans);
     this.optimalAction = this.truncatedMeans.indexOf(bestMean);
     (this.config as any).truncatedMeans = [...this.truncatedMeans];

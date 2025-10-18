@@ -34,10 +34,7 @@ export function generateProbabilities(
   });
 
   const bestIdx = Math.floor(rng() * k);
-  const maxOther = Math.max(
-    ...out.filter((_, idx) => idx !== bestIdx),
-    0,
-  );
+  const maxOther = Math.max(...out.filter((_, idx) => idx !== bestIdx), 0);
   const ensuredBest = Math.min(
     0.99,
     Math.max(out[bestIdx], maxOther + bestBonus, 0.26),

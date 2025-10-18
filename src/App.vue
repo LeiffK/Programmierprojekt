@@ -110,7 +110,12 @@
           </div>
 
           <section id="manual-section" class="card" v-if="mode === 'manual'">
-            <h2>Wähle, welches Thumbnail am besten performen wird <InfoTooltip text="Hier testest du manuell: Klicke auf ein Thumbnail und sieh sofort, wie viel Reward es bringt. Gleichzeitig lernen die Algorithmen im Hintergrund mit – so kannst du deine eigene Intuition direkt mit den automatischen Strategien vergleichen." /></h2>
+            <h2>
+              Wähle, welches Thumbnail am besten performen wird
+              <InfoTooltip
+                text="Hier testest du manuell: Klicke auf ein Thumbnail und sieh sofort, wie viel Reward es bringt. Gleichzeitig lernen die Algorithmen im Hintergrund mit – so kannst du deine eigene Intuition direkt mit den automatischen Strategien vergleichen."
+              />
+            </h2>
 
             <div class="thumb-grid">
               <ThumbnailCard
@@ -151,7 +156,12 @@
 
         <div class="col-right">
           <section id="chart-area" class="card">
-            <h2>Verläufe <InfoTooltip text="Sieh live, wie sich die Algorithmen entwickeln. Wähle oben eine Metrik aus (z.B. Gesamt-Reward oder Regret) und klicke in der Legende auf Algorithmen, um einzelne Linien ein- oder auszublenden. So erkennst du schnell, welche Strategie am besten funktioniert." /></h2>
+            <h2>
+              Verläufe
+              <InfoTooltip
+                text="Sieh live, wie sich die Algorithmen entwickeln. Wähle oben eine Metrik aus (z.B. Gesamt-Reward oder Regret) und klicke in der Legende auf Algorithmen, um einzelne Linien ein- oder auszublenden. So erkennst du schnell, welche Strategie am besten funktioniert."
+              />
+            </h2>
             <ChartArea
               :key="chartKey"
               :series="chartSeries"

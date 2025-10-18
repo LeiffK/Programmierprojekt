@@ -34,14 +34,17 @@ export class ThompsonSamplingGaussian extends BasePolicy {
 
   constructor(cfg: ThompsonGaussianConfig = {}) {
     super(cfg);
-    this.priorMean = cfg.priorMean ?? (cfg.optimisticInitialValue ?? 0);
+    this.priorMean = cfg.priorMean ?? cfg.optimisticInitialValue ?? 0;
     this.priorVariance = cfg.priorVariance ?? 1;
     this.defaultObservationVariance = cfg.observationVariance ?? 1;
   }
 
   protected onInitialize(env: iBanditEnv): void {
     this.means = Array.from({ length: this.nArms }, () => this.priorMean);
-    this.variances = Array.from({ length: this.nArms }, () => this.priorVariance);
+    this.variances = Array.from(
+      { length: this.nArms },
+      () => this.priorVariance,
+    );
     this.observationVariances = this.resolveObservationVariance(env);
   }
 
@@ -80,9 +83,15 @@ export class ThompsonSamplingGaussian extends BasePolicy {
       return cfg.stdDev.map((s: number) => Math.max(s, 0) ** 2);
     }
     if (typeof cfg.stdDev === "number") {
-      return Array.from({ length: this.nArms }, () => Math.max(cfg.stdDev, 0) ** 2);
+      return Array.from(
+        { length: this.nArms },
+        () => Math.max(cfg.stdDev, 0) ** 2,
+      );
     }
-    return Array.from({ length: this.nArms }, () => this.defaultObservationVariance);
+    return Array.from(
+      { length: this.nArms },
+      () => this.defaultObservationVariance,
+    );
   }
 
   public getMeans(): number[] {
@@ -90,7 +99,9 @@ export class ThompsonSamplingGaussian extends BasePolicy {
   }
 
   public getPrecisions(): number[] {
-    return this.variances.map((v) => (v > 0 ? 1 / v : Number.POSITIVE_INFINITY));
+    return this.variances.map((v) =>
+      v > 0 ? 1 / v : Number.POSITIVE_INFINITY,
+    );
   }
 
   public getObsVariances(): number[] {

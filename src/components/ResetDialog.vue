@@ -15,14 +15,12 @@
       ref="modalRef"
     >
       <div class="modal-header">
-        <div class="modal-title" id="reset-title">
-          Zurücksetzen bestätigen
-        </div>
+        <div class="modal-title" id="reset-title">Zurücksetzen bestätigen</div>
       </div>
       <div class="modal-body" id="reset-desc">
         <p>
-          Alle Daten und Einstellungen gehen verloren. Dieser Schritt kann
-          nicht rückgängig gemacht werden.
+          Alle Daten und Einstellungen gehen verloren. Dieser Schritt kann nicht
+          rückgängig gemacht werden.
         </p>
       </div>
       <div class="modal-footer">

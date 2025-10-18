@@ -1,7 +1,12 @@
 <template>
   <section class="card">
     <div class="card-head">
-      <h2>Environment <InfoTooltip text="Hier legst du fest, was getestet werden soll: Gaussian für messbare Werte wie Watchtime in Sekunden, Bernoulli für Ja/Nein-Entscheidungen wie Klicks. Die Anzahl Thumbnails bestimmt, wie viele verschiedene Varianten miteinander verglichen werden." /></h2>
+      <h2>
+        Environment
+        <InfoTooltip
+          text="Hier legst du fest, was getestet werden soll: Gaussian für messbare Werte wie Watchtime in Sekunden, Bernoulli für Ja/Nein-Entscheidungen wie Klicks. Die Anzahl Thumbnails bestimmt, wie viele verschiedene Varianten miteinander verglichen werden."
+        />
+      </h2>
       <div class="head-actions">
         <slot name="actions" />
       </div>
@@ -17,9 +22,26 @@
             :class="{ active: local.type === 'gaussian' }"
             @click="local.type = 'gaussian'"
           >
-            <svg class="env-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 3v18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M7 16c0-1.5 1-3 2-3s2 1.5 3 0 1-3 2-3 2 1.5 3 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              class="env-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 3v18h18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M7 16c0-1.5 1-3 2-3s2 1.5 3 0 1-3 2-3 2 1.5 3 0"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
             <div class="env-text">
               <div class="env-title">Gaussian</div>
@@ -32,9 +54,26 @@
             :class="{ active: local.type === 'bernoulli' }"
             @click="local.type = 'bernoulli'"
           >
-            <svg class="env-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              class="env-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M9 11l3 3L22 4"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
             <div class="env-text">
               <div class="env-title">Bernoulli</div>

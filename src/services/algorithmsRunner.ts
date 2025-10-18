@@ -480,7 +480,9 @@ class AlgorithmsRunner {
           const hasSharedExplicit = Array.isArray(tsInput?.variants);
           const defaultMean = Number((tsInput as any)?.priorMean ?? 0);
           const defaultVar = Number((tsInput as any)?.priorVariance ?? 1);
-          const defaultObsVar = Number((tsInput as any)?.observationVariance ?? 1);
+          const defaultObsVar = Number(
+            (tsInput as any)?.observationVariance ?? 1,
+          );
           const defaultOiv = Number.isFinite(
             Number((tsInput as any)?.optimisticInitialValue),
           )
@@ -572,14 +574,15 @@ class AlgorithmsRunner {
           : cfg.envConfig.type === "bernoulli"
             ? 0.99
             : 0;
-        const variants = Array.isArray(gradInput?.variants) && gradInput.variants.length
-          ? gradInput.variants
-          : [
-              {
-                alpha: defaultAlpha,
-                optimisticInitialValue: defaultOiv,
-              },
-            ];
+        const variants =
+          Array.isArray(gradInput?.variants) && gradInput.variants.length
+            ? gradInput.variants
+            : [
+                {
+                  alpha: defaultAlpha,
+                  optimisticInitialValue: defaultOiv,
+                },
+              ];
 
         let gradColorIdx = 0;
         variants.forEach((variant, idx) => {
@@ -598,7 +601,7 @@ class AlgorithmsRunner {
             : `Gradient Bandit v${idx + 1} (alpha=${alpha.toFixed(3)})`;
           const color = isSingle
             ? "#795548"
-            : PALETTE[(gradColorIdx++) % PALETTE.length];
+            : PALETTE[gradColorIdx++ % PALETTE.length];
 
           const gradCfg: ConstructorParameters<typeof GradientBandit>[0] = {
             seed:
@@ -609,7 +612,9 @@ class AlgorithmsRunner {
             optimisticInitialValue,
           };
           const grad = new GradientBandit(
-            gradCfg as unknown as ConstructorParameters<typeof GradientBandit>[0],
+            gradCfg as unknown as ConstructorParameters<
+              typeof GradientBandit
+            >[0],
           );
           const env = mkEnv(151 + idx * 3);
           grad.initialize(env);

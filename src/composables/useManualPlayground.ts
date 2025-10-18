@@ -52,8 +52,7 @@ export function useManualPlayground(options: ManualPlaygroundOptions) {
         manualEnv.value.config.type === "bernoulli"
           ? result.reward.toFixed(0)
           : `${result.reward.toFixed(2)}s`;
-      const suffix =
-        debugEnabled.value && result.isOptimal ? " - optimal" : "";
+      const suffix = debugEnabled.value && result.isOptimal ? " - optimal" : "";
       lastEventText.value = `Manuell: Arm ${
         actionIndex + 1
       } - Reward ${rewardText}${suffix}`;

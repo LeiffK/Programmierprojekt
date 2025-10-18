@@ -1,10 +1,4 @@
-import {
-  computed,
-  onBeforeUnmount,
-  ref,
-  watch,
-  type Ref,
-} from "vue";
+import { computed, onBeforeUnmount, ref, watch, type Ref } from "vue";
 import type { ManualStep } from "../domain/iHistory";
 import type { iEnvConfig } from "../env/Domain/iEnvConfig";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv";
@@ -97,8 +91,12 @@ export function useRunnerOrchestration(options: RunnerOrchestrationOptions) {
     return output;
   });
 
-  const metricRows = computed<(iMetricsRow & { seriesId?: string; optimalRate?: number })[]>(() => {
-    const rows: Array<iMetricsRow & { seriesId?: string; optimalRate?: number }> = [];
+  const metricRows = computed<
+    (iMetricsRow & { seriesId?: string; optimalRate?: number })[]
+  >(() => {
+    const rows: Array<
+      iMetricsRow & { seriesId?: string; optimalRate?: number }
+    > = [];
     if (options.mode.value === "manual" && (seriesState as any).manual) {
       const manualRow = buildMetricsRowFromManual(
         options.manualHistory.value,
@@ -165,25 +163,28 @@ export function useRunnerOrchestration(options: RunnerOrchestrationOptions) {
     setSeriesVisible(payload.id, payload.visible);
   }
 
-type ResetReason = "mode-switch" | "user-reset" | "env-reinit" | "bootstrap";
+  type ResetReason = "mode-switch" | "user-reset" | "env-reinit" | "bootstrap";
 
-function hardResetForMode(newMode: "manual" | "algo", reason: ResetReason = "bootstrap") {
-  try {
-    const status = algorithmsRunner.getStatus?.();
-    const shouldStop = status === "RUNNING" || status === "PAUSED";
-    if (shouldStop) {
-      const message =
-        reason === "mode-switch"
-          ? "Modus gewechselt"
-          : reason === "user-reset"
-            ? "Zurückgesetzt"
-            : reason === "env-reinit"
-              ? "Neu initialisiert"
-              : "Neu geladen";
-      algorithmsRunner.stop(message);
-    }
-  } catch {}
-  resetSeriesStore();
+  function hardResetForMode(
+    newMode: "manual" | "algo",
+    reason: ResetReason = "bootstrap",
+  ) {
+    try {
+      const status = algorithmsRunner.getStatus?.();
+      const shouldStop = status === "RUNNING" || status === "PAUSED";
+      if (shouldStop) {
+        const message =
+          reason === "mode-switch"
+            ? "Modus gewechselt"
+            : reason === "user-reset"
+              ? "Zurückgesetzt"
+              : reason === "env-reinit"
+                ? "Neu initialisiert"
+                : "Neu geladen";
+        algorithmsRunner.stop(message);
+      }
+    } catch {}
+    resetSeriesStore();
     options.manualHistory.value = [];
     options.manualCounts.value = Array.from(
       { length: options.form.value.arms ?? 0 },
@@ -214,8 +215,7 @@ function hardResetForMode(newMode: "manual" | "algo", reason: ResetReason = "boo
   }
 
   function onModeChange() {
-    const label =
-      options.mode.value === "manual" ? "Manuell" : "Algorithmisch";
+    const label = options.mode.value === "manual" ? "Manuell" : "Algorithmisch";
     options.lastEventText.value = `Modus: ${label}`;
     hardResetForMode(options.mode.value, "mode-switch");
   }

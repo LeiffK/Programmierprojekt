@@ -9,7 +9,8 @@
       </header>
       <div class="modal-body">
         <p class="description">
-          Diese Werte zeigen die tatsächliche Performance jedes Thumbnails. Das beste Thumbnail hat den höchsten Wert.
+          Diese Werte zeigen die tatsächliche Performance jedes Thumbnails. Das
+          beste Thumbnail hat den höchsten Wert.
         </p>
         <div class="truth-grid">
           <div
@@ -19,8 +20,12 @@
             :class="{ 'is-best': index === bestIndex }"
           >
             <div class="truth-label">
-              <span class="thumb-name">Thumbnail {{ String.fromCharCode(65 + index) }}</span>
-              <span v-if="index === bestIndex" class="best-badge">★ Bestes</span>
+              <span class="thumb-name"
+                >Thumbnail {{ String.fromCharCode(65 + index) }}</span
+              >
+              <span v-if="index === bestIndex" class="best-badge"
+                >★ Bestes</span
+              >
             </div>
             <div class="truth-value">{{ value.toFixed(3) }}</div>
           </div>
@@ -31,14 +36,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from "vue";
 
 const props = defineProps<{
   open: boolean;
   truthValues: number[];
 }>();
 
-defineEmits<{ (e: 'close'): void }>();
+defineEmits<{ (e: "close"): void }>();
 
 const bestIndex = computed(() => {
   if (!props.truthValues || props.truthValues.length === 0) return -1;

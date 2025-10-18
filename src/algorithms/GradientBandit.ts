@@ -63,7 +63,7 @@ export class GradientBandit extends BasePolicy {
 
     // inkrementeller Durchschnitt mit altem t
     if (oldT > 0) {
-        this.averageReward += (result.reward - this.averageReward) / this.t;
+      this.averageReward += (result.reward - this.averageReward) / this.t;
     } else {
       // Falls erstes Sample, baseline auf Reward setzen
       this.averageReward = result.reward;

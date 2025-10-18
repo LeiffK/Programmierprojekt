@@ -354,7 +354,7 @@ async function start() {
       attach: { element: SEL.env, on: "bottom" },
       title: "1/12 – Umgebung einrichten",
       text: [
-        "Bestimme hier, wie viele Thumbnail-Varianten du testen möchtest. Mit den Pfeiltasten kannst du die Anzahl anpassen."
+        "Bestimme hier, wie viele Thumbnail-Varianten du testen möchtest. Mit den Pfeiltasten kannst du die Anzahl anpassen.",
       ],
       run: async () => {
         await focusSelector(SEL.env);
@@ -433,7 +433,7 @@ async function start() {
       attach: { element: SEL.runner, on: "bottom" },
       title: "5/12 – Simulation starten",
       text: [
-        "Klicke auf \"Start\", um die Algorithmen automatisch laufen zu lassen. Derselbe Button dient anschließend zum Pausieren. Mit \"+1 Schritt\" kannst du einzelne Schritte manuell ausführen – ideal, um genau zu beobachten, was passiert.",
+        'Klicke auf "Start", um die Algorithmen automatisch laufen zu lassen. Derselbe Button dient anschließend zum Pausieren. Mit "+1 Schritt" kannst du einzelne Schritte manuell ausführen – ideal, um genau zu beobachten, was passiert.',
       ],
       run: async () => {
         await sleep(200);
@@ -469,7 +469,7 @@ async function start() {
       attach: { element: SEL.chart, on: "top" },
       title: "7/12 – Metrik wechseln",
       text: [
-        "Wechsle nun zur Metrik \"Durchschnitt\" (Ø-Reward). Dadurch erkennst du, welcher Algorithmus im Schnitt pro Schritt die meisten Punkte erzielt.",
+        'Wechsle nun zur Metrik "Durchschnitt" (Ø-Reward). Dadurch erkennst du, welcher Algorithmus im Schnitt pro Schritt die meisten Punkte erzielt.',
       ],
       run: async () => {
         await sleep(200);
@@ -570,7 +570,7 @@ async function start() {
       attach: { element: "#btn-tutorial", on: "bottom" },
       title: "12/12 – Tutorial abgeschlossen",
       text: [
-        "Geschafft! Du kennst nun alle wichtigen Funktionen. Die App wird zurückgesetzt, damit du mit einem frischen Start experimentieren kannst. Viel Erfolg! <b>Tipp:</b> Aktiviere den Debug-Modus oben rechts, um die tatsächlichen Werte der Thumbnails einzusehen."
+        "Geschafft! Du kennst nun alle wichtigen Funktionen. Die App wird zurückgesetzt, damit du mit einem frischen Start experimentieren kannst. Viel Erfolg! <b>Tipp:</b> Aktiviere den Debug-Modus oben rechts, um die tatsächlichen Werte der Thumbnails einzusehen.",
       ],
       run: async () => {
         try {
@@ -595,14 +595,14 @@ async function start() {
         show: async () => {
           // Buttons initial deaktivieren
           await nextTick();
-          const buttons = document.querySelectorAll('.shepherd-button');
+          const buttons = document.querySelectorAll(".shepherd-button");
           const originalTexts = new Map<HTMLButtonElement, string>();
 
           buttons.forEach((btn) => {
             const btnEl = btn as HTMLButtonElement;
-            originalTexts.set(btnEl, btnEl.textContent || '');
+            originalTexts.set(btnEl, btnEl.textContent || "");
             btnEl.disabled = true;
-            btn.classList.add('shepherd-button-disabled');
+            btn.classList.add("shepherd-button-disabled");
           });
 
           // Countdown-Funktion (läuft parallel zur Step-Logik)
@@ -611,7 +611,7 @@ async function start() {
             while (countdown > 0) {
               buttons.forEach((btn) => {
                 const btnEl = btn as HTMLButtonElement;
-                const originalText = originalTexts.get(btnEl) || '';
+                const originalText = originalTexts.get(btnEl) || "";
                 btnEl.textContent = `${originalText} (${countdown}s)`;
               });
               await sleep(1000);
@@ -620,17 +620,14 @@ async function start() {
           };
 
           // Step-Logik und Countdown parallel ausführen
-          await Promise.all([
-            s.run(),
-            runCountdown()
-          ]);
+          await Promise.all([s.run(), runCountdown()]);
 
           // Buttons wieder aktivieren und Original-Text wiederherstellen
           buttons.forEach((btn) => {
             const btnEl = btn as HTMLButtonElement;
-            btnEl.textContent = originalTexts.get(btnEl) || '';
+            btnEl.textContent = originalTexts.get(btnEl) || "";
             btnEl.disabled = false;
-            btn.classList.remove('shepherd-button-disabled');
+            btn.classList.remove("shepherd-button-disabled");
           });
         },
       },

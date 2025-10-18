@@ -1,7 +1,12 @@
 <template>
   <section class="card">
     <div class="row one-line">
-      <h2 class="title">Automatischer Lauf <InfoTooltip text="Lass die Algorithmen automatisch laufen. Stelle ein, wie viele Schritte insgesamt gemacht werden sollen und wie schnell (Schritte pro Sekunde). Mit +1 Schritt kannst du auch einzeln vorwärtsgehen – ideal zum genauen Beobachten." /></h2>
+      <h2 class="title">
+        Automatischer Lauf
+        <InfoTooltip
+          text="Lass die Algorithmen automatisch laufen. Stelle ein, wie viele Schritte insgesamt gemacht werden sollen und wie schnell (Schritte pro Sekunde). Mit +1 Schritt kannst du auch einzeln vorwärtsgehen – ideal zum genauen Beobachten."
+        />
+      </h2>
       <div class="status" :class="statusClass">
         <span class="dot" />
         <span class="txt">{{ statusText }}</span>
@@ -218,7 +223,7 @@ function onReset() {
   algorithmsRunner.stop("Reset");
   running.value = false;
   configured.value = false;
-  lastConfigKey = null;  // Config-Cache löschen, damit beim nächsten Start neu konfiguriert wird
+  lastConfigKey = null; // Config-Cache löschen, damit beim nächsten Start neu konfiguriert wird
   statusText.value = "Zurückgesetzt";
   emit("reset");
 }

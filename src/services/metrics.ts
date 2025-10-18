@@ -25,7 +25,11 @@ function bestMeanFrom(cfg?: iEnvConfig | null): number {
 
 function bestActionIndex(cfg?: iEnvConfig | null): number | null {
   if (!cfg) return null;
-  if (cfg.type === "bernoulli" && Array.isArray(cfg.probs) && cfg.probs.length) {
+  if (
+    cfg.type === "bernoulli" &&
+    Array.isArray(cfg.probs) &&
+    cfg.probs.length
+  ) {
     const max = Math.max(...cfg.probs);
     return cfg.probs.indexOf(max);
   }
@@ -36,7 +40,10 @@ function bestActionIndex(cfg?: iEnvConfig | null): number | null {
   return null;
 }
 
-function isBestAction(cfg: iEnvConfig | null | undefined, action: number): boolean {
+function isBestAction(
+  cfg: iEnvConfig | null | undefined,
+  action: number,
+): boolean {
   const idx = bestActionIndex(cfg);
   if (idx == null) return false;
   return action === idx;
@@ -60,7 +67,10 @@ export function buildMetricsRowFromManual(
   const bestIdx = bestActionIndex(cfg);
   const bestCount =
     bestIdx != null
-      ? history.reduce((sum, step) => sum + (step.action === bestIdx ? 1 : 0), 0)
+      ? history.reduce(
+          (sum, step) => sum + (step.action === bestIdx ? 1 : 0),
+          0,
+        )
       : history.filter((r) => r.isOptimal).length;
   const bestChoiceRate = n ? bestCount / n : 0;
 
@@ -108,7 +118,7 @@ export function buildSeriesFromManual(
     const step = i + 1;
     cum += r.reward;
     const isBest =
-      bestIdx != null ? r.action === bestIdx : r.isOptimal ?? false;
+      bestIdx != null ? r.action === bestIdx : (r.isOptimal ?? false);
     bestCount += isBest ? 1 : 0;
     regret += regretContribution(bestMean ?? 0, r);
 

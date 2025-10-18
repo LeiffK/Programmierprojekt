@@ -6,12 +6,36 @@
     <details class="help-section" :open="helpOpen">
       <summary @click="toggleHelp">
         <div class="help-header">
-          <svg class="help-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8 7h8M8 11h8M8 15h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <svg
+            class="help-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M8 7h8M8 11h8M8 15h5"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
           </svg>
-          <span class="help-title">Anleitung: Wie schreibe ich einen eigenen Algorithmus?</span>
+          <span class="help-title"
+            >Anleitung: Wie schreibe ich einen eigenen Algorithmus?</span
+          >
           <span class="help-chevron" :class="{ open: helpOpen }">▾</span>
         </div>
       </summary>
@@ -19,8 +43,14 @@
         <h4>Grundlagen</h4>
         <ul>
           <li><strong>Sprache:</strong> TypeScript (ES2022)</li>
-          <li><strong>Klassenname:</strong> Benenne deine Klasse eindeutig (z.B. <code>MyPolicy</code>) – dieser Name erscheint im UI</li>
-          <li><strong>Basisklasse:</strong> Deine Klasse muss von <code>BasePolicy</code> erben</li>
+          <li>
+            <strong>Klassenname:</strong> Benenne deine Klasse eindeutig (z.B.
+            <code>MyPolicy</code>) – dieser Name erscheint im UI
+          </li>
+          <li>
+            <strong>Basisklasse:</strong> Deine Klasse muss von
+            <code>BasePolicy</code> erben
+          </li>
         </ul>
 
         <h4>Verfügbare Funktionen aus BasePolicy</h4>
@@ -51,14 +81,27 @@
 
         <h4>Wichtige Hinweise</h4>
         <ul>
-          <li>Die Methode <code>selectAction()</code> muss einen gültigen Arm-Index (0 bis nArms-1) zurückgeben</li>
-          <li>Wirft <code>selectAction()</code> einen Fehler, wird die Policy deaktiviert</li>
-          <li>Nach dem Speichern kannst du deine Policy über den "Anwenden"-Button aktivieren</li>
-          <li>Aktivierte Policies erscheinen in den Verläufen und der Vergleichstabelle</li>
+          <li>
+            Die Methode <code>selectAction()</code> muss einen gültigen
+            Arm-Index (0 bis nArms-1) zurückgeben
+          </li>
+          <li>
+            Wirft <code>selectAction()</code> einen Fehler, wird die Policy
+            deaktiviert
+          </li>
+          <li>
+            Nach dem Speichern kannst du deine Policy über den "Anwenden"-Button
+            aktivieren
+          </li>
+          <li>
+            Aktivierte Policies erscheinen in den Verläufen und der
+            Vergleichstabelle
+          </li>
         </ul>
 
         <h4>Beispiel: Epsilon-Greedy</h4>
-        <pre class="help-code">export class MyEpsilonGreedy extends BasePolicy {
+        <pre class="help-code">
+export class MyEpsilonGreedy extends BasePolicy {
   epsilon = 0.1;
 
   selectAction() {
@@ -69,7 +112,8 @@
     const estimates = this.getEstimates();
     return estimates.indexOf(Math.max(...estimates));
   }
-}</pre>
+}</pre
+        >
       </div>
     </details>
 

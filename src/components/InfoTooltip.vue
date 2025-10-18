@@ -1,13 +1,28 @@
 <template>
   <div class="tooltip-wrapper">
-    <div class="tooltip-icon" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
+    <div
+      class="tooltip-icon"
+      @mouseenter="onMouseEnter"
+      @mouseleave="onMouseLeave"
+    >
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-        <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+        <path
+          d="M12 16v-4M12 8h.01"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
       </svg>
     </div>
     <transition name="fade">
-      <div v-if="show" ref="tooltipRef" class="tooltip-content" :class="position" :style="tooltipStyle">
+      <div
+        v-if="show"
+        ref="tooltipRef"
+        class="tooltip-content"
+        :class="position"
+        :style="tooltipStyle"
+      >
         <slot>{{ text }}</slot>
       </div>
     </transition>
@@ -15,16 +30,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue';
+import { ref, nextTick } from "vue";
 
 interface Props {
   text?: string;
-  position?: 'top' | 'bottom' | 'left' | 'right';
+  position?: "top" | "bottom" | "left" | "right";
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  text: '',
-  position: 'top'
+  text: "",
+  position: "top",
 });
 
 const show = ref(false);
@@ -55,28 +70,28 @@ function adjustTooltipPosition() {
 
   // Rechter Rand überschritten
   if (rect.right > viewportWidth - padding) {
-    adjustments.left = 'auto';
-    adjustments.right = '0';
-    adjustments.transform = 'none';
+    adjustments.left = "auto";
+    adjustments.right = "0";
+    adjustments.transform = "none";
   }
 
   // Linker Rand überschritten
   if (rect.left < padding) {
-    adjustments.left = '0';
-    adjustments.right = 'auto';
-    adjustments.transform = 'none';
+    adjustments.left = "0";
+    adjustments.right = "auto";
+    adjustments.transform = "none";
   }
 
   // Unterer Rand überschritten
   if (rect.bottom > viewportHeight - padding) {
-    adjustments.top = 'auto';
-    adjustments.bottom = 'calc(100% + 12px)';
+    adjustments.top = "auto";
+    adjustments.bottom = "calc(100% + 12px)";
   }
 
   // Oberer Rand überschritten
   if (rect.top < padding) {
-    adjustments.bottom = 'auto';
-    adjustments.top = 'calc(100% + 12px)';
+    adjustments.bottom = "auto";
+    adjustments.top = "calc(100% + 12px)";
   }
 
   tooltipStyle.value = adjustments;
@@ -129,7 +144,9 @@ function adjustTooltipPosition() {
   font-size: 14px;
   line-height: 1.5;
   white-space: normal;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.4);
   pointer-events: none;
   max-width: 380px;
   min-width: 240px;
@@ -162,7 +179,7 @@ function adjustTooltipPosition() {
 
 /* Arrow */
 .tooltip-content::before {
-  content: '';
+  content: "";
   position: absolute;
   width: 0;
   height: 0;

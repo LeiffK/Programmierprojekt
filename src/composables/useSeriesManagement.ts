@@ -155,7 +155,12 @@ export function useSeriesManagement(options: SeriesManagementOptions) {
     paletteIdx = 0;
   }
 
-  function handleRunnerResult(policyId: string, action: number, reward: number, isOptimal: boolean) {
+  function handleRunnerResult(
+    policyId: string,
+    action: number,
+    reward: number,
+    isOptimal: boolean,
+  ) {
     const id = String(policyId);
 
     // Selbstheilung: unbekannte Serien sofort registrieren

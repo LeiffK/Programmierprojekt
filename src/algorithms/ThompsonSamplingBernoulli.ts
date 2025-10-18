@@ -9,7 +9,6 @@ export interface ThompsonBernoulliConfig extends iBanditPolicyConfig {
   beta?: number;
 }
 
-
 /**
  * Thompson Sampling für Bernoulli-Banditen.
  *

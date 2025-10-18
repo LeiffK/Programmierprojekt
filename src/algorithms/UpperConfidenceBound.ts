@@ -32,8 +32,6 @@ export class UpperConfidenceBound extends BasePolicy {
    * Noch nie gewählte Arme werden zuerst gespielt.
    */
   override selectAction(): number {
-  
-
     // Priorisiere Arme, die noch nie ausgespielt wurden
     for (let a = 0; a < this.nArms; a++) {
       if (this.N[a] === 0) {
