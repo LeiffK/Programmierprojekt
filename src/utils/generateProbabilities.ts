@@ -28,14 +28,27 @@ export function generateProbabilities(
   const bestBonus = cfg.bestBonus ?? 0.25;
 
   // Basiswahrscheinlichkeiten generieren
-  const out = Array.from({ length: k }, () =>
-    Number((min + rng() * span).toFixed(4)),
-  );
+  const out = Array.from({ length: k }, () => {
+    const raw = min + rng() * span;
+    return Number(raw.toFixed(4));
+  });
 
-  // Einen "besten" Arm auswählen und Bonus darauf anwenden
   const bestIdx = Math.floor(rng() * k);
-  out[bestIdx] = Number(Math.min(0.99, out[bestIdx] + bestBonus).toFixed(4));
+  const maxOther = Math.max(
+    ...out.filter((_, idx) => idx !== bestIdx),
+    0,
+  );
+  const ensuredBest = Math.min(
+    0.99,
+    Math.max(out[bestIdx], maxOther + bestBonus, 0.26),
+  );
+  out[bestIdx] = Number(ensuredBest.toFixed(4));
 
-  // Alle Wahrscheinlichkeiten auf gültigen Bereich [0.01, 0.99] trimmen
+  for (let i = 0; i < out.length; i++) {
+    if (i === bestIdx) continue;
+    const capped = Math.min(out[i], out[bestIdx] - 0.25);
+    out[i] = Number(Math.max(capped, 0.01).toFixed(4));
+  }
+
   return out.map((p) => Math.min(Math.max(p, 0.01), 0.99));
 }

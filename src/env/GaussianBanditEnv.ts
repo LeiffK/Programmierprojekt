@@ -52,8 +52,9 @@ export class GaussianBanditEnv extends BanditEnv {
 
     const hasMeans = Array.isArray(means);
     const hasStd = Array.isArray(stdDev);
+    const generatedRandom = !hasMeans && !hasStd;
 
-    if (!hasMeans && !hasStd) {
+    if (generatedRandom) {
       means = [];
       stdDev = [];
       for (let i = 0; i < config.arms; i++) {
@@ -77,6 +78,16 @@ export class GaussianBanditEnv extends BanditEnv {
 
     this.config.means = means!;
     this.config.stdDev = stdDev!;
+
+    if (generatedRandom && this.config.means.length > 1) {
+      const sorted = [...this.config.means].sort((a, b) => b - a);
+      const second = sorted[1] ?? sorted[0];
+      const bestIndex = this.config.means.indexOf(sorted[0]);
+      const required = second + 75;
+      if (this.config.means[bestIndex] < required) {
+        this.config.means[bestIndex] = required;
+      }
+    }
 
     this.truncatedMeans = means!.map((m, idx) =>
       truncatedGaussianMean(m, stdDev![idx]),

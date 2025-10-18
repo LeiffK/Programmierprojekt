@@ -97,4 +97,3 @@ export class ThompsonSamplingGaussian extends BasePolicy {
     return [...this.observationVariances];
   }
 }
-
