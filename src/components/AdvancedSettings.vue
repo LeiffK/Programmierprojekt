@@ -412,9 +412,11 @@
               <div class="algo-head">
                 <div class="pill pill-thompson">Thompson</div>
                 <InfoTooltip
-                  :text="localEnv.type === 'gaussian'
-                    ? 'Thompson Sampling ist ein bayesianischer Ansatz, der Wahrscheinlichkeitsverteilungen nutzt. Für Gaussian: Prior-Mean = erwarteter Startwert, Prior-Varianz = initiale Unsicherheit (höher = mehr Exploration), Beobachtungs-Varianz (Obs-Var) = angenommenes Rauschen der Messungen, OIV = Optimistic Initial Value.'
-                    : 'Thompson Sampling ist ein bayesianischer Ansatz mit Beta-Verteilung für Bernoulli-Banditen. Alpha = Startwert für Erfolge + 1, Beta = Startwert für Misserfolge + 1. Höhere Werte bedeuten stärkere Prior-Überzeugung. OIV = Optimistic Initial Value für initiale Exploration.'"
+                  :text="
+                    localEnv.type === 'gaussian'
+                      ? 'Thompson Sampling ist ein bayesianischer Ansatz, der Wahrscheinlichkeitsverteilungen nutzt. Für Gaussian: Prior-Mean = erwarteter Startwert, Prior-Varianz = initiale Unsicherheit (höher = mehr Exploration), Beobachtungs-Varianz (Obs-Var) = angenommenes Rauschen der Messungen, OIV = Optimistic Initial Value.'
+                      : 'Thompson Sampling ist ein bayesianischer Ansatz mit Beta-Verteilung für Bernoulli-Banditen. Alpha = Startwert für Erfolge + 1, Beta = Startwert für Misserfolge + 1. Höhere Werte bedeuten stärkere Prior-Überzeugung. OIV = Optimistic Initial Value für initiale Exploration.'
+                  "
                   @click.stop
                 />
               </div>
@@ -515,7 +517,10 @@
 
                 <div
                   class="variants-table"
-                  :class="{ 'variants-table--thompson-gauss': localEnv.type === 'gaussian' }"
+                  :class="{
+                    'variants-table--thompson-gauss':
+                      localEnv.type === 'gaussian',
+                  }"
                   role="table"
                   aria-label="Thompson Varianten"
                 >
@@ -527,7 +532,9 @@
                       :class="{ 'is-alt': i % 2 === 1 }"
                     >
                       <div class="thompson-variant-header">
-                        <div class="thompson-variant-label">Thompson v{{ i + 1 }}</div>
+                        <div class="thompson-variant-label">
+                          Thompson v{{ i + 1 }}
+                        </div>
                         <button
                           class="btn btn-ghost btn-pill btn-sm"
                           type="button"
@@ -541,7 +548,9 @@
                         <!-- Erste Zeile: Prior-Mean, Prior-Varianz -->
                         <div class="thompson-param-group">
                           <div class="thompson-param">
-                            <label class="thompson-param-label">Prior-Mean</label>
+                            <label class="thompson-param-label"
+                              >Prior-Mean</label
+                            >
                             <NumericStepper
                               v-model="v.priorMean"
                               :min="-1000"
@@ -551,7 +560,9 @@
                             />
                           </div>
                           <div class="thompson-param">
-                            <label class="thompson-param-label">Prior-Varianz</label>
+                            <label class="thompson-param-label"
+                              >Prior-Varianz</label
+                            >
                             <NumericStepper
                               v-model="v.priorVariance"
                               :min="0.0001"
@@ -1734,10 +1745,9 @@ function onCustomToggle(e: Event) {
 }
 .variants-row {
   display: grid;
-  grid-template-columns: minmax(120px, 2fr) minmax(140px, 1fr) minmax(
-      140px,
-      1fr
-    ) minmax(100px, 0.6fr);
+  grid-template-columns:
+    minmax(120px, 2fr) minmax(140px, 1fr) minmax(140px, 1fr)
+    minmax(100px, 0.6fr);
   gap: 0;
   border-top: 1px solid var(--br-22);
   background: #151515;

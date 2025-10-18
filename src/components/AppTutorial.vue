@@ -262,7 +262,7 @@ const SEL = {
   table: "#comparison-table",
   tableHead: "#comparison-table .head",
 
-  truthValuesBtn: '#btn-truth-values',
+  truthValuesBtn: "#btn-truth-values",
 };
 
 function findButtonByText(rootSel: string, text: string): HTMLElement | null {
@@ -780,7 +780,10 @@ function cleanup() {
 
   // SOFORT Shepherd-Klassen entfernen
   try {
-    document.body.classList.remove("shepherd-active", "shepherd-modal-is-visible");
+    document.body.classList.remove(
+      "shepherd-active",
+      "shepherd-modal-is-visible",
+    );
   } catch {}
 
   // SOFORT pointer-events wiederherstellen
@@ -792,7 +795,7 @@ function cleanup() {
   // SOFORT Shepherd-Elemente entfernen (NICHT in nextTick!)
   try {
     const shepherdElements = document.querySelectorAll(
-      ".shepherd-modal-overlay-container, .shepherd-element, .shepherd-target, .shepherd-modal-is-visible"
+      ".shepherd-modal-overlay-container, .shepherd-element, .shepherd-target, .shepherd-modal-is-visible",
     );
     shepherdElements.forEach((el) => {
       try {
@@ -803,13 +806,11 @@ function cleanup() {
 
   // SOFORT tour-highlight Klassen entfernen
   try {
-    document
-      .querySelectorAll(".tour-highlight")
-      .forEach((el) => {
-        try {
-          el.classList.remove("tour-highlight");
-        } catch {}
-      });
+    document.querySelectorAll(".tour-highlight").forEach((el) => {
+      try {
+        el.classList.remove("tour-highlight");
+      } catch {}
+    });
   } catch {}
 
   // Zusätzliche Sicherheits-Checks nach nextTick (falls DOM noch nachhängt)
@@ -817,7 +818,10 @@ function cleanup() {
     try {
       document.documentElement.classList.remove("tour-lock");
       document.body.classList.remove("tour-lock");
-      document.body.classList.remove("shepherd-active", "shepherd-modal-is-visible");
+      document.body.classList.remove(
+        "shepherd-active",
+        "shepherd-modal-is-visible",
+      );
       document.body.style.removeProperty("pointer-events");
       document.documentElement.style.removeProperty("pointer-events");
     } catch {}
@@ -825,7 +829,7 @@ function cleanup() {
     // Nochmal alle Shepherd-Elemente entfernen (falls welche nachgeladen wurden)
     try {
       const shepherdElements = document.querySelectorAll(
-        ".shepherd-modal-overlay-container, .shepherd-element, .shepherd-target"
+        ".shepherd-modal-overlay-container, .shepherd-element, .shepherd-target",
       );
       shepherdElements.forEach((el) => {
         try {
@@ -840,12 +844,15 @@ function cleanup() {
     try {
       document.documentElement.classList.remove("tour-lock");
       document.body.classList.remove("tour-lock");
-      document.body.classList.remove("shepherd-active", "shepherd-modal-is-visible");
+      document.body.classList.remove(
+        "shepherd-active",
+        "shepherd-modal-is-visible",
+      );
       document.body.style.removeProperty("pointer-events");
       document.documentElement.style.removeProperty("pointer-events");
 
       const shepherdElements = document.querySelectorAll(
-        ".shepherd-modal-overlay-container, .shepherd-element, .shepherd-target"
+        ".shepherd-modal-overlay-container, .shepherd-element, .shepherd-target",
       );
       shepherdElements.forEach((el) => {
         try {
@@ -865,8 +872,8 @@ function cleanup() {
           parseInt(style.zIndex) > 2000 &&
           htmlEl.className &&
           (htmlEl.className.includes("shepherd") ||
-           htmlEl.className.includes("tour-root") ||
-           htmlEl.className.includes("tour-dim"))
+            htmlEl.className.includes("tour-root") ||
+            htmlEl.className.includes("tour-dim"))
         ) {
           try {
             htmlEl.remove();
@@ -882,13 +889,22 @@ function cleanup() {
       document.body.style.removeProperty("pointer-events");
       document.documentElement.style.removeProperty("pointer-events");
       document.documentElement.classList.remove("tour-lock");
-      document.body.classList.remove("tour-lock", "shepherd-active", "shepherd-modal-is-visible");
+      document.body.classList.remove(
+        "tour-lock",
+        "shepherd-active",
+        "shepherd-modal-is-visible",
+      );
 
       // Entferne alle verbleibenden Shepherd und Tour Elemente
-      const allShepherd = document.querySelectorAll('[class*="shepherd"], [class*="tour"]');
+      const allShepherd = document.querySelectorAll(
+        '[class*="shepherd"], [class*="tour"]',
+      );
       allShepherd.forEach((el) => {
         try {
-          if (el.className.includes("shepherd") || el.className.includes("tour")) {
+          if (
+            el.className.includes("shepherd") ||
+            el.className.includes("tour")
+          ) {
             (el as HTMLElement).remove();
           }
         } catch {}

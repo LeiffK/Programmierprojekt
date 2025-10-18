@@ -425,7 +425,9 @@ class AlgorithmsRunner {
                 ? Number(_v?.optimisticInitialValue)
                 : defaultOiv;
 
-              const bernCfg: ConstructorParameters<typeof ThompsonSamplingBernoulli>[0] = {
+              const bernCfg: ConstructorParameters<
+                typeof ThompsonSamplingBernoulli
+              >[0] = {
                 seed:
                   typeof cfg.envConfig.seed === "number"
                     ? cfg.envConfig.seed
@@ -435,7 +437,9 @@ class AlgorithmsRunner {
                 optimisticInitialValue,
               };
               const th = new ThompsonSamplingBernoulli(
-                bernCfg as unknown as ConstructorParameters<typeof ThompsonSamplingBernoulli>[0],
+                bernCfg as unknown as ConstructorParameters<
+                  typeof ThompsonSamplingBernoulli
+                >[0],
               );
               const env = mkEnv(131 + idx * 5);
               th.initialize(env);
@@ -503,7 +507,9 @@ class AlgorithmsRunner {
                 ? "Thompson (Gaussian)"
                 : `Thompson (Gaussian) v${idx + 1} (μ=${priorMean.toFixed(2)}, Var=${priorVariance.toFixed(2)})`;
 
-              const gauCfg: ConstructorParameters<typeof ThompsonSamplingGaussian>[0] = {
+              const gauCfg: ConstructorParameters<
+                typeof ThompsonSamplingGaussian
+              >[0] = {
                 seed:
                   typeof cfg.envConfig.seed === "number"
                     ? cfg.envConfig.seed
@@ -514,7 +520,9 @@ class AlgorithmsRunner {
                 optimisticInitialValue,
               };
               const th = new ThompsonSamplingGaussian(
-                gauCfg as unknown as ConstructorParameters<typeof ThompsonSamplingGaussian>[0],
+                gauCfg as unknown as ConstructorParameters<
+                  typeof ThompsonSamplingGaussian
+                >[0],
               );
               const env = mkEnv(141 + idx * 5);
               th.initialize(env);

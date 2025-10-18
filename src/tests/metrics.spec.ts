@@ -157,15 +157,9 @@ describe("metrics", () => {
     });
 
     it("funktioniert mit null envConfig", () => {
-      const history: ManualStep[] = [
-        { action: 0, reward: 5, isOptimal: true },
-      ];
+      const history: ManualStep[] = [{ action: 0, reward: 5, isOptimal: true }];
 
-      const result = buildMetricsRowFromManual(
-        history,
-        null,
-        defaultSeriesCfg,
-      );
+      const result = buildMetricsRowFromManual(history, null, defaultSeriesCfg);
 
       expect(result.n).toBe(1);
       expect(result.cumReward).toBe(5);
