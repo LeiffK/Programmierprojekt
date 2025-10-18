@@ -12,7 +12,6 @@
     <header class="thumb-head">
       <div class="lh">
         <div class="label">{{ label }}</div>
-        <div class="variant muted">{{ variant }}</div>
       </div>
       <div class="n-pill">n={{ n }}</div>
     </header>
@@ -47,11 +46,10 @@
 <script setup lang="ts">
 const props = defineProps<{
   label: string;
-  variant: string;
   n: number;
   estimate: string;
   truth?: string;
-  /** Debug-Modus: steuert Sichtbarkeit der „Wahr“-Zeile */
+  /** Debug-Modus: steuert Sichtbarkeit der „Wahr"-Zeile */
   debug?: boolean;
 }>();
 
@@ -108,10 +106,6 @@ function emitPick() {
   border: 1px solid #222;
   font-size: 12px;
   font-weight: 600;
-}
-.variant {
-  margin-top: 4px;
-  font-size: 12px;
 }
 .n-pill {
   font-size: 12px;

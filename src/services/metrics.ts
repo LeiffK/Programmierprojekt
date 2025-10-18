@@ -13,10 +13,40 @@ function bestMeanFrom(cfg?: iEnvConfig | null): number {
   ) {
     return Math.max(...cfg.probs);
   }
+  const truncated = (cfg as any).truncatedMeans;
+  if (Array.isArray(truncated) && truncated.length) {
+    return Math.max(...truncated);
+  }
   if (Array.isArray(cfg.means) && cfg.means.length) {
     return Math.max(...cfg.means);
   }
   return 0;
+}
+
+function bestActionIndex(cfg?: iEnvConfig | null): number | null {
+  if (!cfg) return null;
+  if (
+    cfg.type === "bernoulli" &&
+    Array.isArray(cfg.probs) &&
+    cfg.probs.length
+  ) {
+    const max = Math.max(...cfg.probs);
+    return cfg.probs.indexOf(max);
+  }
+  if (Array.isArray(cfg.means) && cfg.means.length) {
+    const max = Math.max(...cfg.means);
+    return cfg.means.indexOf(max);
+  }
+  return null;
+}
+
+function isBestAction(
+  cfg: iEnvConfig | null | undefined,
+  action: number,
+): boolean {
+  const idx = bestActionIndex(cfg);
+  if (idx == null) return false;
+  return action === idx;
 }
 
 function regretContribution(bestMean: number, step: ManualStep): number {
@@ -34,7 +64,14 @@ export function buildMetricsRowFromManual(
   const n = history.length;
   const cumReward = history.reduce((s, r) => s + r.reward, 0);
   const avgReward = n ? cumReward / n : 0;
-  const bestCount = history.filter((r) => r.isOptimal).length;
+  const bestIdx = bestActionIndex(cfg);
+  const bestCount =
+    bestIdx != null
+      ? history.reduce(
+          (sum, step) => sum + (step.action === bestIdx ? 1 : 0),
+          0,
+        )
+      : history.filter((r) => r.isOptimal).length;
   const bestChoiceRate = n ? bestCount / n : 0;
 
   const bestMean = bestMeanFrom(cfg);
@@ -64,6 +101,7 @@ export function buildSeriesFromManual(
   sCfg: iSeriesConfig,
 ): iChartSeries {
   const bestMean = bestMeanFrom(cfg);
+  const bestIdx = bestActionIndex(cfg);
 
   let cum = 0;
   let bestCount = 0;
@@ -79,7 +117,9 @@ export function buildSeriesFromManual(
   history.forEach((r, i) => {
     const step = i + 1;
     cum += r.reward;
-    bestCount += r.isOptimal ? 1 : 0;
+    const isBest =
+      bestIdx != null ? r.action === bestIdx : (r.isOptimal ?? false);
+    bestCount += isBest ? 1 : 0;
     regret += regretContribution(bestMean ?? 0, r);
 
     points.cumReward.push({ step, y: cum });

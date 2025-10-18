@@ -2,6 +2,7 @@ import type { iPullResult } from "../env/Domain/iPullResult.ts";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
 import { randNormal } from "../utils/randNormal.ts";
 import { BasePolicy } from "./BasePolicy.ts";
+import type { iBanditPolicyConfig } from "./Domain/iBanditPolicyConfig.ts";
 
 /**
  * Thompson Sampling für Gaussian-Banditen.
@@ -19,96 +20,85 @@ import { BasePolicy } from "./BasePolicy.ts";
  */
 export class ThompsonSamplingGaussian extends BasePolicy {
   protected means: number[] = [];
-  protected precisions: number[] = [];
-  protected priorVariance: number;
-  protected obsVariances: number[] = [];
+  protected variances: number[] = [];
+  protected observationVariances: number[] = [];
+  private priorMean: number;
+  private priorVariance: number;
+  private defaultObservationVariance: number;
 
-  constructor(cfg: { seed?: number; priorVariance?: number } = {}) {
+  constructor(cfg: iBanditPolicyConfig = {}) {
     super(cfg);
+    this.priorMean = cfg.priorMean ?? cfg.optimisticInitialValue ?? 0;
     this.priorVariance = cfg.priorVariance ?? 1;
+    this.defaultObservationVariance = cfg.observationVariance ?? 1;
   }
 
-  override initialize(env: iBanditEnv): void {
-    super.initialize(env);
-    this.means = this.Q.slice();
-    const initPrecision = 1 / this.priorVariance;
-    this.precisions = new Array(this.nArms).fill(initPrecision);
-
-    // Beobachtungsvarianzen aus Env übernehmen
-    const stds = (env.config as any).stdDev;
-    if (Array.isArray(stds)) {
-      this.obsVariances = stds.map((s: number) => s ** 2);
-    } else if (typeof stds === "number") {
-      this.obsVariances = new Array(this.nArms).fill(stds ** 2);
-    } else {
-      this.obsVariances = new Array(this.nArms).fill(1);
-    }
+  protected onInitialize(env: iBanditEnv): void {
+    this.means = Array.from({ length: this.nArms }, () => this.priorMean);
+    this.variances = Array.from(
+      { length: this.nArms },
+      () => this.priorVariance,
+    );
+    this.observationVariances = this.resolveObservationVariance(env);
   }
 
-  override reset(): void {
-    super.reset();
-    // Zufällige leichte Variation, um Symmetrie zwischen Armen zu brechen
-    this.means = this.Q.map((m) => m + 1e-6 * (this.rng() - 0.5));
-    this.precisions.fill(1 / this.priorVariance);
-  }
-
-  override update(result: iPullResult): void {
-    super.update(result);
-
-    const a = result.action;
-    const reward = result.reward;
-
-    const priorPrecision = this.precisions[a];
-    const oldMean = this.means[a];
-
-    const obsVar = this.obsVariances[a];
-    const obsPrecision = 1 / obsVar;
-
-    const precisionNew = priorPrecision + obsPrecision;
-    const meanNew =
-      (priorPrecision * oldMean + obsPrecision * reward) / precisionNew;
-
-    this.precisions[a] = precisionNew;
-    this.means[a] = meanNew;
-
-    // Q hier NICHT aktualisieren, damit BasePolicy-Logik nicht überschrieben wird
+  protected onReset(): void {
+    this.means.fill(this.priorMean);
+    this.variances.fill(this.priorVariance);
   }
 
   override selectAction(): number {
-    const samples = this.means.map((mean, i) => {
-      const variance = 1 / this.precisions[i];
+    const samples = this.means.map((mean, idx) => {
+      const variance = Math.max(this.variances[idx], 1e-12);
       const stdDev = Math.sqrt(variance);
       return randNormal(this.rng, mean, stdDev);
     });
 
-    return this.argmax(samples);
+    return this.tiebreak(samples);
   }
 
-  private argmax(values: number[]): number {
-    let best = -Infinity;
-    let candidates: number[] = [];
-    for (let i = 0; i < values.length; i++) {
-      const v = values[i];
-      if (v > best) {
-        best = v;
-        candidates = [i];
-      } else if (v === best) {
-        candidates.push(i);
-      }
+  protected onUpdate(result: iPullResult): void {
+    const idx = result.action;
+    const obsVar = this.observationVariances[idx];
+    const priorVar = this.variances[idx];
+    const priorMean = this.means[idx];
+
+    const posteriorVariance = 1 / (1 / priorVar + 1 / obsVar);
+    const posteriorMean =
+      posteriorVariance * (priorMean / priorVar + result.reward / obsVar);
+
+    this.variances[idx] = posteriorVariance;
+    this.means[idx] = posteriorMean;
+  }
+
+  private resolveObservationVariance(env: iBanditEnv): number[] {
+    const cfg = env.config as any;
+    if (Array.isArray(cfg.stdDev) && cfg.stdDev.length === this.nArms) {
+      return cfg.stdDev.map((s: number) => Math.max(s, 0) ** 2);
     }
-    const idx = Math.floor(this.rng() * candidates.length);
-    return candidates[idx];
+    if (typeof cfg.stdDev === "number") {
+      return Array.from(
+        { length: this.nArms },
+        () => Math.max(cfg.stdDev, 0) ** 2,
+      );
+    }
+    return Array.from(
+      { length: this.nArms },
+      () => this.defaultObservationVariance,
+    );
   }
 
   public getMeans(): number[] {
-    return this.means;
+    return [...this.means];
   }
 
   public getPrecisions(): number[] {
-    return this.precisions;
+    return this.variances.map((v) =>
+      v > 0 ? 1 / v : Number.POSITIVE_INFINITY,
+    );
   }
 
   public getObsVariances(): number[] {
-    return this.obsVariances;
+    return [...this.observationVariances];
   }
 }

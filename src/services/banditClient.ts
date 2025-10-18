@@ -1,3 +1,11 @@
+/**
+ * "API"-Layer: zentrale Fassade, über die die UI mit den Bandit-Umgebungen spricht.
+ *
+ * Die Idee hinter dem API-Ordner:
+ *   - Stellt eine klar abgegrenzte Schnittstelle bereit, als läge die Logik extern.
+ *   - UI/Composables müssen keine Details der Environment-Klassen kennen.
+ *   - Später austauschbar gegen einen echten HTTP- oder Worker-Endpunkt.
+ */
 import type { iBanditEnv } from "../env/Domain/iBanditEnv.js";
 import type { iEnvConfig } from "../env/Domain/iEnvConfig.js";
 import type { iPullResult } from "../env/Domain/iPullResult.js";
@@ -12,6 +20,7 @@ type EnvRecord = {
   estimates: number[]; // laufender mittelwert (reward) je thumbnail
 };
 
+// Lokale "Session-Datenbank": envId -> Environment + Tracking-Daten
 const REGISTRY = new Map<string, EnvRecord>();
 const DEBUG = import.meta.env.VITE_API_DEBUG === "true";
 
@@ -20,6 +29,10 @@ function ensureSeed(cfg: iEnvConfig): iEnvConfig {
   return { ...cfg, seed: cfg.seed ?? Math.floor(Math.random() * 1e9) };
 }
 
+/**
+ * Erzeugt eine neue Environment-Instanz und gibt eine handlebare ID zurück.
+ * So bleibt die UI unabhängig von konkreten Klassen.
+ */
 export async function initEnv(cfg: iEnvConfig): Promise<InitEnvResponse> {
   const base = ensureSeed(cfg);
 
@@ -44,6 +57,9 @@ export async function initEnv(cfg: iEnvConfig): Promise<InitEnvResponse> {
   return { envId, optimalAction: env.optimalAction };
 }
 
+/**
+ * Führt einen Zug in der angefragten Environment aus und aktualisiert Kennzahlen.
+ */
 export async function pullAction(
   envId: string,
   action: number,
@@ -71,6 +87,9 @@ export async function pullAction(
   return res;
 }
 
+/**
+ * Liefert einen Read-Only-Snapshot (Parameter, Zähler, Schätzwerte) für Debug/UI.
+ */
 export function getEnvSnapshot(envId: string) {
   const rec = REGISTRY.get(envId);
   if (!rec) throw new Error("unknown envId (snapshots brauchen eine welt)");
@@ -83,6 +102,9 @@ export function getEnvSnapshot(envId: string) {
   };
 }
 
+/**
+ * Entfernt eine Environment-Instanz aus der Registry (Aufräumen bei Reset).
+ */
 export function destroyEnv(envId: string) {
   REGISTRY.delete(envId);
   if (DEBUG) console.debug("[env:destroy]", { envId });

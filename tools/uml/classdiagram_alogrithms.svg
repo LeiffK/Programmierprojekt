@@ -1,0 +1,387 @@
+<svg version="1.1" baseProfile="full" width="1990.3" height="1033.0" viewBox="0 0 1990.25 1033" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events">
+<desc >#.interface: fill=lightblue
+#.enumeration: fill=lightgreen
+#.type: fill=lightgray
+
+[BasePolicy|\#nArms: number;\#t: number;\#Q: number\[\];\#N: number\[\];\#rng: () =&gt; number;\#cfg: iBanditPolicyConfig|+initialize(): void;\#setOptimisticInitialValue(): number;+reset(): void;+update(): void;+getEstimates(): readonly number\[\];+getCounts(): readonly number\[\];+abstract selectAction(): number;+getInfo(): { name: string; params: Record&lt;string, unknown&gt;; };\#tiebreak(): number;\#randomArm(): number;\#onInitialize(): void;\#onReset(): void;\#onUpdate(): void]
+[iBanditPolicy]&lt;:--[BasePolicy]
+[CustomPolicyLoader||+static loadPolicy(): Promise&lt;iBanditPolicy&gt;]
+[EpsilonGreedy||+selectAction(): number;\#getClampedEpsilon(): number]
+[BasePolicy]&lt;:-[EpsilonGreedy]
+[GradientBandit|\#preferences: number\[\];\#averageReward: number|+initialize(): void;+reset(): void;+update(): void;+selectAction(): number;-getActionProbabilities(): number\[\];+getPreferences(): number\[\];+getAverageReward(): number]
+[BasePolicy]&lt;:-[GradientBandit]
+[Greedy||+selectAction(): number]
+[BasePolicy]&lt;:-[Greedy]
+[ThompsonSamplingBernoulli|-alpha0: number;-beta0: number;\#successes: number\[\];\#failures: number\[\]|+initialize(): void;+reset(): void;+selectAction(): number;+update(): void;-sampleBeta(): number;-sampleGamma(): number;+getSuccesses(): number\[\];+getFailures(): number\[\]]
+[BasePolicy]&lt;:-[ThompsonSamplingBernoulli]
+[ThompsonSamplingGaussian|\#means: number\[\];\#variances: number\[\];\#observationVariances: number\[\];-priorMean: number;-priorVariance: number;-defaultObservationVariance: number|\#onInitialize(): void;\#onReset(): void;+selectAction(): number;\#onUpdate(): void;-resolveObservationVariance(): number\[\];+getMeans(): number\[\];+getPrecisions(): number\[\];+getObsVariances(): number\[\]]
+[BasePolicy]&lt;:-[ThompsonSamplingGaussian]
+[UpperConfidenceBound|-c: number|+selectAction(): number]
+[BasePolicy]&lt;:-[UpperConfidenceBound]
+[&lt;interface&gt;iBanditPolicy||+initialize(): void;+selectAction(): number;+update(): void;+reset(): void;+getEstimates(): readonly number\[\];+getCounts(): readonly number\[\];+getInfo(): { name: string; params: Record&lt;string, unknown&gt;; }]
+[&lt;interface&gt;iBanditPolicyConfig|+seed?: string \| number;+optimisticInitialValue?: number;+epsilon?: number;+confidence?: number;+alpha?: number;+beta?: number;+priorMean?: number;+priorVariance?: number;+observationVariance?: number|]
+[&lt;interface&gt;CustomPolicyRegistration|+id: string;+name: string;+factory: () =&gt; iBanditPolicy|]</desc>
+<g stroke-width="1.0" text-align="left" font="12pt Helvetica, Arial, sans-serif" font-size="12pt" font-family="Helvetica" font-weight="normal" font-style="normal">
+<g font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" stroke-width="3.0" stroke-linejoin="round" stroke-linecap="round" stroke="#33322E">
+<g stroke="transparent" fill="transparent">
+<rect x="0.0" y="0.0" height="1033.0" width="1990.3" stroke="none"></rect>
+</g>
+<g transform="translate(8, 8)" fill="#33322E">
+<g transform="translate(20, 20)" fill="#eee8d5" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal">
+<g stroke-dasharray="6 6">
+<path d="M804.3 215.3 L804.25 222 L804.25 242 L804.3 242.0 " fill="none"></path>
+</g>
+<path d="M809.6 215.3 L804.3 215.3 L798.9 215.3 L804.3 202.0 Z"></path>
+<path d="M643.6 496.9 L130.5 666 L130.5 787.5 L130.5 787.5 " fill="none"></path>
+<path d="M645.3 502.0 L643.6 496.9 L641.9 491.9 L656.3 492.8 Z"></path>
+<path d="M644.9 542.1 L443.5 666 L443.5 727 L443.5 727.0 " fill="none"></path>
+<path d="M647.7 546.6 L644.9 542.1 L642.1 537.5 L656.3 535.1 Z"></path>
+<path d="M730.5 658.6 L728 666 L728 795.5 L728.0 795.5 " fill="none"></path>
+<path d="M735.6 660.3 L730.5 658.6 L725.5 656.9 L734.9 646.0 Z"></path>
+<path d="M960.8 630.6 L990.5 666 L990.5 702 L990.5 702.0 " fill="none"></path>
+<path d="M964.9 627.2 L960.8 630.6 L956.7 634.1 L952.3 620.4 Z"></path>
+<path d="M964.5 513.0 L1320 666 L1320 686 L1320.0 686.0 " fill="none"></path>
+<path d="M966.6 508.1 L964.5 513.0 L962.4 517.9 L952.3 507.7 Z"></path>
+<path d="M965.1 487.2 L1631.5 666 L1631.5 783.5 L1631.5 783.5 " fill="none"></path>
+<path d="M966.5 482.0 L965.1 487.2 L963.7 492.3 L952.3 483.7 Z"></path>
+<g data-name="BasePolicy">
+<g fill="#eee8d5" stroke="#33322E" data-name="BasePolicy">
+<rect x="656.3" y="242.0" height="404.0" width="296.0" data-name="BasePolicy"></rect>
+<path d="M656.3 274.0 L952.3 274.0" fill="none" data-name="BasePolicy"></path>
+<path d="M656.3 387.0 L952.3 387.0" fill="none" data-name="BasePolicy"></path>
+</g>
+<g transform="translate(656.25, 242)" font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" data-name="BasePolicy" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="BasePolicy" data-compartment="0">
+<a id="src\algorithms\BasePolicy.ts.BasePolicy" xlink:href="src\algorithms\BasePolicy.ts"><text x="140.0" y="14.1" stroke="none" text-anchor="middle" data-name="BasePolicy" data-compartment="0">BasePolicy</text></a>
+
+</g>
+</g>
+<g transform="translate(656.25, 274)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="BasePolicy" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="BasePolicy" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="BasePolicy" data-compartment="1">#nArms: number</text>
+<text x="0.0" y="30.3" stroke="none" data-name="BasePolicy" data-compartment="1">#t: number</text>
+<text x="0.0" y="46.5" stroke="none" data-name="BasePolicy" data-compartment="1">#Q: number[]</text>
+<text x="0.0" y="62.7" stroke="none" data-name="BasePolicy" data-compartment="1">#N: number[]</text>
+<text x="0.0" y="78.9" stroke="none" data-name="BasePolicy" data-compartment="1">#rng: () =&gt; number</text>
+<text x="0.0" y="95.1" stroke="none" data-name="BasePolicy" data-compartment="1">#cfg: iBanditPolicyConfig</text>
+
+</g>
+</g>
+<g transform="translate(656.25, 387)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="BasePolicy" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="BasePolicy" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="BasePolicy" data-compartment="2">+initialize(): void</text>
+<text x="0.0" y="30.3" stroke="none" data-name="BasePolicy" data-compartment="2">#setOptimisticInitialValue(): number</text>
+<text x="0.0" y="46.5" stroke="none" data-name="BasePolicy" data-compartment="2">+reset(): void</text>
+<text x="0.0" y="62.7" stroke="none" data-name="BasePolicy" data-compartment="2">+update(): void</text>
+<text x="0.0" y="78.9" stroke="none" data-name="BasePolicy" data-compartment="2">+getEstimates(): readonly number[]</text>
+<text x="0.0" y="95.1" stroke="none" data-name="BasePolicy" data-compartment="2">+getCounts(): readonly number[]</text>
+<text x="0.0" y="111.3" stroke="none" data-name="BasePolicy" data-compartment="2">+abstract selectAction(): number</text>
+<text x="0.0" y="127.5" stroke="none" data-name="BasePolicy" data-compartment="2">+getInfo(): { name: string</text>
+<text x="0.0" y="143.7" stroke="none" data-name="BasePolicy" data-compartment="2">params: Record&lt;string, unknown&gt;</text>
+<text x="0.0" y="159.9" stroke="none" data-name="BasePolicy" data-compartment="2">}</text>
+<text x="0.0" y="176.1" stroke="none" data-name="BasePolicy" data-compartment="2">#tiebreak(): number</text>
+<text x="0.0" y="192.3" stroke="none" data-name="BasePolicy" data-compartment="2">#randomArm(): number</text>
+<text x="0.0" y="208.5" stroke="none" data-name="BasePolicy" data-compartment="2">#onInitialize(): void</text>
+<text x="0.0" y="224.7" stroke="none" data-name="BasePolicy" data-compartment="2">#onReset(): void</text>
+<text x="0.0" y="240.9" stroke="none" data-name="BasePolicy" data-compartment="2">#onUpdate(): void</text>
+
+</g>
+</g>
+</g>
+<g data-name="iBanditPolicy">
+<g fill="lightblue" stroke="#33322E" data-name="iBanditPolicy">
+<rect x="657.3" y="0.0" height="202.0" width="294.0" data-name="iBanditPolicy"></rect>
+<path d="M657.3 32.0 L951.3 32.0" fill="none" data-name="iBanditPolicy"></path>
+<path d="M657.3 40.0 L951.3 40.0" fill="none" data-name="iBanditPolicy"></path>
+</g>
+<g transform="translate(657.25, 0)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iBanditPolicy" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="iBanditPolicy" data-compartment="0">
+<a id="src\algorithms\Domain\iBanditPolicy.ts.iBanditPolicy" xlink:href="src\algorithms\Domain\iBanditPolicy.ts"><text x="139.0" y="14.1" stroke="none" text-anchor="middle" data-name="iBanditPolicy" data-compartment="0">iBanditPolicy</text></a>
+
+</g>
+</g>
+<g transform="translate(657.25, 32)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iBanditPolicy" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" data-name="iBanditPolicy" data-compartment="1">
+
+</g>
+</g>
+<g transform="translate(657.25, 40)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iBanditPolicy" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="iBanditPolicy" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="iBanditPolicy" data-compartment="2">+initialize(): void</text>
+<text x="0.0" y="30.3" stroke="none" data-name="iBanditPolicy" data-compartment="2">+selectAction(): number</text>
+<text x="0.0" y="46.5" stroke="none" data-name="iBanditPolicy" data-compartment="2">+update(): void</text>
+<text x="0.0" y="62.7" stroke="none" data-name="iBanditPolicy" data-compartment="2">+reset(): void</text>
+<text x="0.0" y="78.9" stroke="none" data-name="iBanditPolicy" data-compartment="2">+getEstimates(): readonly number[]</text>
+<text x="0.0" y="95.1" stroke="none" data-name="iBanditPolicy" data-compartment="2">+getCounts(): readonly number[]</text>
+<text x="0.0" y="111.3" stroke="none" data-name="iBanditPolicy" data-compartment="2">+getInfo(): { name: string</text>
+<text x="0.0" y="127.5" stroke="none" data-name="iBanditPolicy" data-compartment="2">params: Record&lt;string, unknown&gt;</text>
+<text x="0.0" y="143.7" stroke="none" data-name="iBanditPolicy" data-compartment="2">}</text>
+
+</g>
+</g>
+</g>
+<g data-name="CustomPolicyLoader">
+<g fill="#eee8d5" stroke="#33322E" data-name="CustomPolicyLoader">
+<rect x="991.3" y="65.0" height="72.0" width="361.0" data-name="CustomPolicyLoader"></rect>
+<path d="M991.3 97.0 L1352.3 97.0" fill="none" data-name="CustomPolicyLoader"></path>
+<path d="M991.3 105.0 L1352.3 105.0" fill="none" data-name="CustomPolicyLoader"></path>
+</g>
+<g transform="translate(991.25, 65)" font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" data-name="CustomPolicyLoader" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="CustomPolicyLoader" data-compartment="0">
+<a id="src\algorithms\CustomPolicyLoader.ts.CustomPolicyLoader" xlink:href="src\algorithms\CustomPolicyLoader.ts"><text x="172.5" y="14.1" stroke="none" text-anchor="middle" data-name="CustomPolicyLoader" data-compartment="0">CustomPolicyLoader</text></a>
+
+</g>
+</g>
+<g transform="translate(991.25, 97)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="CustomPolicyLoader" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" data-name="CustomPolicyLoader" data-compartment="1">
+
+</g>
+</g>
+<g transform="translate(991.25, 105)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="CustomPolicyLoader" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="CustomPolicyLoader" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="CustomPolicyLoader" data-compartment="2">+static loadPolicy(): Promise&lt;iBanditPolicy&gt;</text>
+
+</g>
+</g>
+</g>
+<g data-name="EpsilonGreedy">
+<g fill="#eee8d5" stroke="#33322E" data-name="EpsilonGreedy">
+<rect x="0.0" y="787.5" height="88.0" width="261.0" data-name="EpsilonGreedy"></rect>
+<path d="M0.0 819.5 L261.0 819.5" fill="none" data-name="EpsilonGreedy"></path>
+<path d="M0.0 827.5 L261.0 827.5" fill="none" data-name="EpsilonGreedy"></path>
+</g>
+<g transform="translate(0, 787.5)" font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" data-name="EpsilonGreedy" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="EpsilonGreedy" data-compartment="0">
+<a id="src\algorithms\EpsilonGreedy.ts.EpsilonGreedy" xlink:href="src\algorithms\EpsilonGreedy.ts"><text x="122.5" y="14.1" stroke="none" text-anchor="middle" data-name="EpsilonGreedy" data-compartment="0">EpsilonGreedy</text></a>
+
+</g>
+</g>
+<g transform="translate(0, 819.5)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="EpsilonGreedy" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" data-name="EpsilonGreedy" data-compartment="1">
+
+</g>
+</g>
+<g transform="translate(0, 827.5)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="EpsilonGreedy" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="EpsilonGreedy" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="EpsilonGreedy" data-compartment="2">+selectAction(): number</text>
+<text x="0.0" y="30.3" stroke="none" data-name="EpsilonGreedy" data-compartment="2">#getClampedEpsilon(): number</text>
+
+</g>
+</g>
+</g>
+<g data-name="GradientBandit">
+<g fill="#eee8d5" stroke="#33322E" data-name="GradientBandit">
+<rect x="301.0" y="727.0" height="209.0" width="285.0" data-name="GradientBandit"></rect>
+<path d="M301.0 759.0 L586.0 759.0" fill="none" data-name="GradientBandit"></path>
+<path d="M301.0 807.0 L586.0 807.0" fill="none" data-name="GradientBandit"></path>
+</g>
+<g transform="translate(301, 727)" font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" data-name="GradientBandit" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="GradientBandit" data-compartment="0">
+<a id="src\algorithms\GradientBandit.ts.GradientBandit" xlink:href="src\algorithms\GradientBandit.ts"><text x="134.5" y="14.1" stroke="none" text-anchor="middle" data-name="GradientBandit" data-compartment="0">GradientBandit</text></a>
+
+</g>
+</g>
+<g transform="translate(301, 759)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="GradientBandit" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="GradientBandit" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="GradientBandit" data-compartment="1">#preferences: number[]</text>
+<text x="0.0" y="30.3" stroke="none" data-name="GradientBandit" data-compartment="1">#averageReward: number</text>
+
+</g>
+</g>
+<g transform="translate(301, 807)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="GradientBandit" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="GradientBandit" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="GradientBandit" data-compartment="2">+initialize(): void</text>
+<text x="0.0" y="30.3" stroke="none" data-name="GradientBandit" data-compartment="2">+reset(): void</text>
+<text x="0.0" y="46.5" stroke="none" data-name="GradientBandit" data-compartment="2">+update(): void</text>
+<text x="0.0" y="62.7" stroke="none" data-name="GradientBandit" data-compartment="2">+selectAction(): number</text>
+<text x="0.0" y="78.9" stroke="none" data-name="GradientBandit" data-compartment="2">-getActionProbabilities(): number[]</text>
+<text x="0.0" y="95.1" stroke="none" data-name="GradientBandit" data-compartment="2">+getPreferences(): number[]</text>
+<text x="0.0" y="111.3" stroke="none" data-name="GradientBandit" data-compartment="2">+getAverageReward(): number</text>
+
+</g>
+</g>
+</g>
+<g data-name="Greedy">
+<g fill="#eee8d5" stroke="#33322E" data-name="Greedy">
+<rect x="626.0" y="795.5" height="72.0" width="204.0" data-name="Greedy"></rect>
+<path d="M626.0 827.5 L830.0 827.5" fill="none" data-name="Greedy"></path>
+<path d="M626.0 835.5 L830.0 835.5" fill="none" data-name="Greedy"></path>
+</g>
+<g transform="translate(626, 795.5)" font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" data-name="Greedy" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="Greedy" data-compartment="0">
+<a id="src\algorithms\greedy.ts.Greedy" xlink:href="src\algorithms\greedy.ts"><text x="94.0" y="14.1" stroke="none" text-anchor="middle" data-name="Greedy" data-compartment="0">Greedy</text></a>
+
+</g>
+</g>
+<g transform="translate(626, 827.5)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="Greedy" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" data-name="Greedy" data-compartment="1">
+
+</g>
+</g>
+<g transform="translate(626, 835.5)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="Greedy" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="Greedy" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="Greedy" data-compartment="2">+selectAction(): number</text>
+
+</g>
+</g>
+</g>
+<g data-name="ThompsonSamplingBernoulli">
+<g fill="#eee8d5" stroke="#33322E" data-name="ThompsonSamplingBernoulli">
+<rect x="870.0" y="702.0" height="259.0" width="241.0" data-name="ThompsonSamplingBernoulli"></rect>
+<path d="M870.0 734.0 L1111.0 734.0" fill="none" data-name="ThompsonSamplingBernoulli"></path>
+<path d="M870.0 815.0 L1111.0 815.0" fill="none" data-name="ThompsonSamplingBernoulli"></path>
+</g>
+<g transform="translate(870, 702)" font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" data-name="ThompsonSamplingBernoulli" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="ThompsonSamplingBernoulli" data-compartment="0">
+<a id="src\algorithms\ThompsonSamplingBernoulli.ts.ThompsonSamplingBernoulli" xlink:href="src\algorithms\ThompsonSamplingBernoulli.ts"><text x="112.5" y="14.1" stroke="none" text-anchor="middle" data-name="ThompsonSamplingBernoulli" data-compartment="0">ThompsonSamplingBernoulli</text></a>
+
+</g>
+</g>
+<g transform="translate(870, 734)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="ThompsonSamplingBernoulli" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="ThompsonSamplingBernoulli" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="ThompsonSamplingBernoulli" data-compartment="1">-alpha0: number</text>
+<text x="0.0" y="30.3" stroke="none" data-name="ThompsonSamplingBernoulli" data-compartment="1">-beta0: number</text>
+<text x="0.0" y="46.5" stroke="none" data-name="ThompsonSamplingBernoulli" data-compartment="1">#successes: number[]</text>
+<text x="0.0" y="62.7" stroke="none" data-name="ThompsonSamplingBernoulli" data-compartment="1">#failures: number[]</text>
+
+</g>
+</g>
+<g transform="translate(870, 815)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="ThompsonSamplingBernoulli" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="ThompsonSamplingBernoulli" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="ThompsonSamplingBernoulli" data-compartment="2">+initialize(): void</text>
+<text x="0.0" y="30.3" stroke="none" data-name="ThompsonSamplingBernoulli" data-compartment="2">+reset(): void</text>
+<text x="0.0" y="46.5" stroke="none" data-name="ThompsonSamplingBernoulli" data-compartment="2">+selectAction(): number</text>
+<text x="0.0" y="62.7" stroke="none" data-name="ThompsonSamplingBernoulli" data-compartment="2">+update(): void</text>
+<text x="0.0" y="78.9" stroke="none" data-name="ThompsonSamplingBernoulli" data-compartment="2">-sampleBeta(): number</text>
+<text x="0.0" y="95.1" stroke="none" data-name="ThompsonSamplingBernoulli" data-compartment="2">-sampleGamma(): number</text>
+<text x="0.0" y="111.3" stroke="none" data-name="ThompsonSamplingBernoulli" data-compartment="2">+getSuccesses(): number[]</text>
+<text x="0.0" y="127.5" stroke="none" data-name="ThompsonSamplingBernoulli" data-compartment="2">+getFailures(): number[]</text>
+
+</g>
+</g>
+</g>
+<g data-name="ThompsonSamplingGaussian">
+<g fill="#eee8d5" stroke="#33322E" data-name="ThompsonSamplingGaussian">
+<rect x="1151.0" y="686.0" height="291.0" width="338.0" data-name="ThompsonSamplingGaussian"></rect>
+<path d="M1151.0 718.0 L1489.0 718.0" fill="none" data-name="ThompsonSamplingGaussian"></path>
+<path d="M1151.0 831.0 L1489.0 831.0" fill="none" data-name="ThompsonSamplingGaussian"></path>
+</g>
+<g transform="translate(1151, 686)" font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" data-name="ThompsonSamplingGaussian" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="ThompsonSamplingGaussian" data-compartment="0">
+<a id="src\algorithms\ThompsonSamplingGaussian.ts.ThompsonSamplingGaussian" xlink:href="src\algorithms\ThompsonSamplingGaussian.ts"><text x="161.0" y="14.1" stroke="none" text-anchor="middle" data-name="ThompsonSamplingGaussian" data-compartment="0">ThompsonSamplingGaussian</text></a>
+
+</g>
+</g>
+<g transform="translate(1151, 718)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="ThompsonSamplingGaussian" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="ThompsonSamplingGaussian" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="1">#means: number[]</text>
+<text x="0.0" y="30.3" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="1">#variances: number[]</text>
+<text x="0.0" y="46.5" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="1">#observationVariances: number[]</text>
+<text x="0.0" y="62.7" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="1">-priorMean: number</text>
+<text x="0.0" y="78.9" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="1">-priorVariance: number</text>
+<text x="0.0" y="95.1" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="1">-defaultObservationVariance: number</text>
+
+</g>
+</g>
+<g transform="translate(1151, 831)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="ThompsonSamplingGaussian" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="ThompsonSamplingGaussian" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="2">#onInitialize(): void</text>
+<text x="0.0" y="30.3" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="2">#onReset(): void</text>
+<text x="0.0" y="46.5" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="2">+selectAction(): number</text>
+<text x="0.0" y="62.7" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="2">#onUpdate(): void</text>
+<text x="0.0" y="78.9" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="2">-resolveObservationVariance(): number[]</text>
+<text x="0.0" y="95.1" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="2">+getMeans(): number[]</text>
+<text x="0.0" y="111.3" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="2">+getPrecisions(): number[]</text>
+<text x="0.0" y="127.5" stroke="none" data-name="ThompsonSamplingGaussian" data-compartment="2">+getObsVariances(): number[]</text>
+
+</g>
+</g>
+</g>
+<g data-name="UpperConfidenceBound">
+<g fill="#eee8d5" stroke="#33322E" data-name="UpperConfidenceBound">
+<rect x="1529.0" y="783.5" height="96.0" width="205.0" data-name="UpperConfidenceBound"></rect>
+<path d="M1529.0 815.5 L1734.0 815.5" fill="none" data-name="UpperConfidenceBound"></path>
+<path d="M1529.0 847.5 L1734.0 847.5" fill="none" data-name="UpperConfidenceBound"></path>
+</g>
+<g transform="translate(1529, 783.5)" font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" data-name="UpperConfidenceBound" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="UpperConfidenceBound" data-compartment="0">
+<a id="src\algorithms\UpperConfidenceBound.ts.UpperConfidenceBound" xlink:href="src\algorithms\UpperConfidenceBound.ts"><text x="94.5" y="14.1" stroke="none" text-anchor="middle" data-name="UpperConfidenceBound" data-compartment="0">UpperConfidenceBound</text></a>
+
+</g>
+</g>
+<g transform="translate(1529, 815.5)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="UpperConfidenceBound" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="UpperConfidenceBound" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="UpperConfidenceBound" data-compartment="1">-c: number</text>
+
+</g>
+</g>
+<g transform="translate(1529, 847.5)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="UpperConfidenceBound" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="UpperConfidenceBound" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="UpperConfidenceBound" data-compartment="2">+selectAction(): number</text>
+
+</g>
+</g>
+</g>
+<g data-name="iBanditPolicyConfig">
+<g fill="lightblue" stroke="#33322E" data-name="iBanditPolicyConfig">
+<rect x="1392.3" y="0.0" height="202.0" width="269.0" data-name="iBanditPolicyConfig"></rect>
+<path d="M1392.3 32.0 L1661.3 32.0" fill="none" data-name="iBanditPolicyConfig"></path>
+<path d="M1392.3 194.0 L1661.3 194.0" fill="none" data-name="iBanditPolicyConfig"></path>
+</g>
+<g transform="translate(1392.25, 0)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iBanditPolicyConfig" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="iBanditPolicyConfig" data-compartment="0">
+<a id="src\algorithms\Domain\iBanditPolicyConfig.ts.iBanditPolicyConfig" xlink:href="src\algorithms\Domain\iBanditPolicyConfig.ts"><text x="126.5" y="14.1" stroke="none" text-anchor="middle" data-name="iBanditPolicyConfig" data-compartment="0">iBanditPolicyConfig</text></a>
+
+</g>
+</g>
+<g transform="translate(1392.25, 32)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iBanditPolicyConfig" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="iBanditPolicyConfig" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="iBanditPolicyConfig" data-compartment="1">+seed?: string | number</text>
+<text x="0.0" y="30.3" stroke="none" data-name="iBanditPolicyConfig" data-compartment="1">+optimisticInitialValue?: number</text>
+<text x="0.0" y="46.5" stroke="none" data-name="iBanditPolicyConfig" data-compartment="1">+epsilon?: number</text>
+<text x="0.0" y="62.7" stroke="none" data-name="iBanditPolicyConfig" data-compartment="1">+confidence?: number</text>
+<text x="0.0" y="78.9" stroke="none" data-name="iBanditPolicyConfig" data-compartment="1">+alpha?: number</text>
+<text x="0.0" y="95.1" stroke="none" data-name="iBanditPolicyConfig" data-compartment="1">+beta?: number</text>
+<text x="0.0" y="111.3" stroke="none" data-name="iBanditPolicyConfig" data-compartment="1">+priorMean?: number</text>
+<text x="0.0" y="127.5" stroke="none" data-name="iBanditPolicyConfig" data-compartment="1">+priorVariance?: number</text>
+<text x="0.0" y="143.7" stroke="none" data-name="iBanditPolicyConfig" data-compartment="1">+observationVariance?: number</text>
+
+</g>
+</g>
+<g transform="translate(1392.25, 194)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iBanditPolicyConfig" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" data-name="iBanditPolicyConfig" data-compartment="2">
+
+</g>
+</g>
+</g>
+<g data-name="CustomPolicyRegistration">
+<g fill="lightblue" stroke="#33322E" data-name="CustomPolicyRegistration">
+<rect x="1701.3" y="48.5" height="105.0" width="233.0" data-name="CustomPolicyRegistration"></rect>
+<path d="M1701.3 80.5 L1934.3 80.5" fill="none" data-name="CustomPolicyRegistration"></path>
+<path d="M1701.3 145.5 L1934.3 145.5" fill="none" data-name="CustomPolicyRegistration"></path>
+</g>
+<g transform="translate(1701.25, 48.5)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="CustomPolicyRegistration" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="CustomPolicyRegistration" data-compartment="0">
+<a id="src\algorithms\Domain\iCustomPolicyRegistration.ts.CustomPolicyRegistration" xlink:href="src\algorithms\Domain\iCustomPolicyRegistration.ts"><text x="108.5" y="14.1" stroke="none" text-anchor="middle" data-name="CustomPolicyRegistration" data-compartment="0">CustomPolicyRegistration</text></a>
+
+</g>
+</g>
+<g transform="translate(1701.25, 80.5)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="CustomPolicyRegistration" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="CustomPolicyRegistration" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="CustomPolicyRegistration" data-compartment="1">+id: string</text>
+<text x="0.0" y="30.3" stroke="none" data-name="CustomPolicyRegistration" data-compartment="1">+name: string</text>
+<text x="0.0" y="46.5" stroke="none" data-name="CustomPolicyRegistration" data-compartment="1">+factory: () =&gt; iBanditPolicy</text>
+
+</g>
+</g>
+<g transform="translate(1701.25, 145.5)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="CustomPolicyRegistration" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" data-name="CustomPolicyRegistration" data-compartment="2">
+
+</g>
+</g>
+</g>
+</g>
+</g>
+</g>
+</g>
+</svg>

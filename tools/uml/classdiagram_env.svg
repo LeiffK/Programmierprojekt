@@ -1,0 +1,196 @@
+<svg version="1.1" baseProfile="full" width="878.3" height="579.0" viewBox="0 0 878.25 579" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events">
+<desc >#.interface: fill=lightblue
+#.enumeration: fill=lightgreen
+#.type: fill=lightgray
+
+[BanditEnv|+config: iEnvConfig;+optimalAction: number;\#rng: () =&gt; number|+abstract pull(): iPullResult]
+[iBanditEnv]&lt;:--[BanditEnv]
+[BernoulliBanditEnv|-probs: number\[\]|+pull(): iPullResult;+getProbs(): number\[\]]
+[BanditEnv]&lt;:-[BernoulliBanditEnv]
+[GaussianBanditEnv|-truncatedMeans: number\[\]|+pull(): iPullResult]
+[BanditEnv]&lt;:-[GaussianBanditEnv]
+[&lt;interface&gt;iBanditEnv|+config: iEnvConfig;+optimalAction: number|+pull(): iPullResult]
+[&lt;interface&gt;iEnvConfig|+type: &quot;bernoulli&quot; \| &quot;gaussian&quot;;+arms: number;+probs?: number\[\];+means?: number\[\];+stdDev?: number\[\];+seed?: number;+minProb?: number;+maxProb?: number;+bestBonus?: number|]
+[&lt;interface&gt;iPullResult|+action: number;+reward: number;+isOptimal: boolean|]</desc>
+<g stroke-width="1.0" text-align="left" font="12pt Helvetica, Arial, sans-serif" font-size="12pt" font-family="Helvetica" font-weight="normal" font-style="normal">
+<g font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" stroke-width="3.0" stroke-linejoin="round" stroke-linecap="round" stroke="#33322E">
+<g stroke="transparent" fill="transparent">
+<rect x="0.0" y="0.0" height="579.0" width="878.3" stroke="none"></rect>
+</g>
+<g transform="translate(8, 8)" fill="#33322E">
+<g transform="translate(20, 20)" fill="#eee8d5" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal">
+<g stroke-dasharray="6 6">
+<path d="M219.3 170.3 L219.25 222 L219.25 242 L219.3 242.0 " fill="none"></path>
+</g>
+<path d="M224.6 170.3 L219.3 170.3 L213.9 170.3 L219.3 157.0 Z"></path>
+<path d="M113.0 378.5 L94.5 391 L94.5 411 L94.5 411.0 " fill="none"></path>
+<path d="M116.0 382.9 L113.0 378.5 L110.0 374.1 L124.0 371.0 Z"></path>
+<path d="M325.5 378.5 L344 391 L344 419 L344.0 419.0 " fill="none"></path>
+<path d="M328.5 374.1 L325.5 378.5 L322.5 382.9 L314.5 371.0 Z"></path>
+<g data-name="BanditEnv">
+<g fill="#eee8d5" stroke="#33322E" data-name="BanditEnv">
+<rect x="105.3" y="242.0" height="129.0" width="228.0" data-name="BanditEnv"></rect>
+<path d="M105.3 274.0 L333.3 274.0" fill="none" data-name="BanditEnv"></path>
+<path d="M105.3 339.0 L333.3 339.0" fill="none" data-name="BanditEnv"></path>
+</g>
+<g transform="translate(105.25, 242)" font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" data-name="BanditEnv" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="BanditEnv" data-compartment="0">
+<a id="src\env\BanditEnv.ts.BanditEnv" xlink:href="src\env\BanditEnv.ts"><text x="106.0" y="14.1" stroke="none" text-anchor="middle" data-name="BanditEnv" data-compartment="0">BanditEnv</text></a>
+
+</g>
+</g>
+<g transform="translate(105.25, 274)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="BanditEnv" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="BanditEnv" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="BanditEnv" data-compartment="1">+config: iEnvConfig</text>
+<text x="0.0" y="30.3" stroke="none" data-name="BanditEnv" data-compartment="1">+optimalAction: number</text>
+<text x="0.0" y="46.5" stroke="none" data-name="BanditEnv" data-compartment="1">#rng: () =&gt; number</text>
+
+</g>
+</g>
+<g transform="translate(105.25, 339)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="BanditEnv" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="BanditEnv" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="BanditEnv" data-compartment="2">+abstract pull(): iPullResult</text>
+
+</g>
+</g>
+</g>
+<g data-name="iBanditEnv">
+<g fill="lightblue" stroke="#33322E" data-name="iBanditEnv">
+<rect x="118.3" y="45.0" height="112.0" width="202.0" data-name="iBanditEnv"></rect>
+<path d="M118.3 77.0 L320.3 77.0" fill="none" data-name="iBanditEnv"></path>
+<path d="M118.3 125.0 L320.3 125.0" fill="none" data-name="iBanditEnv"></path>
+</g>
+<g transform="translate(118.25, 45)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iBanditEnv" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="iBanditEnv" data-compartment="0">
+<a id="src\env\Domain\iBanditEnv.ts.iBanditEnv" xlink:href="src\env\Domain\iBanditEnv.ts"><text x="93.0" y="14.1" stroke="none" text-anchor="middle" data-name="iBanditEnv" data-compartment="0">iBanditEnv</text></a>
+
+</g>
+</g>
+<g transform="translate(118.25, 77)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iBanditEnv" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="iBanditEnv" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="iBanditEnv" data-compartment="1">+config: iEnvConfig</text>
+<text x="0.0" y="30.3" stroke="none" data-name="iBanditEnv" data-compartment="1">+optimalAction: number</text>
+
+</g>
+</g>
+<g transform="translate(118.25, 125)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iBanditEnv" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="iBanditEnv" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="iBanditEnv" data-compartment="2">+pull(): iPullResult</text>
+
+</g>
+</g>
+</g>
+<g data-name="BernoulliBanditEnv">
+<g fill="#eee8d5" stroke="#33322E" data-name="BernoulliBanditEnv">
+<rect x="0.0" y="411.0" height="112.0" width="189.0" data-name="BernoulliBanditEnv"></rect>
+<path d="M0.0 443.0 L189.0 443.0" fill="none" data-name="BernoulliBanditEnv"></path>
+<path d="M0.0 475.0 L189.0 475.0" fill="none" data-name="BernoulliBanditEnv"></path>
+</g>
+<g transform="translate(0, 411)" font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" data-name="BernoulliBanditEnv" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="BernoulliBanditEnv" data-compartment="0">
+<a id="src\env\BernoulliBanditEnv.ts.BernoulliBanditEnv" xlink:href="src\env\BernoulliBanditEnv.ts"><text x="86.5" y="14.1" stroke="none" text-anchor="middle" data-name="BernoulliBanditEnv" data-compartment="0">BernoulliBanditEnv</text></a>
+
+</g>
+</g>
+<g transform="translate(0, 443)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="BernoulliBanditEnv" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="BernoulliBanditEnv" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="BernoulliBanditEnv" data-compartment="1">-probs: number[]</text>
+
+</g>
+</g>
+<g transform="translate(0, 475)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="BernoulliBanditEnv" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="BernoulliBanditEnv" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="BernoulliBanditEnv" data-compartment="2">+pull(): iPullResult</text>
+<text x="0.0" y="30.3" stroke="none" data-name="BernoulliBanditEnv" data-compartment="2">+getProbs(): number[]</text>
+
+</g>
+</g>
+</g>
+<g data-name="GaussianBanditEnv">
+<g fill="#eee8d5" stroke="#33322E" data-name="GaussianBanditEnv">
+<rect x="229.0" y="419.0" height="96.0" width="230.0" data-name="GaussianBanditEnv"></rect>
+<path d="M229.0 451.0 L459.0 451.0" fill="none" data-name="GaussianBanditEnv"></path>
+<path d="M229.0 483.0 L459.0 483.0" fill="none" data-name="GaussianBanditEnv"></path>
+</g>
+<g transform="translate(229, 419)" font-family="Helvetica" font-size="12pt" font-weight="bold" font-style="normal" data-name="GaussianBanditEnv" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="GaussianBanditEnv" data-compartment="0">
+<a id="src\env\GaussianBanditEnv.ts.GaussianBanditEnv" xlink:href="src\env\GaussianBanditEnv.ts"><text x="107.0" y="14.1" stroke="none" text-anchor="middle" data-name="GaussianBanditEnv" data-compartment="0">GaussianBanditEnv</text></a>
+
+</g>
+</g>
+<g transform="translate(229, 451)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="GaussianBanditEnv" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="GaussianBanditEnv" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="GaussianBanditEnv" data-compartment="1">-truncatedMeans: number[]</text>
+
+</g>
+</g>
+<g transform="translate(229, 483)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="GaussianBanditEnv" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="GaussianBanditEnv" data-compartment="2">
+<text x="0.0" y="14.1" stroke="none" data-name="GaussianBanditEnv" data-compartment="2">+pull(): iPullResult</text>
+
+</g>
+</g>
+</g>
+<g data-name="iEnvConfig">
+<g fill="lightblue" stroke="#33322E" data-name="iEnvConfig">
+<rect x="360.3" y="0.0" height="202.0" width="249.0" data-name="iEnvConfig"></rect>
+<path d="M360.3 32.0 L609.3 32.0" fill="none" data-name="iEnvConfig"></path>
+<path d="M360.3 194.0 L609.3 194.0" fill="none" data-name="iEnvConfig"></path>
+</g>
+<g transform="translate(360.25, 0)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iEnvConfig" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="iEnvConfig" data-compartment="0">
+<a id="src\env\Domain\iEnvConfig.ts.iEnvConfig" xlink:href="src\env\Domain\iEnvConfig.ts"><text x="116.5" y="14.1" stroke="none" text-anchor="middle" data-name="iEnvConfig" data-compartment="0">iEnvConfig</text></a>
+
+</g>
+</g>
+<g transform="translate(360.25, 32)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iEnvConfig" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="iEnvConfig" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="iEnvConfig" data-compartment="1">+type: &quot;bernoulli&quot; | &quot;gaussian&quot;</text>
+<text x="0.0" y="30.3" stroke="none" data-name="iEnvConfig" data-compartment="1">+arms: number</text>
+<text x="0.0" y="46.5" stroke="none" data-name="iEnvConfig" data-compartment="1">+probs?: number[]</text>
+<text x="0.0" y="62.7" stroke="none" data-name="iEnvConfig" data-compartment="1">+means?: number[]</text>
+<text x="0.0" y="78.9" stroke="none" data-name="iEnvConfig" data-compartment="1">+stdDev?: number[]</text>
+<text x="0.0" y="95.1" stroke="none" data-name="iEnvConfig" data-compartment="1">+seed?: number</text>
+<text x="0.0" y="111.3" stroke="none" data-name="iEnvConfig" data-compartment="1">+minProb?: number</text>
+<text x="0.0" y="127.5" stroke="none" data-name="iEnvConfig" data-compartment="1">+maxProb?: number</text>
+<text x="0.0" y="143.7" stroke="none" data-name="iEnvConfig" data-compartment="1">+bestBonus?: number</text>
+
+</g>
+</g>
+<g transform="translate(360.25, 194)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iEnvConfig" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" data-name="iEnvConfig" data-compartment="2">
+
+</g>
+</g>
+</g>
+<g data-name="iPullResult">
+<g fill="lightblue" stroke="#33322E" data-name="iPullResult">
+<rect x="649.3" y="48.5" height="105.0" width="173.0" data-name="iPullResult"></rect>
+<path d="M649.3 80.5 L822.3 80.5" fill="none" data-name="iPullResult"></path>
+<path d="M649.3 145.5 L822.3 145.5" fill="none" data-name="iPullResult"></path>
+</g>
+<g transform="translate(649.25, 48.5)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iPullResult" data-compartment="0">
+<g transform="translate(8, 8)" fill="#33322E" text-align="center" data-name="iPullResult" data-compartment="0">
+<a id="src\env\Domain\iPullResult.ts.iPullResult" xlink:href="src\env\Domain\iPullResult.ts"><text x="78.5" y="14.1" stroke="none" text-anchor="middle" data-name="iPullResult" data-compartment="0">iPullResult</text></a>
+
+</g>
+</g>
+<g transform="translate(649.25, 80.5)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iPullResult" data-compartment="1">
+<g transform="translate(8, 8)" fill="#33322E" text-align="left" data-name="iPullResult" data-compartment="1">
+<text x="0.0" y="14.1" stroke="none" data-name="iPullResult" data-compartment="1">+action: number</text>
+<text x="0.0" y="30.3" stroke="none" data-name="iPullResult" data-compartment="1">+reward: number</text>
+<text x="0.0" y="46.5" stroke="none" data-name="iPullResult" data-compartment="1">+isOptimal: boolean</text>
+
+</g>
+</g>
+<g transform="translate(649.25, 145.5)" font-family="Helvetica" font-size="12pt" font-weight="normal" font-style="normal" data-name="iPullResult" data-compartment="2">
+<g transform="translate(8, 8)" fill="#33322E" data-name="iPullResult" data-compartment="2">
+
+</g>
+</g>
+</g>
+</g>
+</g>
+</g>
+</g>
+</svg>

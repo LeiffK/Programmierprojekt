@@ -1,7 +1,12 @@
 <template>
   <section class="card">
     <div class="row one-line">
-      <h2 class="title">Automatischer Lauf</h2>
+      <h2 class="title">
+        Automatischer Lauf
+        <InfoTooltip
+          text="Lass die Algorithmen automatisch laufen. Stelle ein, wie viele Schritte insgesamt gemacht werden sollen und wie schnell (Schritte pro Sekunde). Mit +1 Schritt kannst du auch einzeln vorwärtsgehen – ideal zum genauen Beobachten."
+        />
+      </h2>
       <div class="status" :class="statusClass">
         <span class="dot" />
         <span class="txt">{{ statusText }}</span>
@@ -56,8 +61,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import NumericStepper from "./ui/NumericStepper.vue";
+import InfoTooltip from "./InfoTooltip.vue";
 import { algorithmsRunner } from "../services/algorithmsRunner";
 import type { iEnvConfig } from "../env/Domain/iEnvConfig";
 import type { iBanditPolicyConfig } from "../algorithms/Domain/iBanditPolicyConfig";
@@ -91,14 +97,78 @@ const statusClass = computed(() => ({
   idle: !configured.value,
 }));
 
+// Event-Listener für Runner-Events
+const offRunner = algorithmsRunner.on((msg: any) => {
+  if (msg.type === "STOPPED") {
+    running.value = false;
+    statusText.value = `Angehalten: ${msg.payload?.reason ?? "—"}`;
+  }
+  if (msg.type === "STARTED") {
+    running.value = true;
+    statusText.value = "Läuft";
+  }
+  if (msg.type === "PAUSED") {
+    running.value = false;
+    statusText.value = "Pausiert";
+  }
+  if (msg.type === "CONFIGURED") {
+    configured.value = true;
+    if (!running.value) {
+      statusText.value = "Konfiguriert";
+    }
+  }
+});
+
+onBeforeUnmount(() => {
+  offRunner?.();
+});
+
 let cfgTimer: number | null = null;
+let lastConfigKey: string | null = null;
+
+function stableStringify(input: any): string {
+  const seen = new WeakSet();
+  const walk = (value: any): any => {
+    if (value === null || typeof value !== "object") {
+      if (typeof value === "function") return "[fn]";
+      return value;
+    }
+    if (seen.has(value)) return undefined;
+    seen.add(value);
+
+    if (Array.isArray(value)) {
+      return value.map((entry) => walk(entry));
+    }
+
+    const out: Record<string, unknown> = {};
+    for (const key of Object.keys(value).sort()) {
+      const next = walk((value as Record<string, any>)[key]);
+      if (next !== undefined) out[key] = next;
+    }
+    return out;
+  };
+  try {
+    return JSON.stringify(walk(input));
+  } catch {
+    return Math.random().toString(36);
+  }
+}
 function ensureConfigured(immediate = false) {
   if (!props.envConfig) {
     configured.value = false;
     statusText.value = "Kein Environment";
+    lastConfigKey = null;
     return;
   }
+  const nextKey = stableStringify({
+    env: props.envConfig,
+    policies: props.policyConfigs,
+    totalSteps: totalSteps.value,
+    rate: rate.value,
+  });
+
   const doConfig = () => {
+    if (configured.value && lastConfigKey === nextKey) return;
     algorithmsRunner.configure({
       envConfig: props.envConfig!,
       totalSteps: totalSteps.value,
@@ -107,6 +177,7 @@ function ensureConfigured(immediate = false) {
     });
     configured.value = true;
     statusText.value = running.value ? "Läuft" : "Konfiguriert";
+    lastConfigKey = nextKey;
   };
   if (immediate) {
     doConfig();
@@ -152,6 +223,7 @@ function onReset() {
   algorithmsRunner.stop("Reset");
   running.value = false;
   configured.value = false;
+  lastConfigKey = null; // Config-Cache löschen, damit beim nächsten Start neu konfiguriert wird
   statusText.value = "Zurückgesetzt";
   emit("reset");
 }

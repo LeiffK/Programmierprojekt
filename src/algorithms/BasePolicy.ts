@@ -47,6 +47,7 @@ export abstract class BasePolicy implements iBanditPolicy {
     this.t = 0; // Gesamtanzahl Ziehungen
     this.cfg.seed = env.config.seed;
     this.rng = seedrandom(String(this.cfg.seed));
+    this.onInitialize(env);
   }
   protected setOptimisticInitialValue(): number {
     // Methode, damit in Greedy oder E Greedy der Startwert für die Arme leichter angepasst werden kann--> Ansonsten öfters Gefahr, dass Algo sich einfach auf einen Anfangsarm einigt
@@ -61,6 +62,7 @@ export abstract class BasePolicy implements iBanditPolicy {
     this.Q.fill(optimisticValue); // alle Q-Werte auf Anfang setzen (optimistisch)
     this.N.fill(0); // Zähler zurücksetzen
     this.t = 0; // Gesamtanzahl Steps zurücksetzen
+    this.onReset();
   }
 
   /**
@@ -76,9 +78,12 @@ export abstract class BasePolicy implements iBanditPolicy {
     const n = this.N[a]; // Anzahl Ziehungen dieses Arms
     // Mittelwert-Update mit inkrementeller Form
     this.Q[a] += (result.reward - this.Q[a]) / (n + 1);
+    // this.Q[a] += (result.reward - this.Q[a]) / n;
+
     //Alt
     // this.Q[a] += (result.reward - this.Q[a]) / n+1;
     this.t += 1; // Gesamtanzahl Schritte erhöhen
+    this.onUpdate(result);
   }
 
   /**
@@ -139,4 +144,11 @@ export abstract class BasePolicy implements iBanditPolicy {
   protected randomArm(): number {
     return Math.floor(this.rng() * this.nArms);
   }
+
+  // Erweiterungspunkte für Spezial-Policies
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected onInitialize(_env: iBanditEnv): void {}
+  protected onReset(): void {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected onUpdate(_result: iPullResult): void {}
 }

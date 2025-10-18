@@ -40,14 +40,19 @@
       </button>
     </div>
 
-    <v-chart
-      ref="chartRef"
-      class="echart"
-      :option="option"
-      :update-options="updateOpts"
-      :autoresize="true"
-      @legendselectchanged="onLegendSelect"
-    />
+    <!-- Chart mit Achsenbeschriftungen -->
+    <div class="chart-container">
+      <div class="axis-label axis-label-y">{{ yAxisLabel }}</div>
+      <v-chart
+        ref="chartRef"
+        class="echart"
+        :option="option"
+        :update-options="updateOpts"
+        :autoresize="true"
+        @legendselectchanged="onLegendSelect"
+      />
+      <div class="axis-label axis-label-x">{{ xAxisLabel }}</div>
+    </div>
   </div>
 </template>
 
@@ -83,6 +88,7 @@ const chartRef = ref<InstanceType<typeof VChart> | null>(null);
 const props = defineProps<{
   series: iChartSeries[];
   modelValue?: ChartMetric;
+  envType?: "gaussian" | "bernoulli";
 }>();
 const emit = defineEmits<{
   (e: "update:modelValue", v: ChartMetric): void;
@@ -104,6 +110,27 @@ watch(
   },
 );
 watch(localMetric, (v) => emit("update:modelValue", v));
+
+/* Achsen-Labels für HTML */
+const yAxisLabel = computed(() => {
+  const isBernoulli = props.envType === "bernoulli";
+
+  switch (localMetric.value) {
+    case "cumReward":
+    case "regret":
+      return isBernoulli ? "Klicks" : "Watchtime (Sekunden)";
+    case "avgReward":
+      return isBernoulli ? "Klicks" : "Watchtime (Sekunden)";
+    case "bestRate":
+      return "optimales Thumbnail / Gewählte Thumbnails";
+    default:
+      return "Wert";
+  }
+});
+
+const xAxisLabel = computed(() => {
+  return "Gewählte Thumbnails";
+});
 
 /* Smoother Updates */
 const updateOpts = { notMerge: false, lazyUpdate: true } as const;
@@ -310,8 +337,42 @@ function fmt(n: number) {
   display: inline-block;
 }
 
-/* Chart-Container */
+/* Chart-Container mit Achsenbeschriftungen */
+.chart-container {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.axis-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e0e0e0;
+  user-select: none;
+}
+
+.axis-label-y {
+  grid-column: 1;
+  grid-row: 1;
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+  text-align: center;
+  padding: 8px 0;
+}
+
+.axis-label-x {
+  grid-column: 2;
+  grid-row: 2;
+  text-align: center;
+  padding: 4px 0;
+}
+
 .echart {
+  grid-column: 2;
+  grid-row: 1;
   width: 100%;
   height: 320px;
   background: #111;

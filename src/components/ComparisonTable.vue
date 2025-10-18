@@ -9,7 +9,12 @@
       @keydown.enter.prevent="toggle()"
       @keydown.space.prevent="toggle()"
     >
-      <h2>Vergleich &amp; Kennzahlen</h2>
+      <h2>
+        Vergleich &amp; Kennzahlen
+        <InfoTooltip
+          text="Alle wichtigen Zahlen auf einen Blick: Gesamt-Reward (Σ), Durchschnitt (Ø), wie oft der beste Arm gewählt wurde (Best-Quote), verpasster Gewinn (Regret) und der letzte gemessene Wert. Klicke auf eine Zeile, um die Serie im Chart aus- oder einzublenden."
+        />
+      </h2>
       <div class="meta">
         <span class="badge">{{ seriesBadge }}</span>
         <button class="btn btn-ghost btn-pill" type="button">
@@ -24,8 +29,6 @@
           <thead>
             <tr>
               <th>Serie</th>
-              <th>Typ</th>
-              <th class="num">n</th>
               <th class="num">Σ&nbsp;Reward</th>
               <th class="num">Ø&nbsp;Reward</th>
               <th class="num">Best-Quote</th>
@@ -56,12 +59,6 @@
                   {{ r.label }}
                 </span>
               </td>
-
-              <!-- Typ -->
-              <td>{{ deriveType(r) }}</td>
-
-              <!-- n -->
-              <td class="num">{{ pickInt(r.n, r.count, r.steps) }}</td>
 
               <!-- Σ Reward -->
               <td class="num">
@@ -110,6 +107,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import InfoTooltip from "./InfoTooltip.vue";
 
 /** Tolerantes Interface – akzeptiert unterschiedliche Feldnamen. */
 export interface AnyRow {
