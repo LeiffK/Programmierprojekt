@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { randGaussianDist } from "../utils/randGaussianDist";
+import { randGaussianDist } from "../env/GaussianBanditEnv.ts";
 
 describe("randGaussianDist", () => {
   it("gibt ein Objekt mit mean und standardDeviation zurück", () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { randNormal } from "../utils/randNormal";
+import { randNormal } from "../env/GaussianBanditEnv.ts";
 
 describe("randNormal", () => {
   it("gibt einen Wert nahe dem Mittelwert zurück (Standard N(0,1))", () => {

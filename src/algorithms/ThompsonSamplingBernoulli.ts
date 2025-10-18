@@ -1,8 +1,15 @@
 import type { iPullResult } from "../env/Domain/iPullResult.ts";
 import type { iBanditEnv } from "../env/Domain/iBanditEnv.ts";
-import { randNormal } from "../utils/randNormal.ts";
 import { BasePolicy } from "./BasePolicy.ts";
 import type { iBanditPolicyConfig } from "./Domain/iBanditPolicyConfig.ts";
+
+function sampleStandardNormal(rng: () => number): number {
+  let u1 = 0;
+  let u2 = 0;
+  while (u1 === 0) u1 = rng();
+  u2 = rng();
+  return Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+}
 
 /**
  * Thompson Sampling für Bernoulli-Banditen.
@@ -111,7 +118,7 @@ export class ThompsonSamplingBernoulli extends BasePolicy {
         let x = 0;
         let v = 0;
         do {
-          x = randNormal(this.rng);
+          x = sampleStandardNormal(this.rng);
           v = 1 + c * x;
         } while (v <= 0);
         v = v * v * v;
